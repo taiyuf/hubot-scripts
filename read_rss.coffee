@@ -17,31 +17,24 @@
 fs         = require 'fs'
 path       = require 'path'
 cron       = require('cron').CronJob
-# feed_url   = "http://redmine.on-net.jp/projects/jsdf/activity.atom?key=7f44b6ed31fe0f04a003a02422351f9afe6d8e93"
-feed_url   = "http://news.livedoor.com/topics/rss/top.xml"
 feedparser = require 'feedparser'
 request    = require 'request'
-room       = '#start'
-schedule   = '0 * * * * *'
-# *(sec) *(min) *(hour) *(day) *(month) *(day of the week)
+label      = 'read_rss'
+schedule   = '0 * * * * *' # *(sec) *(min) *(hour) *(day) *(month) *(day of the week)
+rssPath    = process.env.RSS_FILE_PATH or '../rss_list.json'
+
+try
+  data = fs.readFileSync rssPath, 'utf-8'
+  try
+    rss = JSON.parse(data)
+    console.log "#{label} success to load file: #{rssPath}."
+  catch
+    console.log "#{label} Error on parsing the json file: #{rssPath}"
+catch
+  console.log "#{label} Error on reading the json file: #{rssPath}"
 
 module.exports = (robot) ->
-  send_to_irc = (cronTime, room, url, callback)->
-
-    rssPath = process.env.RSS_FILE_PATH or '../rss_list.json'
-
-    try
-      data = fs.readFileSync rssPath, 'utf-8'
-      console.log data
-      try
-        rss = JSON.parse(data)
-        console.log "success to load file: #{rssPath}."
-      catch
-        console.log "Error on parsing the json file: #{rssPath}"
-        return
-    catch
-      console.log "Error on reading the json file: #{rssPath}"
-      return
+  send_to_irc = (cronTime, callback)->
 
     new cron
       cronTime: cronTime
@@ -49,35 +42,51 @@ module.exports = (robot) ->
       timeZone: "Asia/Tokyo"
       onTick: ->
         for key of rss
-          date    = new Date
-          entries = []
-          fp      = new feedparser
 
-          console.log "job of #{key}"
+          fp   = new feedparser
+          url  = rss[key]['url']
+          room = rss[key]['room']
+          date = new Date
+
+          if not rss[key]['room']
+            console.log "#{label} not defined 'room'."
+            return
+
           if rss[key]["id"] and rss[key]["password"]
-            request(rss[key]["url"])
+            try
+              auth = new Buffer("#{rss[key]['id']}:#{rss[key]['password']}").toString('base64')
+              req = request({url: url, headers: {"Authorization": "Basic #{auth}"}})
+            catch
+              console.log "#{label} Error on fetch the url: #{url}"
+              return
           else
-            request(rss[key]["url"]).auth("{ #{rss[key]["id"]}: #{rss[key]["password"]} }")
+            try
+              req = request(rss[key]["url"])
+            catch
+              console.log "#{label} Error on fetch the url: #{url}"
+              return
 
           try
             req.pipe(fp)
           catch error
-            console.log "Error on reqest: #{error}"
+            console.log "#{label} Error on reqest: #{error}"
 
           fp.on('error', (error) ->
-            console.log "Error on feedparser: #{error}")
+            console.log "#{label} job of #{url}"
+            console.log "#{label} Error on feedparser: #{error}")
 
           fp.on('readable', () ->
             try
               while item = @read()
                 if not robot.brain.data[url]?[item.link]?
-                  callback item
                   robot.brain.data[url][item.link] = true
+                  callback item, room
               robot.brain.save
             catch error
-              console.log "error on reading: #{error}"
+              console.log "#{label} error on reading: #{error}"
               return)
 
   robot.enter ->
-    send_to_irc schedule, room, feed_url, (item) ->
-      robot.send { room: room }, "#{item.title}: #{item.link}"
+    send_to_irc schedule, (item, room) ->
+      for r in room
+        robot.send { room: r }, "#{item.title}: #{item.link}"
