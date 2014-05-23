@@ -12,6 +12,7 @@
 # #
 # # URLs
 # #   GET /http_irc?message=<message>&room=<room>
+# #   There is no '#' at tne room name.
 # #
 # # Author:
 # #   Taiyu Fujii
