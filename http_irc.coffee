@@ -11,15 +11,16 @@
 # #   None
 # #
 # # URLs
-# #   GET /hubot/tell_irc?message=<message>&room=<room>
+# #   GET /http_irc?message=<message>&room=<room>
 # #
 # # Author:
 # #   Taiyu Fujii
 
+path        = "/http_irc"
 querystring = require('querystring')
 
 module.exports = (robot) ->
-  robot.router.get "/hubot/tell_irc", (req, res) ->
+  robot.router.get "#{path}", (req, res) ->
     query = querystring.parse(req._parsedUrl.query)
     robot.send { room: "\##{query.room}" }, "#{query.message}"
 
