@@ -37,7 +37,7 @@ feedparser = require 'feedparser'
 request    = require 'request'
 prefix     = '[read_rss]:'
 timezone   = "Asia/Tokyo"
-schedule   = '0 * * * * *' # *(sec) *(min) *(hour) *(day) *(month) *(day of the week)
+schedule   = '0 */5 * * * *' # *(sec) *(min) *(hour) *(day) *(month) *(day of the week)
 configFile = process.env.RSS_CONFIG_FILE or '../rss_list.json'
 
 try

@@ -13,7 +13,7 @@ http://YOUR_SERVER/http_irc?message=hoge&room=test
 
 This version do not support the POST method.
 
-# read_rss
+# read_rss_for_irc
 
 Simple RSS Reader for irc.
 
