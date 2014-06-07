@@ -13,24 +13,40 @@ http://YOUR_SERVER/http_irc?message=hoge&room=test
 
 This version do not support the POST method.
 
-# read_rss_for_irc
+# read_rss
 
-Simple RSS Reader for irc.
+Simple RSS Reader for irc and group chat system.
 
-You need to configure 'RSS_CONFIG_FILE' value, and it should be as json format.
+You need to configure
 
-like this,
+RSS_CONFIG_FILE: path to configuration file(json format).
+RSS_LABEL:       if you create many bots, you define a unique keyword.
+RSS_TARGET_TYPE: "http_post" or "irc"
+
+
+If you use the group chat system and post message by HTTP POST, you set "RSS_TARGET_TYPE" to "http_post", and configuration file like this,
 
 {
-  "rss feed1": {"url": "http://....",
-                "room": ["#hoge", "#fuga"]},
-  "rss feed2": {"url": "http://...",
-                "id": "user",
-                "password": "password",
-                "room": ["#hoge", "#fuga"]}
+  "keyword1": {"feed": {"url": "http://...."},
+               "target": ["URL1"]},
+  "keyword2": {"feed": {"url": "http://...",
+                        "id": "user",
+                        "password": "password"},
+               "target": ["URL1", "URL2"]}
 }
 
-url, room(irc channel) fields are required. if the site require the basic
+If you use the irc adapter of hubot, you set "type" is irc, and configuratio file like this,
+
+{
+  "keyword1": {"feed": {"url": "http://...."},
+               "target": ["#hoge", "#fuga"]},
+  "keyword2": {"feed": {"url": "http://...",
+                        "id": "user",
+                        "password": "password"},
+               "target": ["#hoge", "#foo"]}
+}
+
+url, room(idobata channel's url) fields are required. if the site require the basic
 authentication, you need to set id, password fields.
 
 

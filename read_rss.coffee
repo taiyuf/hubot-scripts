@@ -12,7 +12,7 @@
 # #
 # #   you need to write configuration file as json format.
 # #
-# #   if "RSS_TARGET_TYPE" is http_post, like this,
+# #   If you use the group chat system and post message by HTTP POST, you set "RSS_TARGET_TYPE" to "http_post", and configuration file like this,
 # #
 # #   {
 # #     "keyword1": {"feed": {"url": "http://...."},
@@ -23,7 +23,7 @@
 # #                  "target": ["URL1", "URL2"]}
 # #   }
 # #
-# #   if "type" is irc, like this,
+# #   If you use the irc adapter of hubot, you set "type" is irc, and configuratio file like this,
 # #
 # #   {
 # #     "keyword1": {"feed": {"url": "http://...."},
