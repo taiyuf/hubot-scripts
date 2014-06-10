@@ -85,7 +85,7 @@ module.exports = (robot) ->
 
   handler = (mode, req, res) ->
     query = querystring.parse(url.parse(req.url).query)
-    hook = req.body
+    hook  = req.body
 
     switch mode
       when "system"
@@ -106,13 +106,11 @@ module.exports = (robot) ->
       when "web"
         message = ""
         branch = hook.ref.split("/")[2..].join("/")
-        console.log "branch: #{branch}"
         # if the ref before the commit is 00000, this is a new branch
         if /^0+$/.test(hook.before)
             message = "#{bold(hook.user_name)} pushed a new branch (#{bold(branch)}) to #{bold(hook.repository.name)} (#{underline(hook.repository.homepage)})"
         else
             message = "#{bold(hook.user_name)} pushed #{bold(hook.total_commits_count)} commits to #{bold(branch)} in #{bold(hook.repository.name)} (#{underline(hook.repository.homepage + '/compare/' + hook.before.substr(0,9) + '...' + hook.after.substr(0,9))})"
-        # robot.send user, message
         send_msg type, dst['target'], message
 
   robot.router.post "/gitlab/system", (req, res) ->
