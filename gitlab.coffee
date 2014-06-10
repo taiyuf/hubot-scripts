@@ -3,7 +3,6 @@
 #
 # Dependencies:
 #   "request":     "2.34.0"
-#   "feedparser":  "0.16.6"
 #   "url" :        ""
 #   "querystring": ""
 #
