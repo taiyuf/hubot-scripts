@@ -11,6 +11,10 @@
 #   GITLAB_CONFIG_FILE: the path to configuration file.
 #   GITLAB_TARGET_TYPE: the value, "http_post" or "irc".
 #
+#   GITLAB_CONFIG_FILE like below,
+#
+#   {"type": "irc", "target": ["#hoge"]}
+#
 #   Put http://<HUBOT_URL>:<PORT>/gitlab/system as your system hook
 #   Put http://<HUBOT_URL>:<PORT>/gitlab/web as your web hook (per repository)
 #
