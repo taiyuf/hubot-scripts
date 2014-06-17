@@ -8,11 +8,14 @@
 #
 # Configuration:
 #   GITLAB_CONFIG_FILE: the path to configuration file.
-#   GITLAB_TARGET_TYPE: the value, "http_post" or "irc".
 #
 #   GITLAB_CONFIG_FILE like below,
 #
-#   {"type": "irc", "target": ["#hoge"]}
+#   {
+#        "type": "irc",
+#        "target": ["#hoge"],
+#        "headers": {"hoge": "fuga", ... } # optional
+#    }
 #
 #   Put http://<HUBOT_URL>:<PORT>/gitlab/system as your system hook
 #   Put http://<HUBOT_URL>:<PORT>/gitlab/web as your web hook (per repository)
@@ -33,27 +36,39 @@ url         = require 'url'
 querystring = require 'querystring'
 request     = require 'request'
 
-config = process.env.GITLAB_CONFIG_FILE
-type   = process.env.GITLAB_TARGET_TYPE or "irc"
-debug  = process.env.GITLAB_DEBUG?
-prefix = '[gitlab]'
+configFile = process.env.GITLAB_CONFIG_FILE
+debug      = process.env.GITLAB_DEBUG?
+headerFile = process.env.GITLAB_CUSTOM_HEADERS
+prefix     = '[gitlab]'
 
-try
-  console.log "config: #{config}"
-  data = fs.readFileSync config, 'utf-8'
+read_json = (file) ->
   try
-    dst = JSON.parse(data)
-    console.log "#{prefix} success to load file: #{config}."
+    data = fs.readFileSync file, 'utf-8'
+    try
+      json = JSON.parse(data)
+      console.log "#{prefix} success to load file: #{file}."
+      return json
+    catch
+      console.log "#{prefix} Error on parsing the json file: #{file}"
+      return
   catch
-    console.log "#{prefix} Error on parsing the json file: #{config}"
+    console.log "#{prefix} Error on reading the json file: #{file}"
     return
-catch
-  console.log "#{prefix} Error on reading the json file: #{config}"
+
+dst     = read_json configFile
+# headers = read_json headerFile if headerFile
+headers = dst['headers']
+type    = dst['type']
+
+unless type == "irc" or type == "http_post" or type == "chatwork"
+  console.log "Please set the value of 'type' in GITLAB_CONFIG_FILE."
   return
 
-unless type == "irc" or type == "http_post"
-  console.log "Please set the value of GITLAB_TARGET_TYPE."
-  return
+if type == "chatwork"
+  unless headers
+    console.log "Please set the value of 'headers' in GITLAB_CONFIG_FILE."
+    return
+
 
 module.exports = (robot) ->
 
@@ -77,9 +92,26 @@ module.exports = (robot) ->
         when "irc"
           robot.send { "room": t }, msg
         when "http_post"
+          unless headers
+            request.post
+              url: t
+              form: {"source": msg}
+            , (err, response, body) ->
+              console.log "err: #{err}" if err?
+          else
+            request.post
+              url: t
+              headers: headers
+              form: {"source": msg}
+            , (err, response, body) ->
+              console.log "err: #{err}" if err?
+        when "chatwork"
+          msg = encodeURIComponent "[info]#{msg}[/info]"
+          url = "#{t}?body=#{msg}"
+          console.log "url: #{url}"
           request.post
-            url: t
-            form: {"source": msg}
+            url: url
+            headers: headers
           , (err, response, body) ->
             console.log "err: #{err}" if err?
 

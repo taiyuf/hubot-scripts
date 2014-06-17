@@ -49,29 +49,40 @@ cron       = require('cron').CronJob
 feedparser = require 'feedparser'
 request    = require 'request'
 
-prefix     = '[read_rss]:'
+prefix     = '[read_rss]'
 timezone   = "Asia/Tokyo"
 schedule   = '0 */5 * * * *' # *(sec) *(min) *(hour) *(day) *(month) *(day of the week)
 # schedule   = '0 * * * * *' # *(sec) *(min) *(hour) *(day) *(month) *(day of the week)
 configFile = process.env.RSS_CONFIG_FILE or '../rss_list.json'
 label      = process.env.RSS_LABEL       or 'read_rss'
 type       = process.env.RSS_TARGET_TYPE
+headerFile = process.env.RSS_CUSTOM_HEADERS
 
-try
-  data = fs.readFileSync configFile, 'utf-8'
+read_json = (file) ->
   try
-    rss = JSON.parse(data)
-    console.log "#{prefix} success to load file: #{configFile}."
+    data = fs.readFileSync file, 'utf-8'
+    try
+      json = JSON.parse(data)
+      console.log "#{prefix} success to load file: #{file}."
+      return json
+    catch
+      console.log "#{prefix} Error on parsing the json file: #{file}"
+      return
   catch
-    console.log "#{prefix} Error on parsing the json file: #{configFile}"
+    console.log "#{prefix} Error on reading the json file: #{file}"
     return
-catch
-  console.log "#{prefix} Error on reading the json file: #{configFile}"
-  return
 
-unless type == "irc" or type == "http_post"
+rss     = read_json configFile
+headers = read_json headerFile if headerFile
+
+unless type == "irc" or type == "http_post" or type == "chatwork"
   console.log "Please set the value of RSS_TARGET_TYPE."
   return
+
+if type == "chatwork"
+  unless headers
+    console.log "Please set the value of RSS_CUSTOM_HEADERS."
+    return
 
 module.exports = (robot) ->
 
@@ -124,9 +135,25 @@ module.exports = (robot) ->
         when "irc"
           robot.send { "room": t }, msg
         when "http_post"
+          if headers
+            request.post
+              url: t
+              headers: headers
+              form: {"source": msg}
+            , (err, response, body) ->
+              console.log "err: #{err}" if err?
+          else
+            request.post
+              url: t
+              form: {"source": msg}
+            , (err, response, body) ->
+              console.log "err: #{err}" if err?
+        when "chatwork"
+          msg = encodeURIComponent "[info]#{msg}[/info]"
+          url = "#{t}?body=#{msg}"
           request.post
-            url: t
-            form: {"source": msg}
+            url: url
+            headers: headers
           , (err, response, body) ->
             console.log "err: #{err}" if err?
 
