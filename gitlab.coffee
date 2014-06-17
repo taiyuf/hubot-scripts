@@ -83,8 +83,8 @@ module.exports = (robot) ->
     underline = (text) ->
       text
 
-  trim_commit_url = (url) ->
-    url.replace(/(\/[0-9a-f]{9})[0-9a-f]+$/, '$1')
+  trim_commit_url = (u) ->
+    u.replace(/(\/[0-9a-f]{9})[0-9a-f]+$/, '$1')
 
   send_msg = (type, target, msg) ->
     for t in target
@@ -107,10 +107,9 @@ module.exports = (robot) ->
               console.log "err: #{err}" if err?
         when "chatwork"
           msg = encodeURIComponent "[info]#{msg}[/info]"
-          url = "#{t}?body=#{msg}"
-          console.log "url: #{url}"
+          uri = "#{t}?body=#{msg}"
           request.post
-            url: url
+            url: uri
             headers: headers
           , (err, response, body) ->
             console.log "err: #{err}" if err?
@@ -139,6 +138,7 @@ module.exports = (robot) ->
         message = ""
         branch = hook.ref.split("/")[2..].join("/")
         # if the ref before the commit is 00000, this is a new branch
+        # console.log("hook: %j", hook)
         if /^0+$/.test(hook.before)
             message = "#{bold(hook.user_name)} pushed a new branch (#{bold(branch)}) to #{bold(hook.repository.name)} (#{underline(hook.repository.homepage)})"
         else
