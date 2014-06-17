@@ -64,35 +64,35 @@ if type == "chatwork"
     console.log "Please set the value of 'headers' in NJ_CONFIG_FILE."
     return
 
-send_msg = (type, target, msg) ->
-  for t in target
-    switch type
-      when "irc"
-        robot.send { "room": t }, msg
-      when "http_post"
-        if headers
-          request.post
-            url: t
-            headers: headers
-            form: {"source": msg}
-          , (err, response, body) ->
-            console.log "err: #{err}" if err?
-        else
-          request.post
-            url: t
-            form: {"source": msg}
-          , (err, response, body) ->
-            console.log "err: #{err}" if err?
-      when "chatwork"
-        msg = encodeURIComponent "[info]#{msg}[/info]"
-        uri = "#{t}?body=#{msg}"
-        request.post
-          url: uri
-          headers: headers
-        , (err, response, body) ->
-          console.log "err: #{err}" if err?
-
 module.exports = (robot) ->
+
+  send_msg = (type, target, msg) ->
+    for t in target
+      switch type
+        when "irc"
+          robot.send { "room": t }, msg
+        when "http_post"
+          if headers
+            request.post
+              url: t
+              headers: headers
+              form: {"source": msg}
+            , (err, response, body) ->
+              console.log "err: #{err}" if err?
+          else
+            request.post
+              url: t
+              form: {"source": msg}
+            , (err, response, body) ->
+              console.log "err: #{err}" if err?
+        when "chatwork"
+          msg = encodeURIComponent "[info]#{msg}[/info]"
+          uri = "#{t}?body=#{msg}"
+          request.post
+            url: uri
+            headers: headers
+          , (err, response, body) ->
+            console.log "err: #{err}" if err?
 
   robot.router.post "/hubot/jenkins-notify", (req, res) ->
 
