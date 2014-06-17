@@ -8,11 +8,14 @@
 #
 # Configuration:
 #   GITLAB_CONFIG_FILE: the path to configuration file.
-#   GITLAB_TARGET_TYPE: the value, "http_post" or "irc".
 #
 #   GITLAB_CONFIG_FILE like below,
 #
-#   {"type": "irc", "target": ["#hoge"]}
+#   {
+#        "type": "irc",
+#        "target": ["#hoge"],
+#        "headers": {"hoge": "fuga", ... } # optional
+#    }
 #
 #   Put http://<HUBOT_URL>:<PORT>/gitlab/system as your system hook
 #   Put http://<HUBOT_URL>:<PORT>/gitlab/web as your web hook (per repository)
@@ -34,7 +37,6 @@ querystring = require 'querystring'
 request     = require 'request'
 
 configFile = process.env.GITLAB_CONFIG_FILE
-type       = process.env.GITLAB_TARGET_TYPE
 debug      = process.env.GITLAB_DEBUG?
 headerFile = process.env.GITLAB_CUSTOM_HEADERS
 prefix     = '[gitlab]'
@@ -54,15 +56,17 @@ read_json = (file) ->
     return
 
 dst     = read_json configFile
-headers = read_json headerFile if headerFile
+# headers = read_json headerFile if headerFile
+headers = dst['headers']
+type    = dst['type']
 
 unless type == "irc" or type == "http_post" or type == "chatwork"
-  console.log "Please set the value of GITLAB_TARGET_TYPE."
+  console.log "Please set the value of 'type' in GITLAB_CONFIG_FILE."
   return
 
 if type == "chatwork"
   unless headers
-    console.log "Please set the value of RSS_CUSTOM_HEADERS."
+    console.log "Please set the value of 'headers' in GITLAB_CONFIG_FILE."
     return
 
 

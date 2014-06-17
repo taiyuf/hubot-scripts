@@ -75,7 +75,7 @@ read_json = (file) ->
 rss     = read_json configFile
 headers = read_json headerFile if headerFile
 
-unless type == "irc" or type == "http_post" or "chatwork"
+unless type == "irc" or type == "http_post" or type == "chatwork"
   console.log "Please set the value of RSS_TARGET_TYPE."
   return
 
