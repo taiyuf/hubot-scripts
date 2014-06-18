@@ -6,7 +6,18 @@
 #   "querystring": ""
 #
 # Configuration:
-#   Just put this url <HUBOT_URL>:<PORT>/hubot/jenkins-notify to your Jenkins
+#
+#   JENKINS_NOTIFY_CONFIG_FILE concfigration file path.
+#
+#   configuration file like this,
+#
+#   {
+#      "type": "irc",
+#      "target": ["hoge", "fuga"],
+#      "headers": {"foo": "bar", ... }  # optional
+#   }
+#
+#   Put http://<HUBOT_URL>:<PORT>/hubot/jenkins-notify to your Jenkins
 #   Notification config. See here: https://wiki.jenkins-ci.org/display/JENKINS/Notification+Plugin
 #
 # Commands:
@@ -23,9 +34,9 @@ path        = require 'path'
 url         = require('url')
 querystring = require('querystring')
 request     = require 'request'
-configFile  = process.env.NJ_CONFIG_FILE
-debug       = process.env.NJ_DEBUG?
-prefix      = '[jenkins-notifier]'
+configFile  = process.env.JENKINS_NOTIFY_CONFIG_FILE
+debug       = process.env.JENKINS_NOTIFY_DEBUG?
+prefix      = '[jenkins-notify]'
 
 makeCommitLabel = (u, array) ->
   idx = u.indexOf "http", 0
@@ -34,7 +45,7 @@ makeCommitLabel = (u, array) ->
     tmp = array[1] + " (" + u + "/" + array.join("/") + ")"
     return tmp
   else
-    console.log "Not url type." if debug
+    console.log "makeCommitLabel: Not url." if debug
     return array[1]
 
 read_json = (file) ->
