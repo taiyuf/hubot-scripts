@@ -9,7 +9,7 @@
 # Configuration:
 #   GITLAB_CONFIG_FILE: the path to configuration file.
 #
-#   GITLAB_CONFIG_FILE like below,
+#   configuration file like below,
 #
 #   {
 #        "type": "irc",
@@ -115,6 +115,8 @@ module.exports = (robot) ->
             console.log "err: #{err}" if err?
 
   handler = (mode, req, res) ->
+
+    console.log("hook: %j", req.body) if debug
     query = querystring.parse(url.parse(req.url).query)
     hook  = req.body
 
