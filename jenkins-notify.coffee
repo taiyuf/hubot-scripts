@@ -17,7 +17,7 @@
 #      "headers": {"foo": "bar", ... }  # optional
 #   }
 #
-#   Put this url <HUBOT_URL>:<PORT>/hubot/jenkins-notify to your Jenkins
+#   Put http://<HUBOT_URL>:<PORT>/hubot/jenkins-notify to your Jenkins
 #   Notification config. See here: https://wiki.jenkins-ci.org/display/JENKINS/Notification+Plugin
 #
 # Commands:
