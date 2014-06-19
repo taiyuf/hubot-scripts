@@ -137,15 +137,22 @@ module.exports = (robot) ->
             send_msg type, dst['target'], "We will be missing #{bold(hook.name)} (#{bold(hook.email)}) on Gitlab"
 
       when "web"
-        message = ""
+        message = []
         branch = hook.ref.split("/")[2..].join("/")
         # if the ref before the commit is 00000, this is a new branch
-        # console.log("hook: %j", hook)
         if /^0+$/.test(hook.before)
-            message = "#{bold(hook.user_name)} pushed a new branch (#{bold(branch)}) to #{bold(hook.repository.name)} (#{underline(hook.repository.homepage)})"
+          message.push("#{bold(hook.user_name)} pushed a new branch (#{bold(branch)}) to #{bold(hook.repository.name)} (#{underline(hook.repository.homepage)})")
         else
-            message = "#{bold(hook.user_name)} pushed #{bold(hook.total_commits_count)} commits to #{bold(branch)} in #{bold(hook.repository.name)} (#{underline(hook.repository.homepage + '/compare/' + hook.before.substr(0,9) + '...' + hook.after.substr(0,9))})"
-        send_msg type, dst['target'], message
+          message.push("#{bold(hook.user_name)} pushed #{bold(hook.total_commits_count)} commits to #{bold(branch)} in #{bold(hook.repository.name)} (#{underline(hook.repository.homepage + '/compare/' + hook.before.substr(0,9) + '...' + hook.after.substr(0,9))})")
+          indent = "    "
+          for c in hook.commits
+            str = c.message.replace /\n/g, "\n#{indent}"
+            message.push("  - #{c.id}")
+            message.push("    #{str}")
+            # message.push("    #{c.message}")
+            message.push("    #{c.url}")
+
+        send_msg type, dst['target'], message.join("\n")
 
   robot.router.post "/gitlab/system", (req, res) ->
     handler "system", req, res
