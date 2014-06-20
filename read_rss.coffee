@@ -1,53 +1,54 @@
 # Description
-# #   "Simple RSS Reader."
-# #
-# # Dependencies:
-# #   "request":    "2.34.0"
-# #   "feedparser": "0.16.6"
-# #
-# # Configuration:
-# #   RSS_CONFIG_FILE: path to configuration file
-# #   RSS_LABEL:       if you create many bots, you define a unique keyword.
-# #   RSS_TARGET_TYPE: "http_post" or "irc"
-# #
-# #   you need to write configuration file as json format.
-# #
-# #   If you use the group chat system and post message by HTTP POST, you set "RSS_TARGET_TYPE" to "http_post", and configuration file like this,
-# #
-# #   {
-# #     "keyword1": {"feed": {"url": "http://...."},
-# #                  "target": ["URL1"]},
-# #     "keyword2": {"feed": {"url": "http://...",
-# #                           "id": "user",
-# #                           "password": "password"},
-# #                  "target": ["URL1", "URL2"]}
-# #   }
-# #
-# #   If you use the irc adapter of hubot, you set "type" is irc, and configuratio file like this,
-# #
-# #   {
-# #     "keyword1": {"feed": {"url": "http://...."},
-# #                  "target": ["#hoge", "#fuga"]},
-# #     "keyword2": {"feed": {"url": "http://...",
-# #                           "id": "user",
-# #                           "password": "password"},
-# #                  "target": ["#hoge", "#foo"]}
-# #   }
-# #
-# #   url, room(idobata channel's url) fields are required. if the site require the basic
-# #   authentication, you need to set id, password fields.
-# #
-# # Commands:
-# #   None
-# #
-# # Author:
-# #   Taiyu Fujii
+#   Simple RSS Reader.
+#
+# Dependencies:
+#   "request":    "2.34.0"
+#   "feedparser": "0.16.6"
+#
+# Configuration:
+#   RSS_CONFIG_FILE: path to configuration file
+#   RSS_LABEL:       if you create many bots, you define a unique keyword.
+#   RSS_TARGET_TYPE: "http_post" or "irc"
+#
+#   you need to write configuration file as json format.
+#
+#   If you use the group chat system and post message by HTTP POST, you set "RSS_TARGET_TYPE" to "http_post", and configuration file like this,
+#
+#   {
+#     "keyword1": {"feed": {"url": "http://...."},
+#                  "target": ["URL1"]},
+#     "keyword2": {"feed": {"url": "http://...",
+#                           "id": "user",
+#                           "password": "password"},
+#                  "target": ["URL1", "URL2"]}
+#   }
+#
+#   If you use the irc adapter of hubot, you set "type" is irc, and configuratio file like this,
+#
+#   {
+#     "keyword1": {"feed": {"url": "http://...."},
+#                  "target": ["#hoge", "#fuga"]},
+#     "keyword2": {"feed": {"url": "http://...",
+#                           "id": "user",
+#                           "password": "password"},
+#                  "target": ["#hoge", "#foo"]}
+#   }
+#
+#   url, room(idobata channel's url) fields are required. if the site require the basic
+#   authentication, you need to set id, password fields.
+#
+# Commands:
+#   None
+#
+# Author:
+#   Taiyu Fujii
 
-fs         = require 'fs'
-path       = require 'path'
-cron       = require('cron').CronJob
-feedparser = require 'feedparser'
-request    = require 'request'
+# fs         = require 'fs'
+# path       = require 'path'
+cron        = require('cron').CronJob
+feedparser  = require 'feedparser'
+request     = require 'request'
+SendMessage = require './send_message'
 
 prefix     = '[read_rss]'
 timezone   = "Asia/Tokyo"
@@ -58,33 +59,45 @@ label      = process.env.RSS_LABEL       or 'read_rss'
 type       = process.env.RSS_TARGET_TYPE
 headerFile = process.env.RSS_CUSTOM_HEADERS
 
-read_json = (file) ->
-  try
-    data = fs.readFileSync file, 'utf-8'
-    try
-      json = JSON.parse(data)
-      console.log "#{prefix} success to load file: #{file}."
-      return json
-    catch
-      console.log "#{prefix} Error on parsing the json file: #{file}"
-      return
-  catch
-    console.log "#{prefix} Error on reading the json file: #{file}"
-    return
+# read_json = (file) ->
+#   try
+#     data = fs.readFileSync file, 'utf-8'
+#     try
+#       json = JSON.parse(data)
+#       console.log "#{prefix} success to load file: #{file}."
+#       return json
+#     catch
+#       console.log "#{prefix} Error on parsing the json file: #{file}"
+#       return
+#   catch
+#     console.log "#{prefix} Error on reading the json file: #{file}"
+#     return
 
-rss     = read_json configFile
-headers = read_json headerFile if headerFile
+# rss     = read_json configFile
+# headers = read_json headerFile if headerFile
 
-unless type == "irc" or type == "http_post" or type == "chatwork"
-  console.log "Please set the value of RSS_TARGET_TYPE."
-  return
 
-if type == "chatwork"
-  unless headers
-    console.log "Please set the value of RSS_CUSTOM_HEADERS."
-    return
 
 module.exports = (robot) ->
+
+  @sm     = new SendMessage(robot)
+  rss     = @sm.readJson configFile, prefix
+  headers = @sm.readJson headerFile, prefix if headerFile
+
+  @sm.pushTypeSet "irc"
+  @sm.pushTypeSet "http_post"
+  @sm.pushTypeSet "chatwork"
+  @sm.setType     type
+  @sm.setHeaders  headers
+
+  unless type == "irc" or type == "http_post" or type == "chatwork"
+    console.log "Please set the value of RSS_TARGET_TYPE."
+    return
+
+  if type == "chatwork"
+    unless headers
+      console.log "Please set the value of RSS_CUSTOM_HEADERS."
+      return
 
   read_rss = (url, id, password, keyword, target, callback) ->
 
@@ -129,33 +142,33 @@ module.exports = (robot) ->
         console.log "#{prefix} error on reading: #{error}"
         return)
 
-  send_msg = (type, target, msg) ->
-    for t in target
-      switch type
-        when "irc"
-          robot.send { "room": t }, msg
-        when "http_post"
-          if headers
-            request.post
-              url: t
-              headers: headers
-              form: {"source": msg}
-            , (err, response, body) ->
-              console.log "err: #{err}" if err?
-          else
-            request.post
-              url: t
-              form: {"source": msg}
-            , (err, response, body) ->
-              console.log "err: #{err}" if err?
-        when "chatwork"
-          msg = encodeURIComponent "[info]#{msg}[/info]"
-          url = "#{t}?body=#{msg}"
-          request.post
-            url: url
-            headers: headers
-          , (err, response, body) ->
-            console.log "err: #{err}" if err?
+  # send_msg = (type, target, msg) ->
+  #   for t in target
+  #     switch type
+  #       when "irc"
+  #         robot.send { "room": t }, msg
+  #       when "http_post"
+  #         if headers
+  #           request.post
+  #             url: t
+  #             headers: headers
+  #             form: {"source": msg}
+  #           , (err, response, body) ->
+  #             console.log "err: #{err}" if err?
+  #         else
+  #           request.post
+  #             url: t
+  #             form: {"source": msg}
+  #           , (err, response, body) ->
+  #             console.log "err: #{err}" if err?
+  #       when "chatwork"
+  #         msg = encodeURIComponent "[info]#{msg}[/info]"
+  #         url = "#{t}?body=#{msg}"
+  #         request.post
+  #           url: url
+  #           headers: headers
+  #         , (err, response, body) ->
+  #           console.log "err: #{err}" if err?
 
   new cron
     cronTime: schedule
@@ -167,4 +180,5 @@ module.exports = (robot) ->
 
           msg    = "[#{robot.brain.data[label][item.link]['keyword']}] #{item.title}: #{item.link}"
           target = robot.brain.data[label][item.link]['target']
-          send_msg type, target, msg
+          # send_msg type, target, msg
+          @sm.send target, msg

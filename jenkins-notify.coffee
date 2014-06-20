@@ -29,14 +29,13 @@
 # Authors:
 #   Taiyu Fujii
 
-fs          = require 'fs'
-path        = require 'path'
 url         = require('url')
 querystring = require('querystring')
 request     = require 'request'
 configFile  = process.env.JENKINS_NOTIFY_CONFIG_FILE
 debug       = process.env.JENKINS_NOTIFY_DEBUG?
 prefix      = '[jenkins-notify]'
+SendMessage = require './send_message'
 
 makeCommitLabel = (u, array) ->
   idx = u.indexOf "http", 0
@@ -48,62 +47,28 @@ makeCommitLabel = (u, array) ->
     console.log "makeCommitLabel: Not url." if debug
     return array[1]
 
-read_json = (file) ->
-  try
-    data = fs.readFileSync file, 'utf-8'
-    try
-      json = JSON.parse(data)
-      console.log "#{prefix} success to load file: #{file}."
-      return json
-    catch
-      console.log "#{prefix} Error on parsing the json file: #{file}"
-      return
-  catch
-    console.log "#{prefix} Error on reading the json file: #{file}"
-    return
-
-dst     = read_json configFile
-headers = dst['headers']
-type    = dst['type']
-
-unless type == "irc" or type == "http_post" or type == "chatwork"
-  console.log "Please set the value of 'type' in NJ_CONFIG_FILE."
-  return
-
-if type == "chatwork"
-  unless headers
-    console.log "Please set the value of 'headers' in NJ_CONFIG_FILE."
-    return
-
 module.exports = (robot) ->
 
-  send_msg = (type, target, msg) ->
-    for t in target
-      switch type
-        when "irc"
-          robot.send { "room": t }, msg
-        when "http_post"
-          if headers
-            request.post
-              url: t
-              headers: headers
-              form: {"source": msg}
-            , (err, response, body) ->
-              console.log "err: #{err}" if err?
-          else
-            request.post
-              url: t
-              form: {"source": msg}
-            , (err, response, body) ->
-              console.log "err: #{err}" if err?
-        when "chatwork"
-          msg = encodeURIComponent "[info]#{msg}[/info]"
-          uri = "#{t}?body=#{msg}"
-          request.post
-            url: uri
-            headers: headers
-          , (err, response, body) ->
-            console.log "err: #{err}" if err?
+  @sm     = new SendMessage(robot)
+  conf    = @sm.readJson configFile, prefix
+  headers = conf['headers']
+  type    = conf['type']
+  target  = conf['target']
+
+  @sm.pushTypeSet "irc"
+  @sm.pushTypeSet "http_post"
+  @sm.pushTypeSet "chatwork"
+  @sm.setType     type
+  @sm.setHeaders  headers if headers
+
+  unless type == "irc" or type == "http_post" or type == "chatwork"
+    console.log "Please set the value of 'type' in JENKINS_NOTIFY_CONFIG_FILE."
+    return
+
+  if type == "chatwork"
+    unless headers
+      console.log "Please set the value of 'headers' in JENKINS_NOTIFY_CONFIG_FILE."
+      return
 
   robot.router.post "/hubot/jenkins-notify", (req, res) ->
 
@@ -115,31 +80,32 @@ module.exports = (robot) ->
       data   = req.body
       msg    = []
       commit = makeCommitLabel(data['build']['scm']['url'], ["commit", "#{data['build']['scm']['commit']}"])
-      msg.push("[Jenkins]")
-      msg.push("project: #{data['name']}, ")
-      msg.push("repository: #{encodeURI(data['build']['scm']['url'])}, ")
-      msg.push("branch: #{data['build']['scm']['branch']}")
-      msg.push("commit: #{commit}")
+
+      msg.push("#{@sm.bold('[Jenkins]')}")
+      msg.push("project: #{@sm.bold(data['name'])}, ")
+      msg.push("repository: #{@sm.underline(encodeURI(data['build']['scm']['url']))}, ")
+      msg.push("branch: #{@sm.bold(data['build']['scm']['branch'])}")
+      msg.push("commit: #{@sm.bold(commit)}")
       msg.push("")
 
       switch data['build']['phase']
         when "STARTED"
-          str = "has started."
+          str = "has #{@sm.bold('STARTED')}."
         when "COMPLETED"
           switch data['build']['status']
             when "SUCCESS"
-              str = "has completed and SUCCEEDED."
+              str = "has completed and #{@sm.bold('SUCCEEDED')}."
             when "FAILURE"
-              str = "has completed and FAILED."
+              str = "has completed and #{@sm.bold('FAILED')}."
         when "FINALIZED"
           switch data['build']['status']
             when "SUCCESS"
-              str = "has finalized and SUCCEEDED."
+              str = "has finalized and #{@sm.bold('SUCCEEDED')}."
             when "FAILURE"
-              str = "has finalized and FAILED."
+              str = "has finalized and #{@sm.bold('FAILED')}."
 
       msg.push("build ##{data['build']['number']} #{str}")
-      send_msg type, dst['target'], msg.join("\n")
+      @sm.send target, msg.join("\n")
 
     catch error
       console.log "jenkins-notify error: #{error}. Data: #{req.body}"
