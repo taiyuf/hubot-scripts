@@ -8,7 +8,6 @@
 # Configuration:
 #   RSS_CONFIG_FILE: path to configuration file
 #   RSS_LABEL:       if you create many bots, you define a unique keyword.
-#   RSS_TARGET_TYPE: "http_post" or "irc"
 #
 #   you need to write configuration file as json format.
 #
@@ -43,8 +42,6 @@
 # Author:
 #   Taiyu Fujii
 
-# fs         = require 'fs'
-# path       = require 'path'
 cron        = require('cron').CronJob
 feedparser  = require 'feedparser'
 request     = require 'request'
@@ -56,48 +53,12 @@ schedule   = '0 */5 * * * *' # *(sec) *(min) *(hour) *(day) *(month) *(day of th
 # schedule   = '0 * * * * *' # *(sec) *(min) *(hour) *(day) *(month) *(day of the week)
 configFile = process.env.RSS_CONFIG_FILE or '../rss_list.json'
 label      = process.env.RSS_LABEL       or 'read_rss'
-type       = process.env.RSS_TARGET_TYPE
-headerFile = process.env.RSS_CUSTOM_HEADERS
-
-# read_json = (file) ->
-#   try
-#     data = fs.readFileSync file, 'utf-8'
-#     try
-#       json = JSON.parse(data)
-#       console.log "#{prefix} success to load file: #{file}."
-#       return json
-#     catch
-#       console.log "#{prefix} Error on parsing the json file: #{file}"
-#       return
-#   catch
-#     console.log "#{prefix} Error on reading the json file: #{file}"
-#     return
-
-# rss     = read_json configFile
-# headers = read_json headerFile if headerFile
-
-
 
 module.exports = (robot) ->
 
-  @sm     = new SendMessage(robot)
-  rss     = @sm.readJson configFile, prefix
-  headers = @sm.readJson headerFile, prefix if headerFile
-
-  @sm.pushTypeSet "irc"
-  @sm.pushTypeSet "http_post"
-  @sm.pushTypeSet "chatwork"
-  @sm.setType     type
-  @sm.setHeaders  headers
-
-  unless type == "irc" or type == "http_post" or type == "chatwork"
-    console.log "Please set the value of RSS_TARGET_TYPE."
-    return
-
-  if type == "chatwork"
-    unless headers
-      console.log "Please set the value of RSS_CUSTOM_HEADERS."
-      return
+  @sm = new SendMessage(robot)
+  rss = @sm.readJson configFile, prefix
+  return unless rss
 
   read_rss = (url, id, password, keyword, target, callback) ->
 
@@ -142,34 +103,6 @@ module.exports = (robot) ->
         console.log "#{prefix} error on reading: #{error}"
         return)
 
-  # send_msg = (type, target, msg) ->
-  #   for t in target
-  #     switch type
-  #       when "irc"
-  #         robot.send { "room": t }, msg
-  #       when "http_post"
-  #         if headers
-  #           request.post
-  #             url: t
-  #             headers: headers
-  #             form: {"source": msg}
-  #           , (err, response, body) ->
-  #             console.log "err: #{err}" if err?
-  #         else
-  #           request.post
-  #             url: t
-  #             form: {"source": msg}
-  #           , (err, response, body) ->
-  #             console.log "err: #{err}" if err?
-  #       when "chatwork"
-  #         msg = encodeURIComponent "[info]#{msg}[/info]"
-  #         url = "#{t}?body=#{msg}"
-  #         request.post
-  #           url: url
-  #           headers: headers
-  #         , (err, response, body) ->
-  #           console.log "err: #{err}" if err?
-
   new cron
     cronTime: schedule
     start:    true
@@ -178,7 +111,6 @@ module.exports = (robot) ->
       for key of rss
         read_rss rss[key]['feed']['url'], rss[key]['feed']['id'], rss[key]['feed']['password'], key, rss[key]['target'], (item) ->
 
-          msg    = "[#{robot.brain.data[label][item.link]['keyword']}] #{item.title}: #{item.link}"
+          msg    = "[#{robot.brain.data[label][item.link]['keyword']}] #{@sm.url(item.title, item.link)}"
           target = robot.brain.data[label][item.link]['target']
-          # send_msg type, target, msg
           @sm.send target, msg

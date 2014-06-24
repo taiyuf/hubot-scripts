@@ -2,9 +2,9 @@
 #   Post gitlab related events using gitlab hooks
 #
 # Dependencies:
-#   "request":     "2.34.0"
 #   "url" :        ""
 #   "querystring": ""
+#   "request":     "2.34.0"
 #
 # Configuration:
 #   GITLAB_CONFIG_FILE: the path to configuration file.
@@ -12,9 +12,7 @@
 #   configuration file like below,
 #
 #   {
-#        "type": "irc",
-#        "target": ["#hoge"],
-#        "headers": {"hoge": "fuga", ... } # optional
+#        "target": ["#hoge"]
 #    }
 #
 #   Put http://<HUBOT_URL>:<PORT>/gitlab/system as your system hook
@@ -27,11 +25,14 @@
 #   /gitlab/system
 #   /gitlab/web
 #
+# TODO:
+#   - merge request events
+#   - tag push events
+#   - issues events
+#
 # Author:
 #   Taiyu Fujii
 
-fs          = require 'fs'
-path        = require 'path'
 url         = require 'url'
 querystring = require 'querystring'
 request     = require 'request'
@@ -39,7 +40,6 @@ SendMessage = require './send_message'
 
 configFile  = process.env.GITLAB_CONFIG_FILE
 debug       = process.env.GITLAB_DEBUG?
-headerFile  = process.env.GITLAB_CUSTOM_HEADERS
 prefix      = '[gitlab]'
 
 module.exports = (robot) ->
@@ -48,24 +48,7 @@ module.exports = (robot) ->
   conf = @sm.readJson configFile, prefix
   return unless conf
 
-  headers = conf['headers']
-  type    = conf['type']
   target  = conf['target']
-
-  @sm.pushTypeSet  "irc"
-  @sm.pushTypeSet  "http_post"
-  @sm.pushTypeSet  "chatwork"
-  @sm.setType      type
-  @sm.setHeaders = headers if headers
-
-  unless type == "irc" or type == "http_post" or type == "chatwork"
-    console.log "Please set the value of 'type' in GITLAB_CONFIG_FILE."
-    return
-
-  if type == "chatwork"
-    unless headers
-      console.log "Please set the value of 'headers' in GITLAB_CONFIG_FILE."
-      return
 
   handler = (mode, req, res) ->
 
@@ -100,13 +83,18 @@ module.exports = (robot) ->
             # push event
             branch = hook.ref.split("/")[2..].join("/")
             indent = "    "
-            message.push("#{@sm.bold(hook.user_name)} pushed #{@sm.bold(hook.total_commits_count)} commits to #{@sm.bold(branch)} in #{@sm.bold(hook.repository.name)} (#{@sm.underline(hook.repository.homepage + '/compare/' + hook.before.substr(0,9) + '...' + hook.after.substr(0,9))})")
-            for c in hook.commits
-              str = c.message.replace /\n/g, "\n#{indent}"
-              message.push("  - #{c.id}")
-              message.push("    #{str}")
-              # message.push("    #{c.message}")
-              message.push("    #{c.url}")
+            compareUrl = "#{hook.repository.homepage + '/compare/' + hook.before.substr(0,9) + '...' + hook.after.substr(0,9)}"
+            message.push("#{@sm.bold(hook.user_name)} pushed #{@sm.bold(hook.total_commits_count)} commits to #{@sm.bold(branch)} in #{@sm.bold(hook.repository.name)}")
+            message.push("#{@sm.url('compare', compareUrl)}")
+            # for c in hook.commits
+            #   str = c.message.replace /\n/g, "\n#{indent}"
+            #   message.push("  - #{c.id}")
+            #   message.push("    #{str}")
+            #   # message.push("    #{c.message}")
+            #   message.push("    #{c.url}")
+            for li in @sm.list(hook.commits)
+              message.push(li)
+            # message.push(@sm.list(hook.commits))
           # else
           #   if hook.action
           #     switch hook.action
@@ -114,7 +102,7 @@ module.exports = (robot) ->
           #       # pull request
           #         message.push("#{@sm.bold(hook.user_name)} pushed a new branch (#{@sm.bold(branch)}) to #{@sm.bold(hook.repository.name)} (#{@sm.underline(hook.repository.homepage)})")
 
-        @sm.send target, message.join("\n")
+        @sm.send target, message
 
   robot.router.post "/gitlab/system", (req, res) ->
     handler "system", req, res

@@ -12,9 +12,7 @@
 #   configuration file like this,
 #
 #   {
-#      "type": "irc",
-#      "target": ["hoge", "fuga"],
-#      "headers": {"foo": "bar", ... }  # optional
+#      "target": ["hoge", "fuga"]
 #   }
 #
 #   Put http://<HUBOT_URL>:<PORT>/hubot/jenkins-notify to your Jenkins
@@ -38,7 +36,9 @@ prefix      = '[jenkins-notify]'
 SendMessage = require './send_message'
 
 makeCommitLabel = (u, array) ->
+
   idx = u.indexOf "http", 0
+
   if idx == 0
     u.replace(".git", "") if u.match(/.git$/)
     tmp = array[1] + " (" + u + "/" + array.join("/") + ")"
@@ -51,24 +51,8 @@ module.exports = (robot) ->
 
   @sm     = new SendMessage(robot)
   conf    = @sm.readJson configFile, prefix
-  headers = conf['headers']
-  type    = conf['type']
+  return unless conf
   target  = conf['target']
-
-  @sm.pushTypeSet "irc"
-  @sm.pushTypeSet "http_post"
-  @sm.pushTypeSet "chatwork"
-  @sm.setType     type
-  @sm.setHeaders  headers if headers
-
-  unless type == "irc" or type == "http_post" or type == "chatwork"
-    console.log "Please set the value of 'type' in JENKINS_NOTIFY_CONFIG_FILE."
-    return
-
-  if type == "chatwork"
-    unless headers
-      console.log "Please set the value of 'headers' in JENKINS_NOTIFY_CONFIG_FILE."
-      return
 
   robot.router.post "/hubot/jenkins-notify", (req, res) ->
 
@@ -83,7 +67,7 @@ module.exports = (robot) ->
 
       msg.push("#{@sm.bold('[Jenkins]')}")
       msg.push("project: #{@sm.bold(data['name'])}, ")
-      msg.push("repository: #{@sm.underline(encodeURI(data['build']['scm']['url']))}, ")
+      msg.push("repository: #{@sm.bold(encodeURI(data['build']['scm']['url']))}, ")
       msg.push("branch: #{@sm.bold(data['build']['scm']['branch'])}")
       msg.push("commit: #{@sm.bold(commit)}")
       msg.push("")
@@ -105,9 +89,8 @@ module.exports = (robot) ->
               str = "has finalized and #{@sm.bold('FAILED')}."
 
       msg.push("build ##{data['build']['number']} #{str}")
-      @sm.send target, msg.join("\n")
+      @sm.send target, msg
 
     catch error
       console.log "jenkins-notify error: #{error}. Data: #{req.body}"
       console.log error.stack
-
