@@ -9,8 +9,6 @@
 # Configuration:
 #   GITLAB_CONFIG_FILE: the path to configuration file.
 #   GITLAB_URL
-#   GITLAB_AUTH_USERNAME
-#   GITLAB_AUTH_PASSWORD
 #
 #   configuration file like below,
 #
@@ -43,9 +41,9 @@ SendMessage  = require './send_message'
 
 configFile    = process.env.GITLAB_CONFIG_FILE
 gitlabUrl     = process.env.GITLAB_URL
-privateToken  = process.env.GITLAB_PRIVATE_TOKEN
-auth_username = process.env.GITLAB_AUTH_USERNAME
-auth_password = process.env.GITLAB_AUTH_PASSWORD
+# privateToken  = process.env.GITLAB_PRIVATE_TOKEN
+# auth_username = process.env.GITLAB_AUTH_USERNAME
+# auth_password = process.env.GITLAB_AUTH_PASSWORD
 debug         = process.env.GITLAB_DEBUG?
 prefix        = '[gitlab]'
 
@@ -55,19 +53,18 @@ module.exports = (robot) ->
   conf = @sm.readJson configFile, prefix
   return unless conf
 
-  headers = {"PRIVATE-TOKEN": privateToken}
-
-  if auth_username and auth_password
-    auth = {"user": auth_username, "pass": auth_password}
-
   target  = conf['target']
 
-  makeUrl = (projectId, Id) ->
-    "#{gitlabUrl}/api/v3/projects/#{projectId}"
+  # headers = {"PRIVATE-TOKEN": privateToken}
+
+  # if auth_username and auth_password
+  #   auth = {"user": auth_username, "pass": auth_password}
+
+
+  # makeUrl = (projectId, Id) ->
+  #   "#{gitlabUrl}/api/v3/projects/#{projectId}"
 
   # getProjectInfo = (projectId, callback) ->
-
-  #   # return unless _check_condition
 
   #   pjInfo = {}
   #   info        = {"url": makeUrl(projectId), "headers": headers}
@@ -85,12 +82,7 @@ module.exports = (robot) ->
 
   #     callback pjInfo
 
-  #   # console.log "pj: %j", pjInfo
-  #   # projectInfo
-
   # getMergeRequestInfo = (projectId, requestId, callback) ->
-
-  #   # return unless _check_condition
 
   #   mqInfo    = {}
   #   info      = {"url": "#{makeUrl(projectId)}/merge_request/#{requestId}", "headers": headers}
@@ -108,18 +100,6 @@ module.exports = (robot) ->
   #     mqInfo['author_name']   = body['author']['name']
 
   #     callback mqInfo
-
-
-  # mergeRequestInfo = (projectId, requestId, callback) ->
-
-  #   mq_flag = false
-  #   if privateToken and gitlabUrl
-  #     mq_flag =  true
-
-  #   if mq_flag
-  #     getProjectInfo projectInfo, (pjInfo) ->
-        
-            
 
   handler = (mode, req, res) ->
 
