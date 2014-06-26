@@ -8,7 +8,7 @@
 #
 # Configuration:
 #   GITLAB_CONFIG_FILE: the path to configuration file.
-#   GITLAB_URL
+#   GITLAB_URL        : web site url of gitlab.
 #
 #   configuration file like below,
 #
