@@ -147,11 +147,13 @@ Post gitlab related events using gitlab hooks
 configuration file like below,
 
 * IRC
+
     {
          "target": ["#hoge"]
      }
 
 * Other
+
     {
          "target": ["http://....."]
      }
@@ -173,11 +175,13 @@ Notifies about Jenkins build errors via Jenkins Notification Plugin.
 configuration file like this,
 
 * IRC
+
     {
          "target": ["#hoge"]
      }
 
 * Other
+
     {
          "target": ["http://....."]
      }
