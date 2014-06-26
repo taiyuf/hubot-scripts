@@ -53,7 +53,63 @@ module.exports = (robot) ->
   conf = @sm.readJson configFile, prefix
   return unless conf
 
-  target  = conf['target']
+  robot.brain.data[gitlabUrl] = {} unless robot.brain.data[gitlabUrl]?
+  target = conf['target']
+  brain  = robot.brain.data[gitlabUrl]
+
+  initializeBrain = (hook) ->
+    console.log "brain: %j", brain if debug
+
+    brain['user']       = {} unless brain['user']
+    brain['repository'] = {} unless brain['repository']
+    brain['repository'][hook.project_id] = {} unless brain['repository'][hook.project_id]
+
+  makeObjectKindMessage = (hook) ->
+
+    word1 = ''
+    word2 = ''
+    pName = ''
+    msg   = []
+
+    initializeBrain hook
+
+    switch hook.object_kind
+      when "merge_request"
+        word1 = ' merge request '
+        word2 = 'Merge request'
+        pName = hook.object_attributes.target_project_id
+      when "issue"
+        word1 = ' issue '
+        word2 = 'Issue'
+        pName = hook.object_attributes.project_id
+
+    if brain['repository'][pName]?['namespace']? and brain['repository'][pName]?['url']? and brain['user'][hook.object_attributes.author_id]?
+
+      mqUrl = @sm.url("#{brain['repository'][pName]['namespace']}##{hook.object_attributes.iid}", "#{brain['repository'][pName]['url']}")
+
+      msg.push("#{@sm.bold(brain['user'][hook.object_attributes.author_id] + ' ' + hook.object_attributes.state) + word1 + mqUrl}")
+      msg.push("#{@sm.bold(hook.object_attributes.title)}")
+      msg.push("#{hook.object_attributes.description}")
+
+    else
+      msg.push("#{word2} has #{@sm.bold(hook.object_attributes.state)}. ")
+      msg.push("#{word2} ID: #{@sm.bold(hook.object_attributes.id)}")
+      msg.push("Branch: #{@sm.bold(hook.object_attributes.source_branch)} -> #{@sm.bold(hook.object_attributes.target_branch)}") if hook.object_kind == 'merge_request'
+      msg.push("State: #{hook.object_attributes.state}")
+      msg.push("Title: #{@sm.bold(hook.object_attributes.title)}")
+      msg.push("Description: #{@sm.bold(hook.object_attributes.description)}")
+    msg
+
+  saveInfo = (hook) ->
+
+    initializeBrain hook
+    namespace = hook.repository.homepage.replace(gitlabUrl + "/", "")
+
+    brain['user'][hook.user_id] = hook.user_name unless brain['user'][hook.user_id]?
+    brain['repository'][hook.project_id]['namespace'] = namespace unless brain['repository'][hook.project_id]['namespace']
+    brain['repository'][hook.project_id]['url'] = hook.repository.homepage unless brain['repository'][hook.project_id]['url']
+
+    robot.brain.save
 
   # headers = {"PRIVATE-TOKEN": privateToken}
 
@@ -107,9 +163,6 @@ module.exports = (robot) ->
     query = querystring.parse(url.parse(req.url).query)
     hook  = req.body
 
-    robot.brain.data[gitlabUrl] = {} unless robot.brain.data[gitlabUrl]?
-    brain = robot.brain.data[gitlabUrl]
-
     switch mode
       when "system"
         switch hook.event_name
@@ -145,39 +198,14 @@ module.exports = (robot) ->
             for li in @sm.list(hook.commits)
               message.push(li)
 
-            # save data.
-            namespace = hook.repository.homepage.replace(gitlabUrl + "/", "")
-
-            console.log "brain: %j", brain if debug
-
-            brain['user']       = {} unless brain['user']
-            brain['repository'] = {} unless brain['repository']
-            brain['repository'][hook.project_id] = {} unless brain['repository'][hook.project_id]
-
-            brain['user'][hook.user_id] = hook.user_name unless brain['user'][hook.user_id]?
-            brain['repository'][hook.project_id]['namespace'] = namespace unless brain['repository'][hook.project_id]['namespace']
-            brain['repository'][hook.project_id]['url'] = hook.repository.homepage unless brain['repository'][hook.project_id]['url']
-
-            robot.brain.save
+            saveInfo hook
 
           else
             if hook.object_kind
-              switch hook.object_kind
-                when "merge_request"
-                  # merge request
-                  if brain['repository'][hook.object_attributes.target_project_id]?['namespace']? and brain['repository'][hook.object_attributes.target_project_id]?['url']? and brain['user'][hook.object_attributes.author_id]?
-                    mqUrl = @sm.url("#{brain['repository'][hook.object_attributes.target_project_id]['namespace']}##{hook.object_attributes.iid}", "#{brain['repository'][hook.object_attributes.target_project_id]['url']}")
-                    message.push("#{@sm.bold(brain['user'][hook.object_attributes.author_id] + ' ' + hook.object_attributes.state) + ' merge request ' + mqUrl}")
-                    message.push("#{@sm.bold(hook.object_attributes.title)}")
-                    message.push("#{hook.object_attributes.description}")
-
-                  else
-                    message.push("Merge request has #{@sm.bold(hook.object_attributes.state)}. ")
-                    message.push("Merge request ID: #{@sm.bold(hook.object_attributes.id)}")
-                    message.push("Branch: #{@sm.bold(hook.object_attributes.source_branch)} -> #{@sm.bold(hook.object_attributes.target_branch)}")
-                    message.push("State: #{hook.object_attributes.state}")
-                    message.push("Title: #{@sm.bold(hook.object_attributes.title)}")
-                    message.push("Description: #{@sm.bold(hook.object_attributes.description)}")
+              message = makeObjectKindMessage(hook)
+            else
+              console.log "Unknown message type."
+              console.log "hook: %j", hook
 
         @sm.send target, message
 
