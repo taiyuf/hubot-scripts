@@ -150,13 +150,13 @@ configuration file like below,
 
     {
          "target": ["#hoge"]
-     }
+    }
 
 * Other
 
     {
          "target": ["http://....."]
-     }
+    }
 
 ### Usage
 
@@ -178,13 +178,13 @@ configuration file like this,
 
     {
          "target": ["#hoge"]
-     }
+    }
 
 * Other
 
     {
          "target": ["http://....."]
-     }
+    }
 
 ### Usage
 
