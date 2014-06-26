@@ -9,28 +9,15 @@
 #   RSS_CONFIG_FILE: path to configuration file
 #   RSS_LABEL:       if you create many bots, you define a unique keyword.
 #
-#   you need to write configuration file as json format.
-#
-#   If you use the group chat system and post message by HTTP POST, you set "RSS_TARGET_TYPE" to "http_post", and configuration file like this,
-#
-#   {
-#     "keyword1": {"feed": {"url": "http://...."},
-#                  "target": ["URL1"]},
-#     "keyword2": {"feed": {"url": "http://...",
-#                           "id": "user",
-#                           "password": "password"},
-#                  "target": ["URL1", "URL2"]}
-#   }
-#
 #   If you use the irc adapter of hubot, you set "type" is irc, and configuratio file like this,
 #
 #   {
 #     "keyword1": {"feed": {"url": "http://...."},
-#                  "target": ["#hoge", "#fuga"]},
+#                  "target": ["#hoge", "#fuga"]},                # IRC
 #     "keyword2": {"feed": {"url": "http://...",
 #                           "id": "user",
 #                           "password": "password"},
-#                  "target": ["#hoge", "#foo"]}
+#                  "target": ["END_POINT_URL", "END_POINT_URL"]} # Other
 #   }
 #
 #   url, room(idobata channel's url) fields are required. if the site require the basic
