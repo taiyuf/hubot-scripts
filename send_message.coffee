@@ -235,7 +235,7 @@ class SendMessage
 
   send: (target, msg) ->
 
-    form = {}
+    form     = {}
     messages = ''
 
     if typeof(msg) == 'object'
