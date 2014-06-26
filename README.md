@@ -118,8 +118,8 @@ Simple RSS Reader for irc and group chat system.
 
 ### Configuration
 
-RSS_CONFIG_FILE: path to configuration file(json format).
-RSS_LABEL:       if you create many bots, you define a unique keyword.
+* RSS_CONFIG_FILE: path to configuration file(json format).
+* RSS_LABEL:       if you create many bots, you define a unique keyword.
 
 You need to write configuration file as json format.
 
@@ -141,17 +141,17 @@ Post gitlab related events using gitlab hooks
 
 ### Configuration
 
-GITLAB_CONFIG_FILE: the path to configuration file.
-GITLAB_URL        : web site url of gitlab.
+* GITLAB_CONFIG_FILE: the path to configuration file.
+* GITLAB_URL        : web site url of gitlab.
 
 configuration file like below,
 
-IRC
+* IRC
     {
          "target": ["#hoge"]
      }
 
-Other
+* Other
     {
          "target": ["http://....."]
      }
@@ -159,6 +159,7 @@ Other
 ### Usage
 
 Put http://<HUBOT_URL>:<PORT>/gitlab/system as your system hook
+
 Put http://<HUBOT_URL>:<PORT>/gitlab/web as your web hook (per repository)
 
 ## jenkins-notify
@@ -167,16 +168,16 @@ Notifies about Jenkins build errors via Jenkins Notification Plugin.
 
 ### Configuration
 
-JENKINS_NOTIFY_CONFIG_FILE concfigration file path.
+* JENKINS_NOTIFY_CONFIG_FILE concfigration file path.
 
 configuration file like this,
 
-IRC
+* IRC
     {
          "target": ["#hoge"]
      }
 
-Other
+* Other
     {
          "target": ["http://....."]
      }
