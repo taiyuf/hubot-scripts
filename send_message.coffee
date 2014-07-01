@@ -275,7 +275,7 @@ class SendMessage
         when "chatwork"
           messages = encodeURIComponent "[info]#{messages}[/info]"
           uri      = "#{tg}?#{@msgLabel}=#{messages}"
-          console.log "URI: #{uri}"
+          # console.log "URI: #{uri}"
           request.post
             url: uri
             headers: @headers
