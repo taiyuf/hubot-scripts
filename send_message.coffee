@@ -8,12 +8,26 @@
 # Configuration:
 #   HUBOT_IRC_TYPE: "irc", "http_post", "idobata", "chatwork"
 #   HUBOT_IRC_HEADERS: path to headers file(json).
+#   HUBOT_IRC_MSG_TYPE: if you use "http_post", set the type of message. "string" or "html". default: "string"
+#   HUBOT_IRC_MSG_LABEL: if you use "http_post", set the name of form's label.
 #
 # HUBOT_IRC_HEADERS like this,
 #
 # {
 #     "HEADER": "VALUE",
 #     ...
+# }
+#
+# for idobata
+#
+# {
+#     "X-API-Token": "XXXXXXXXXXXX"
+# }
+#
+# for chatwork
+#
+# {
+#     ""X-ChatWorkToken": "XXXXXXXXXXXXXX"
 # }
 #
 #
@@ -24,8 +38,6 @@
 # @sm  = new SendMessage(robot)
 # conf = @sm.readJson configFile, prefix
 # return unless conf
-#
-# @sm.headers = headers if headers
 #
 # ...
 #
@@ -39,75 +51,80 @@ class SendMessage
   fs       = require 'fs'
   request  = require 'request'
 
-  constructor: (r) ->
+  constructor: (robot) ->
 
-    @type = process.env.HUBOT_IRC_TYPE
-
-    unless @type
-      console.log "Please set the value of 'type' in HUBOT_IRC_TYPE."
-      return
-
-    unless r
-      console.log "Please set the value of \"robot\"."
-      console.log "Usage: @sm = new SendMessage(robot)"
-      return
-
-    @robot       = r
-    @typeArray   = ["irc", "http_post", "chatwork", "idobata"]
-    @typeFlag    = false
-    @headers     = {}
-    @msgLabel    = "body"
+    @robot       = robot
+    @type        = process.env.HUBOT_IRC_TYPE
+    @msgLabel    = process.env.HUBOT_IRC_MSG_LABEL
     @msgType     = process.env.HUBOT_IRC_MSG_TYPE
-    @lineFeed    = ""
+    @fmtLabel    = process.env.HUBOT_IRC_FMT_LABEL
     @headersFile = process.env.HUBOT_IRC_HEADERS
+    @headerFlag  = false
+    @headers     = {}
+    @form        = {}
+    @lineFeed    = ""
+    @typeFlag    = false
+    @typeArray   = ["irc", "http_post", "chatwork", "idobata"]
+    @prefix      = "[send_message]"
 
-    return unless @_check_type
-
-    if @headersFile
-      @headers = @readJson @headersFile, '[send_message]'
-
-    if @type == "chatwork" or @type == "idobata"
-      unless @headers
-        console.log "Please set the value of 'headers' in HUBOT_IRC_HEADERS."
-        return
-
-    if @type == "http_post"
-      unless @msgType
-        console.log "Please set the value of HUBOT_IRC_MSG_TYPE."
-        return
-    else
-      unless @msgType
-        @setMsgType "string"
-
-    if @type == "idobata"
-      @setMsgLabel "source"
-      @setMsgType  "html"
-
-    @setLineFeed()
-
-  _check_type: () ->
-
+    # check
     unless @type
-      console.log "Please set the value of type."
+      console.log "#{@prefix}: Please set the value of type at HUBOT_IRC_TYPE."
+      return
+
+    unless robot
+      console.log "#{@prefix}: Please set the value of \"robot\"."
+      console.log "#{@prefix}: Usage: @sm = new SendMessage(robot)"
       return
 
     for tp in @typeArray
       @typeFlag = true if @type == tp
 
-    if @typeFlag == true
-      return true
+    unless @typeFlag
+      console.log "#{@prefix}: wrong type, #{@type}"
+      return
+
+    if @type == "chatwork" or @type == "idobata"
+      unless @headers
+        console.log "#{@prefix}: Please set the value at HUBOT_IRC_HEADERS."
+        return
+
+    if @type == "http_post"
+      unless @msgType
+        console.log "#{@prefix}: Please set the value at HUBOT_IRC_MSG_TYPE."
+        console.log "#{@prefix}: \"string\" type has selected."
+      unless @msgLabel
+        console.log "#{@prefix}: Please set the value at HUBOT_IRC_MSG_LABEL."
+        return
+
+    # initialize
+    unless @msgType
+      @msgType = "string"
+
+    switch @type
+      when "idobata"
+        @msgLabel       = "source"
+        @msgType        = "html"
+        @fmtLabel       = "format"
+        @form[@fmtLabel] = @msgType
+      when "chatwork"
+        @msgLabel = "body"
+      when "http_post"
+        @form[@fmtLabel] = @msgType
+
+    if @msgType == "html"
+      @lineFeed = "<br />"
     else
-      console.log "SendMessage: wrong type: #{@type}"
-      return false
+      @lineFeed = "\n"
 
   readJson: (file, prefix) ->
 
     unless file
-      console.log "Please set the value of \"file\"."
+      console.log "#{@prefix}: Please set the value of \"file\"."
       return
 
     unless prefix
-      console.log "Error occured in loading the file \"#{file}\"."
+      console.log "#{@prefix}: Error occured in loading the file \"#{file}\"."
       console.log "Please set the value of \"prefix\"."
       return
 
@@ -115,39 +132,14 @@ class SendMessage
       data = fs.readFileSync file, 'utf-8'
       try
         json = JSON.parse(data)
-        console.log "#{prefix} success to load file: #{file}."
+        console.log "#{@prefix} success to load file: #{file}."
         return json
       catch
-        console.log "#{prefix} Error on parsing the json file: #{file}"
+        console.log "#{@prefix} Error on parsing the json file: #{file}"
         return
     catch
-      console.log "#{prefix} Error on reading the json file: #{file}"
+      console.log "#{@prefix} Error on reading the json file: #{file}"
       return
-
-
-  pushTypeSet: (t) ->
-    @typeArray.push t
-
-  setType: (t) ->
-    @type = t
-
-  setHeaders: (h) ->
-    @headers = h
-
-  setMsgLabel: (l) ->
-    @msgLabel = l
-
-  setLineFeed: (lf) ->
-    @lineFeed = lf
-
-  setMsgType: (smt) ->
-    @msgType  = smt
-
-  setLineFeed: ()->
-    if @msgType == "html"
-      @lineFeed = "<br />"
-    else
-      @lineFeed = "\n"
 
   bold: (str) ->
 
@@ -235,9 +227,14 @@ class SendMessage
 
   send: (target, msg) ->
 
-    form     = {}
     messages = ''
 
+    if @headersFile
+      unless @headerFlag
+        @headers    = @readJson @headersFile, @prefix
+        @headerFlag = true
+
+    # message
     if typeof(msg) == 'object'
       messages = msg.join(@lineFeed)
     else
@@ -246,19 +243,9 @@ class SendMessage
       else
         console.log "#{@prefix} unknown message type: " + typeof(msg) + "."
 
-    form["#{@msgLabel}"] = messages
+    @form[@msgLabel] = messages
 
-    if @type == "http_post"
-      unless @msgLabel
-        console.log "Please set \"msgLabel\"."
-        return
-
-    if @type == "idobata"
-      unless @msgLabel
-        console.log "Please set \"msgLabel\"."
-        return
-      form['format'] = 'html'
-
+    # main
     for tg in target
       switch @type
         when "irc"
@@ -267,14 +254,14 @@ class SendMessage
           unless @heades
             request.post
               url: tg
-              form: form
+              form: @form
             , (err, response, body) ->
               console.log "err: #{err}" if err?
           else
             request.post
               url: tg
               headers: @headers
-              form: form
+              form: @form
             , (err, response, body) ->
               console.log "err: #{err}" if err?
         when "idobata"
@@ -282,12 +269,13 @@ class SendMessage
           request.post
             url: tg
             headers: @headers
-            form: form
+            form: @form
           , (err, response, body) ->
             console.log "err: #{err}" if err?
         when "chatwork"
           messages = encodeURIComponent "[info]#{messages}[/info]"
-          uri      = "#{tg}?body=#{messages}"
+          uri      = "#{tg}?#{@msgLabel}=#{messages}"
+          console.log "URI: #{uri}"
           request.post
             url: uri
             headers: @headers

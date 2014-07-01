@@ -44,6 +44,9 @@ Here is sample configuration. See https://github.com/nandub/hubot-irc.
     export HUBOT_IRC_ROOMS="#dummy" # dummy text
     export HUBOT_IRC_SERVER="hoge"  # dummy text
     export HUBOT_IRC_HEADERS=${HUBOT_HOME}/headers.json # custom headers as json
+    export HUBOT_IRC_MSG_TYPE="string"
+    export HUBOT_IRC_MSG_LABEL="message"
+    export HUBOT_IRC_FMT_LABEL="format"
     
     ${HUBOT_HOME}/bin/hubot -a irc
 
@@ -106,11 +109,25 @@ HUBOT_IRC_HEADERS:
 
 Simple path to have Hubot echo out anything in the message querystring for a given room.
 
-If you want to tell '#test' room,
+if you want to tell the room '#test' on IRC server, room is '%23test'.
 
-http://YOUR_SERVER/http_irc?message=hoge&room=test
+### GET
 
-This version do not support the POST method.
+GET http://YOUR_SERVER/http_irc?message=hoge&room=%23test
+
+ex)
+
+    curl http://YOUR_SERVER/http_irc?message=hoge&room=%23test
+
+
+### POST
+
+POST /http_irc?room=<room> or POST /http_irc
+
+    curl -X POST --data-urlencode message="hoge hoge." http://YOUR_SERVER/http_irc?room\=test
+    
+    curl -X POST --data-urlencode message="hoge hoge." -d  room=#foo http://YOUR_SERVER/http_irc
+
 
 ## read_rss
 
@@ -189,3 +206,30 @@ Other
 ### Usage
 
 Put http://<HUBOT_URL>:<PORT>/hubot/jenkins-notify to your Jenkins
+
+
+## jenkins-job-selector-by-git-branch
+
+Do the job selected by the branch of git on jenkins
+
+### Configuration
+
+* JENKINS_JOBSELECTOR_CONFIG_FILE concfigration file path.
+
+configuration file like this,
+
+    {
+       "GIT_URL": {
+                      "target": ["hoge", "fuga"],
+                      "auth": {"id": "hoge",
+                               "password": "fuga"},
+                      "jobs":{"branchA": "JENKIS_JOB_URL_A",
+                              "branchB": "JENKIS_JOB_URL_A"}
+                     }
+    }
+
+### Usage
+
+Put http://<HUBOT_URL>:<PORT>/hubot/jenkins-jobselector to web hook at your git repository.
+
+
