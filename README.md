@@ -206,3 +206,30 @@ Other
 ### Usage
 
 Put http://<HUBOT_URL>:<PORT>/hubot/jenkins-notify to your Jenkins
+
+
+## jenkins-job-selector-by-git-branch
+
+Do the job selected by the branch of git on jenkins
+
+### Configuration
+
+* JENKINS_JOBSELECTOR_CONFIG_FILE concfigration file path.
+
+configuration file like this,
+
+    {
+       "GIT_URL": {
+                      "target": ["hoge", "fuga"],
+                      "auth": {"id": "hoge",
+                               "password": "fuga"},
+                      "jobs":{"branchA": "JENKIS_JOB_URL_A",
+                              "branchB": "JENKIS_JOB_URL_A"}
+                     }
+    }
+
+### Usage
+
+Put http://<HUBOT_URL>:<PORT>/hubot/jenkins-jobselector to web hook at your git repository.
+
+
