@@ -265,7 +265,7 @@ class SendMessage
             , (err, response, body) ->
               console.log "err: #{err}" if err?
         when "idobata"
-          console.log("form: %j", form)
+          # console.log("form: %j", @form)
           request.post
             url: tg
             headers: @headers
