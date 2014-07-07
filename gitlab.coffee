@@ -181,31 +181,37 @@ module.exports = (robot) ->
 
       when "web"
         message = []
-        # if the ref before the commit is 00000, this is a new branch
-        if /^0+$/.test(hook.before)
-          branch = hook.ref.split("/")[2..].join("/")
-          message.push("#{@sm.bold(hook.user_name)} pushed a new branch (#{@sm.bold(branch)}) to #{@sm.bold(hook.repository.name)} (#{@sm.underline(hook.repository.homepage)})")
-        else
-          if hook.ref
-            # push event
-            branch     = hook.ref.split("/")[2..].join("/")
-            indent     = "    "
-            compareUrl = "#{hook.repository.homepage}/compare/#{hook.before.substr(0,9)}...#{hook.after.substr(0,9)}"
-
-            message.push("#{@sm.bold(hook.user_name)} pushed #{@sm.bold(hook.total_commits_count)} commits to #{@sm.bold(branch)} in #{@sm.bold(hook.repository.name)}")
-            message.push("#{@sm.url('compare', compareUrl)}")
-
-            for li in @sm.list(hook.commits)
-              message.push(li)
-
-            saveInfo hook
-
+        if hook.ref
+          value = hook.ref.split("/")[2..].join("/")
+          label = hook.ref.split("/")[1]
+          if /^0+$/.test(hook.before)
+            # this is a new branch or tag.
+            message.push("#{@sm.bold(hook.user_name)} pushed a new #{label} (#{@sm.bold(value)}) to #{@sm.bold(hook.repository.name)}")
+            message.push("#{@sm.underline(hook.repository.homepage + '/commit/' + hook.after)}")
           else
-            if hook.object_kind
-              message = makeObjectKindMessage(hook)
+            if /^0+$/.test(hook.after)
+              # branch or tag is deleted.
+              message.push("#{@sm.bold(hook.user_name)} deleted #{label} (#{@sm.bold(value)}) to #{@sm.bold(hook.repository.name)}")
+              message.push("#{@sm.underline(hook.repository.homepage + '/commit/' + hook.before)}")
             else
-              console.log "Unknown message type."
-              console.log "hook: %j", hook
+              # normal push event.
+              branch     = hook.ref.split("/")[2..].join("/")
+              indent     = "    "
+              compareUrl = "#{hook.repository.homepage}/compare/#{hook.before.substr(0,9)}...#{hook.after.substr(0,9)}"
+
+              message.push("#{@sm.bold(hook.user_name)} pushed #{@sm.bold(hook.total_commits_count)} commits to #{@sm.bold(branch)} in #{@sm.bold(hook.repository.name)}")
+              message.push("#{@sm.url('compare', compareUrl)}")
+
+              for li in @sm.list(hook.commits)
+                message.push(li)
+
+              saveInfo hook
+        else
+          if hook.object_kind
+            message = makeObjectKindMessage(hook)
+          else
+            console.log "Unknown message type."
+            console.log "hook: %j", hook
 
         @sm.send target, message
 
