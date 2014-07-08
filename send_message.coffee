@@ -225,6 +225,12 @@ class SendMessage
 
     return commitsArray
 
+  htmlFilter: (msg) ->
+    if @msgType == 'html'
+      msg
+    else
+      msg.replace(/<br>/g, @lineFeed).replace(/<br \/>/g, @lineFeed).replace(/<("[^"]*"|'[^']*'|[^'">])*>/g, '').replace(/^$/g, '').replace(/^#{@lineFeed}$/g, '')
+
   send: (target, msg) ->
 
     messages = ''
