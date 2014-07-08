@@ -98,7 +98,6 @@ module.exports = (robot) ->
       for key of rss
         read_rss rss[key]['feed']['url'], rss[key]['feed']['id'], rss[key]['feed']['password'], key, rss[key]['target'], (item) ->
           msg = []
-          console.log "item: %j", item
           msg.push("[#{robot.brain.data[label][item.link]['keyword']}] #{@sm.url(item.title, item.link)}")
           msg.push("author: #{item.author}, date: #{item.date}")
           if item.description
