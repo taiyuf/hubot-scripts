@@ -97,7 +97,11 @@ module.exports = (robot) ->
     onTick: ->
       for key of rss
         read_rss rss[key]['feed']['url'], rss[key]['feed']['id'], rss[key]['feed']['password'], key, rss[key]['target'], (item) ->
-
-          msg    = "[#{robot.brain.data[label][item.link]['keyword']}] #{@sm.url(item.title, item.link)}"
+          msg = []
+          msg.push("[#{robot.brain.data[label][item.link]['keyword']}] #{@sm.url(item.title, item.link)}")
+          msg.push("author: #{item.author}, date: #{item.date}")
+          if item.description
+            msg.push('')
+            msg.push("#{@sm.htmlFilter(item.description)}") if item.description
           target = robot.brain.data[label][item.link]['target']
           @sm.send target, msg
