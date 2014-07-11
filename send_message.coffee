@@ -66,6 +66,7 @@ class SendMessage
     @typeFlag    = false
     @typeArray   = ["irc", "http_post", "chatwork", "idobata"]
     @prefix      = "[send_message]"
+    @maxLength   = 128
 
     # check
     unless @type
@@ -226,10 +227,19 @@ class SendMessage
     return commitsArray
 
   htmlFilter: (msg) ->
+    # return '' if @type == 'irc'
     if @msgType == 'html'
       msg
     else
-      msg.replace(/<br>/g, @lineFeed).replace(/<br \/>/g, @lineFeed).replace(/<("[^"]*"|'[^']*'|[^'">])*>/g, '').replace(/^$/g, '').replace(/^#{@lineFeed}$/g, '')
+      if @type == 'irc'
+        # msg.replace(/<br>/g, @lineFeed).replace(/<br \/>/g, @lineFeed).replace(/<("[^"]*"|'[^']*'|[^'">])*>/g, '').replace(/^$/g, '').replace(/^#{@lineFeed}$/g, '')[0..64] + '....'
+        ''
+      else
+        msg.replace(/<br>/g, @lineFeed).replace(/<br \/>/g, @lineFeed).replace(/<("[^"]*"|'[^']*'|[^'">])*>/g, '').replace(/^$/g, '').replace(/^#{@lineFeed}$/g, '')
+
+  sleep: (ms) ->
+    start = new Date().getTime()
+    continue while new Date().getTime() - start < ms
 
   send: (target, msg) ->
 
@@ -256,6 +266,7 @@ class SendMessage
       switch @type
         when "irc"
           @robot.send { "room": tg }, messages
+          @sleep 100
         when "http_post"
           unless @heades
             request.post
