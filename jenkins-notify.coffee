@@ -12,8 +12,11 @@
 #   configuration file like this,
 #
 #   {
-#      "target": ["hoge", "fuga"]
+#      "GIT_REPOSITORY":{"target": ["TARGET1", "TARGET2"]}
 #   }
+#
+#   GIT_REPOSITORY: ex. ssh://GITLABUSER@GITLAB_URL/USER/PROJECT.git
+#   TARGET: channel name for IRC, or end point url for other group chat services.
 #
 #   Put http://<HUBOT_URL>:<PORT>/hubot/jenkins-notify to your Jenkins
 #   Notification config. See here: https://wiki.jenkins-ci.org/display/JENKINS/Notification+Plugin
@@ -41,10 +44,9 @@ makeCommitLabel = (u, array) ->
 
   if idx == 0
     u.replace(".git", "") if u.match(/.git$/)
-    tmp = array[1] + " (" + u + "/" + array.join("/") + ")"
-    return tmp
+    return array[1] + " (" + u + "/" + array.join("/") + ")"
   else
-    console.log "makeCommitLabel: Not url." if debug
+    console.log "#{prefix}: makeCommitLabel: Not url." if debug
     return array[1]
 
 module.exports = (robot) ->
@@ -52,7 +54,6 @@ module.exports = (robot) ->
   @sm     = new SendMessage(robot)
   conf    = @sm.readJson configFile, prefix
   return unless conf
-  target  = conf['target']
 
   robot.router.post "/hubot/jenkins-notify", (req, res) ->
 
@@ -61,9 +62,16 @@ module.exports = (robot) ->
     res.end('')
 
     try
-      data   = req.body
-      msg    = []
-      commit = makeCommitLabel(data['build']['scm']['url'], ["commit", "#{data['build']['scm']['commit']}"])
+      data    = req.body
+      msg     = []
+      git_url = ''
+      commit  = makeCommitLabel(data['build']['scm']['url'], ["commit", "#{data['build']['scm']['commit']}"])
+
+      try
+        target = conf["#{data['build']['scm']['url']}"]['target']
+      catch
+        console.log "#{prefix}: No target. Please check configuration file."
+        return
 
       msg.push("#{@sm.bold('[Jenkins]')}")
       msg.push("project: #{@sm.bold(data['name'])}, ")

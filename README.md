@@ -194,14 +194,23 @@ configuration file like this,
 IRC
 
     {
-         "target": ["#hoge"]
+         "GIT_REPOSITORY": {"target": ["#hoge"],
+                            ...,
+                           }
     }
 
 Other
 
     {
-         "target": ["http://....."]
+         "GIT_REPOSITORY": {"target": ["http://....."],
+                            ...,
+                           }
     }
+
+* GIT_REPOSITORY: ex. ssh://GITLABUSER@GITLAB_URL/USER/PROJECT.git
+
+* TARGET: channel name for IRC, or end point url for other group chat services.
+
 
 ### Usage
 
