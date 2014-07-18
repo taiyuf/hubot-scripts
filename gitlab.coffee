@@ -101,7 +101,7 @@ module.exports = (robot) ->
   saveInfo = (hook, url) ->
 
     initializeBrain hook, url
-    namespace = hook.repository.homepage.replace(gitlabUrl + "/", "")
+    namespace = hook.repository.homepage.replace(url + "/", "")
 
     brain[url]['user'][hook.user_id] = hook.user_name unless brain[url]['user'][hook.user_id]?
     brain[url]['repository'][hook.project_id]['namespace'] = namespace unless brain[url]['repository'][hook.project_id]['namespace']
@@ -175,9 +175,9 @@ module.exports = (robot) ->
       console.log "#{prefix}: Unknown git repository."
       return
 
-    if conf[git_url]['target']
+    try
       target = conf[git_url]['target']
-    else
+    catch
       try
         target = conf['DEFAULT']['target']
       catch
