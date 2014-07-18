@@ -159,21 +159,29 @@ Post gitlab related events using gitlab hooks
 ### Configuration
 
 * GITLAB_CONFIG_FILE: the path to configuration file.
-* GITLAB_URL        : web site url of gitlab.
 
 configuration file like below,
 
 IRC
 
     {
-         "target": ["#hoge"]
+        "DEFAULT": {"target": ["#hoge"]},
+        "http://YOUR_GIT_WEB_SITE/USER/HOGE": {"target": ["#hoge", "#fuga"]},
+        "http://YOUR_GIT_WEB_SITE/USER/FUGA": {"target": ["#fuga"]},
+        ...,
     }
 
 Other
 
     {
-         "target": ["http://....."]
+        "DEFAULT": {"target": ["#hoge"]},
+        "http://YOUR_GIT_WEB_SITE/USER/HOGE": {"target": ["http://....", "http://...."]},
+        "http://YOUR_GIT_WEB_SITE/USER/FUGA": {"target": ["http://...."]},
+        ...,
     }
+
+DEFAULT: "DEFAULT" is string. hubot tell the message to this room which is not specified.
+
 
 ### Usage
 
