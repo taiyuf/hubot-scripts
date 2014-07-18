@@ -43,8 +43,8 @@ SendMessage = require './send_message'
 
 module.exports = (robot) ->
 
-  @sm  = new SendMessage(robot)
-  conf = @sm.readJson configFile, prefix
+  @sm      = new SendMessage(robot)
+  conf     = @sm.readJson configFile, prefix
   git_type = ''
   git_url  = ''
 

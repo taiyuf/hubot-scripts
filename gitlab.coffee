@@ -8,12 +8,14 @@
 #
 # Configuration:
 #   GITLAB_CONFIG_FILE: the path to configuration file.
-#   GITLAB_URL        : web site url of gitlab.
 #
 #   configuration file like below,
 #
 #   {
-#        "target": ["#hoge"]
+#        "DEFAULT": {"target": ["#hoge"]},
+#        "GIT_URL1": {"target": ["#hoge, #fuga"]},
+#        "GIT_URL2": {"target": [#fuga"]},
+#        ...,
 #    }
 #
 #   Put http://<HUBOT_URL>:<PORT>/gitlab/system as your system hook
@@ -40,7 +42,6 @@ request      = require 'request'
 SendMessage  = require './send_message'
 
 configFile    = process.env.GITLAB_CONFIG_FILE
-gitlabUrl     = process.env.GITLAB_URL
 # privateToken  = process.env.GITLAB_PRIVATE_TOKEN
 # auth_username = process.env.GITLAB_AUTH_USERNAME
 # auth_password = process.env.GITLAB_AUTH_PASSWORD
@@ -53,25 +54,22 @@ module.exports = (robot) ->
   conf = @sm.readJson configFile, prefix
   return unless conf
 
-  robot.brain.data[gitlabUrl] = {} unless robot.brain.data[gitlabUrl]?
-  target = conf['target']
-  brain  = robot.brain.data[gitlabUrl]
+  brain = robot.brain.data
 
-  initializeBrain = (hook) ->
-    console.log "brain: %j", brain if debug
+  initializeBrain = (hook, url) ->
+    brain[url]                                = {} unless brain[url]?
+    brain[url]['user']                        = {} unless brain[url]['user']
+    brain[url]['repository']                  = {} unless brain[url]['repository']
+    brain[url]['repository'][hook.project_id] = {} unless brain[url]['repository'][hook.project_id]
 
-    brain['user']       = {} unless brain['user']
-    brain['repository'] = {} unless brain['repository']
-    brain['repository'][hook.project_id] = {} unless brain['repository'][hook.project_id]
-
-  makeObjectKindMessage = (hook) ->
+  makeObjectKindMessage = (hook, url) ->
 
     word1 = ''
     word2 = ''
     pName = ''
     msg   = []
 
-    initializeBrain hook
+    initializeBrain hook, url
 
     switch hook.object_kind
       when "merge_request"
@@ -83,11 +81,11 @@ module.exports = (robot) ->
         word2 = 'Issue'
         pName = hook.object_attributes.project_id
 
-    if brain['repository'][pName]?['namespace']? and brain['repository'][pName]?['url']? and brain['user'][hook.object_attributes.author_id]?
+    if brain[url]['repository'][pName]?['namespace']? and brain[url]['repository'][pName]?['url']? and brain[url]['user'][hook.object_attributes.author_id]?
 
-      mqUrl = @sm.url("#{brain['repository'][pName]['namespace']}##{hook.object_attributes.iid}", "#{brain['repository'][pName]['url']}")
+      mqUrl = @sm.url("#{brain[url]['repository'][pName]['namespace']}##{hook.object_attributes.iid}", "#{brain[url]['repository'][pName]['url']}")
 
-      msg.push("#{@sm.bold(brain['user'][hook.object_attributes.author_id] + ' ' + hook.object_attributes.state) + word1 + mqUrl}")
+      msg.push("#{@sm.bold(brain[url]['user'][hook.object_attributes.author_id] + ' ' + hook.object_attributes.state) + word1 + mqUrl}")
       msg.push("#{@sm.bold(hook.object_attributes.title)}")
       msg.push("#{hook.object_attributes.description}")
 
@@ -100,14 +98,14 @@ module.exports = (robot) ->
       msg.push("Description: #{@sm.bold(hook.object_attributes.description)}")
     msg
 
-  saveInfo = (hook) ->
+  saveInfo = (hook, url) ->
 
-    initializeBrain hook
+    initializeBrain hook, url
     namespace = hook.repository.homepage.replace(gitlabUrl + "/", "")
 
-    brain['user'][hook.user_id] = hook.user_name unless brain['user'][hook.user_id]?
-    brain['repository'][hook.project_id]['namespace'] = namespace unless brain['repository'][hook.project_id]['namespace']
-    brain['repository'][hook.project_id]['url'] = hook.repository.homepage unless brain['repository'][hook.project_id]['url']
+    brain[url]['user'][hook.user_id] = hook.user_name unless brain[url]['user'][hook.user_id]?
+    brain[url]['repository'][hook.project_id]['namespace'] = namespace unless brain[url]['repository'][hook.project_id]['namespace']
+    brain[url]['repository'][hook.project_id]['url'] = hook.repository.homepage unless brain[url]['repository'][hook.project_id]['url']
 
     robot.brain.save
 
@@ -160,8 +158,31 @@ module.exports = (robot) ->
   handler = (mode, req, res) ->
 
     console.log("hook: %j", req.body) if debug
-    query = querystring.parse(url.parse(req.url).query)
-    hook  = req.body
+    query   = querystring.parse(url.parse(req.url).query)
+    hook    = req.body
+    git_url = ''
+    target  = ''
+
+    # URL
+    if hook.repository.homepage
+      # gitlab
+      git_url = hook.repository.homepage
+    else
+      # github
+      git_url = hook.repository.url
+
+    unless git_url
+      console.log "#{prefix}: Unknown git repository."
+      return
+
+    if conf[git_url]['target']
+      target = conf[git_url]['target']
+    else
+      try
+        target = conf['DEFAULT']['target']
+      catch
+        console.log "#{prefix}: Please set DEFAULT value."
+        return
 
     switch mode
       when "system"
@@ -205,13 +226,14 @@ module.exports = (robot) ->
               for li in @sm.list(hook.commits)
                 message.push(li)
 
-              saveInfo hook
+              saveInfo hook, git_url
         else
           if hook.object_kind
-            message = makeObjectKindMessage(hook)
+            message = makeObjectKindMessage(hook, git_url)
           else
             console.log "Unknown message type."
             console.log "hook: %j", hook
+            console.log "git_url: #{git_url}"
 
         @sm.send target, message
 
