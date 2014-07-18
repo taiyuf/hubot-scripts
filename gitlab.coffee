@@ -13,10 +13,13 @@
 #
 #   {
 #        "DEFAULT": {"target": ["#hoge"]},
-#        "GIT_URL1": {"target": ["#hoge, #fuga"]},
-#        "GIT_URL2": {"target": [#fuga"]},
+#        "http://YOUR_GIT_WEB_SITE/USER/HOGE": {"target": ["#hoge", "#fuga"]},
+#        "http://YOUR_GIT_WEB_SITE/USER/FUGA": {"target": ["#fuga"]},
 #        ...,
 #    }
+#
+#    DEFAULT: "DEFAULT" is string. hubot tell the message to this room which is not specified.
+
 #
 #   Put http://<HUBOT_URL>:<PORT>/gitlab/system as your system hook
 #   Put http://<HUBOT_URL>:<PORT>/gitlab/web as your web hook (per repository)
