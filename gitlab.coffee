@@ -11,10 +11,21 @@
 #
 #   configuration file like below,
 #
+# IRC
+#
 #   {
 #        "DEFAULT": {"target": ["#hoge"]},
 #        "http://YOUR_GIT_WEB_SITE/USER/HOGE": {"target": ["#hoge", "#fuga"]},
 #        "http://YOUR_GIT_WEB_SITE/USER/FUGA": {"target": ["#fuga"]},
+#        ...,
+#    }
+#
+# Other
+#
+#    {
+#        "DEFAULT": {"target": ["http://...."]},
+#        "http://YOUR_GIT_WEB_SITE/USER/HOGE": {"target": ["http://....", "http://...."]},
+#        "http://YOUR_GIT_WEB_SITE/USER/FUGA": {"target": ["http://...."]},
 #        ...,
 #    }
 #

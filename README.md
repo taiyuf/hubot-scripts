@@ -174,7 +174,7 @@ IRC
 Other
 
     {
-        "DEFAULT": {"target": ["#hoge"]},
+        "DEFAULT": {"target": ["http://...."]},
         "http://YOUR_GIT_WEB_SITE/USER/HOGE": {"target": ["http://....", "http://...."]},
         "http://YOUR_GIT_WEB_SITE/USER/FUGA": {"target": ["http://...."]},
         ...,
