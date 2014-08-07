@@ -272,6 +272,12 @@ configuration file like this,
 }
 ```
 
+if you have an api key, JENKINS_JOB_URL is like this.
+
+```
+http://USER:USER_API_KEY@JENKINS_SERVER_URL/.../job/PROJECT_NAME/build?token=USER_API_KEY
+```
+
 ### Usage
 
 Put http://<HUBOT_URL>:<PORT>/hubot/jenkins-jobselector to web hook at your git repository.

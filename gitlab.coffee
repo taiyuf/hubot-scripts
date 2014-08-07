@@ -118,7 +118,7 @@ module.exports = (robot) ->
   saveInfo = (hook) ->
 
     initializeBrain hook
-    namespace = hook.repository.homepage.replace(url + "/", "")
+    namespace = hook.repository.homepage.replace(gitlabUrl + "/", "")
 
     brain[gitlabUrl]['user'][hook.user_id] = hook.user_name unless brain[gitlabUrl]['user'][hook.user_id]?
     brain[gitlabUrl]['repository'][hook.project_id]['namespace'] = namespace unless brain[gitlabUrl]['repository'][hook.project_id]['namespace']
@@ -187,8 +187,7 @@ module.exports = (robot) ->
     catch
       try
         p_id = hook.object_attributes.target_project_id
-        console.log "R: " + req.headers.referer
-
+        # console.log "R: " + req.headers.referer
         # url -> http://GITLAB/なので、無理
       catch
         console.log "#{prefix}: Unknown git repository."

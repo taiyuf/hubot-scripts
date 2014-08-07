@@ -21,7 +21,11 @@
 #                    }
 #   }
 #
+#   if you have an api key, JENKINS_JOB_URL is like this.
+#   http://USER:USER_API_KEY@JENKINS_SERVER_URL/.../job/PROJECT_NAME/build?token=USER_API_KEY
+#
 #   Put http://<HUBOT_URL>:<PORT>/hubot/jenkins-jobselector to web hook at your git repository.
+#
 #
 # Commands:
 #   None
@@ -47,6 +51,7 @@ module.exports = (robot) ->
   conf     = @sm.readJson configFile, prefix
   git_type = ''
   git_url  = ''
+  auth     = ''
 
   robot.router.post "/hubot/#{path}", (req, res) ->
 
@@ -81,15 +86,18 @@ module.exports = (robot) ->
     # Branch
     branch = hook.ref.replace "refs/heads/", ""
 
-    if conf[git_url]['auth']
-      auth = {"user": conf[git_url]['auth']['id'], "pass": conf[git_url]['auth']['password']}
+    try
+      if conf[git_url]['auth']?
+        auth = {"user": conf[git_url]['auth']['id'], "pass": conf[git_url]['auth']['password']}
+    catch
+      console.log "no auth infomation." if debug
 
     if auth?
-      request.post
+      request.get
         url: conf[git_url]['jobs'][branch]
         auth: auth
     else
-      request.post
+      request.get
         url: conf[git_url]['jobs'][branch]
 
     console.log "target_URL: #{conf[git_url]['jobs'][branch]}" if debug
