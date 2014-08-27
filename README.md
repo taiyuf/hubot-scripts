@@ -216,7 +216,8 @@ Notifies about Jenkins build errors via Jenkins Notification Plugin.
 
 ### Configuration
 
-* JENKINS_NOTIFY_CONFIG_FILE concfigration file path.
+* JENKINS_NOTIFY_CONFIG_FILE: concfigration file path.
+* JENKINS_NOTIFY_BACK_TO_NORMAL: if this value set true, send message when the job status change (FAILURE -> SUCCESS or SUCCESS -> FAILURE).
 
 configuration file like this,
 
@@ -239,6 +240,20 @@ Other
                        }
 }
 ```
+
+hubot send the message like this.
+
+```
+[Jenkins]
+build #60 has completed in SUCCESS. (details)
+elapsed time: 00:00:53
+
+project: Your Project
+repository: ssh://gitlab@gitlab.YOURSITE/SOMEONE/PROJECT_NAME
+branch: origin/BRANCH
+commit: 6ff2e02f57d3d43fd49443b2b5f7e26bada64c0d
+```
+
 
 * GIT_REPOSITORY: ex. ssh://GITLABUSER@GITLAB_URL/USER/PROJECT.git
 

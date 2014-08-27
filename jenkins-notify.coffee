@@ -7,7 +7,8 @@
 #
 # Configuration:
 #
-#   JENKINS_NOTIFY_CONFIG_FILE concfigration file path.
+#   JENKINS_NOTIFY_CONFIG_FILE:    concfigration file path.
+#   JENKINS_NOTIFY_BACK_TO_NORMAL: if this value set true, send message when the job status change (FAILURE -> SUCCESS or SUCCESS -> FAILURE).
 #
 #   configuration file like this,
 #
@@ -30,13 +31,14 @@
 # Authors:
 #   Taiyu Fujii
 
-url         = require('url')
-querystring = require('querystring')
-request     = require 'request'
-configFile  = process.env.JENKINS_NOTIFY_CONFIG_FILE
-debug       = process.env.JENKINS_NOTIFY_DEBUG?
-prefix      = '[jenkins-notify]'
-SendMessage = require './send_message'
+url          = require('url')
+querystring  = require('querystring')
+request      = require 'request'
+configFile   = process.env.JENKINS_NOTIFY_CONFIG_FILE
+debug        = process.env.JENKINS_NOTIFY_DEBUG?
+backToNormal = process.env.JENKINS_NOTIFY_BACK_TO_NORMAL
+prefix       = '[jenkins-notify]'
+SendMessage  = require './send_message'
 
 makeCommitLabel = (u, array) ->
 
@@ -48,6 +50,41 @@ makeCommitLabel = (u, array) ->
   else
     console.log "#{prefix}: makeCommitLabel: Not url." if debug
     return array[1]
+
+format_number = (n) ->
+  unless n
+    n = "0"
+
+  if n < 10
+    return "0" + n
+  else
+    return n
+
+displayTime = (diffMs) ->
+  days    = parseInt(diffMs/(24*60*60*1000), 10)
+  diffMs  = diffMs - days * 24 * 60 * 60 * 1000 if days > 0
+  hours   = parseInt(diffMs/(60*60*1000), 10)
+  diffMs  = diffMs - hours * 60 * 60 * 1000     if hours > 0
+  minutes = parseInt(diffMs/(60*1000), 10)
+  diffMs  = diffMs - minutes * 60 * 1000        if minutes > 0
+  seconds = parseInt(diffMs/1000, 10)
+  time    = []
+  if hours > 0
+    time.push(format_number("#{hours}"))
+  else
+    time.push("00")
+
+  if minutes > 0
+    time.push(format_number("#{minutes}"))
+  else
+    time.push("00")
+  time.push(format_number("#{seconds}"))
+
+  result  = ""
+  result  = "#{days}day, "  if days > 0 and days <= 1
+  result  = "#{days}days, " if days > 1
+  result  = result + time.join(":")
+  return result
 
 module.exports = (robot) ->
 
@@ -67,37 +104,64 @@ module.exports = (robot) ->
       git_url = ''
       commit  = makeCommitLabel(data['build']['scm']['url'], ["commit", "#{data['build']['scm']['commit']}"])
 
+      robot.brain.data["#{data['name']}"] = {} unless robot.brain.data["#{data['name']}"]
+      robot.brain.data["#{data['name']}"]["#{data['build']['scm']['branch']}"] = {} unless robot.brain.data["#{data['name']}"]["#{data['build']['scm']['branch']}"]
+      label = robot.brain.data["#{data['name']}"]["#{data['build']['scm']['branch']}"]
+      label["#{data['build']['number']}"] = {} unless label["#{data['build']['number']}"]
+
       try
         target = conf["#{data['build']['scm']['url']}"]['target']
       catch
         console.log "#{prefix}: No target. Please check configuration file."
         return
 
-      msg.push("#{@sm.bold('[Jenkins]')}")
-      msg.push("project: #{@sm.bold(data['name'])}, ")
-      msg.push("repository: #{@sm.bold(encodeURI(data['build']['scm']['url']))}, ")
-      msg.push("branch: #{@sm.bold(data['build']['scm']['branch'])}")
-      msg.push("commit: #{@sm.bold(commit)}")
-      msg.push("")
-
       switch data['build']['phase']
         when "STARTED"
-          str = "has #{@sm.bold('STARTED')}."
-        when "COMPLETED"
-          switch data['build']['status']
-            when "SUCCESS"
-              str = "has completed and #{@sm.bold('SUCCEEDED')}."
-            when "FAILURE"
-              str = "has completed and #{@sm.bold('FAILED')}."
+          label["#{data['build']['number']}"]['startdate'] = new Date().getTime()
+          robot.brain.save
         when "FINALIZED"
-          switch data['build']['status']
-            when "SUCCESS"
-              str = "has finalized and #{@sm.bold('SUCCEEDED')}."
-            when "FAILURE"
-              str = "has finalized and #{@sm.bold('FAILED')}."
+          startdate     = label["#{data['build']['number']}"]['startdate']
+          enddate       = new Date().getTime()
+          diff          = displayTime(enddate - startdate)
+          currentstatus = data['build']['status']
+          flag          = false
+          status        = ''
 
-      msg.push("build ##{data['build']['number']} #{str}")
-      @sm.send target, msg
+          if label['status']?
+            status = label['status']
+
+          if backToNormal == false
+            msg.push("#{@sm.bold('[Jenkins]')}")
+            msg.push("build #{@sm.bold('#' + data['build']['number'])} has completed in #{@sm.bold(currentstatus)}. (#{@sm.url('details', data['build']['full_url'])})")
+            msg.push("elapsed time: #{diff}");
+            msg.push("")
+            msg.push("project: #{@sm.bold(data['name'])}")
+            msg.push("repository: #{@sm.bold(encodeURI(data['build']['scm']['url']))}")
+            msg.push("branch: #{@sm.bold(data['build']['scm']['branch'])}")
+            msg.push("commit: #{@sm.bold(commit)}")
+            @sm.send target, msg
+
+          else
+            console.log "status: #{status}, #{currentstatus}" if debug
+            if currentstatus != status
+              msg.push("#{@sm.bold('[Jenkins]')}")
+              msg.push("build #{@sm.bold('#' + data['build']['number'])} has completed in #{@sm.bold(currentstatus)}. (#{@sm.url('details', data['build']['full_url'])})")
+              msg.push("elapsed time: #{diff}");
+              msg.push("")
+              msg.push("project: #{@sm.bold(data['name'])}")
+              msg.push("repository: #{@sm.bold(encodeURI(data['build']['scm']['url']))}")
+              msg.push("branch: #{@sm.bold(data['build']['scm']['branch'])}")
+              msg.push("commit: #{@sm.bold(commit)}")
+              @sm.send target, msg
+
+            else
+              console.log "#{data['name']}:#{data['build']['scm']['branch']}:#{data['build']['number']} #{currentstatus}" if debug
+
+          if label['status']?
+            delete label['status']
+          label['status'] = "#{currentstatus}"
+          delete label["#{data['build']['number']}"]
+          robot.brain.save
 
     catch error
       console.log "jenkins-notify error: #{error}. Data: #{req.body}"
