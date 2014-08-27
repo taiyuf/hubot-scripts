@@ -7,11 +7,11 @@
 #
 # Configuration:
 #   HUBOT_IRC_TYPE: "irc", "http_post", "idobata", "chatwork"
-#   HUBOT_IRC_HEADERS: path to headers file(json).
 #   HUBOT_IRC_MSG_TYPE: if you use "http_post", set the type of message. "string" or "html". default: "string"
 #   HUBOT_IRC_MSG_LABEL: if you use "http_post", set the name of form's label.
+#   HUBOT_IRC_INFO: path to headers file(json).
 #
-# HUBOT_IRC_HEADERS like this,
+# HUBOT_IRC_INFO like this,
 #
 # {
 #     "HEADER": "VALUE",
@@ -21,15 +21,23 @@
 # for idobata
 #
 # {
-#     "X-API-Token": "XXXXXXXXXXXX"
+#     "header": [{"X-API-Token": "XXXXXXXXXXXX"}]
 # }
 #
 # for chatwork
 #
 # {
-#     ""X-ChatWorkToken": "XXXXXXXXXXXXXX"
+#     "header": [{"X-ChatWorkToken": "XXXXXXXXXXXXXX"}]
 # }
 #
+# for slack
+#
+# {
+#     "team_url": "hoge.slack.com",  # required
+#     "token: "",                    # required
+#     "username": "hubot",           # optional. default is "hubot"
+#     "icon_emoji": ":ghost:"        # optional
+# }
 #
 # Usage:
 #
@@ -58,13 +66,13 @@ class SendMessage
     @msgLabel    = process.env.HUBOT_IRC_MSG_LABEL
     @msgType     = process.env.HUBOT_IRC_MSG_TYPE
     @fmtLabel    = process.env.HUBOT_IRC_FMT_LABEL
-    @headersFile = process.env.HUBOT_IRC_HEADERS
-    @headerFlag  = false
-    @headers     = {}
+    @infoFile    = process.env.HUBOT_IRC_INFO
+    @info        = {}
+    @infoFlag  = false
     @form        = {}
     @lineFeed    = ""
     @typeFlag    = false
-    @typeArray   = ["irc", "http_post", "chatwork", "idobata"]
+    @typeArray   = ["irc", "http_post", "chatwork", "idobata", "slack"]
     @prefix      = "[send_message]"
     @maxLength   = 128
 
@@ -85,9 +93,9 @@ class SendMessage
       console.log "#{@prefix}: wrong type, #{@type}"
       return
 
-    if @type == "chatwork" or @type == "idobata"
-      unless @headers
-        console.log "#{@prefix}: Please set the value at HUBOT_IRC_HEADERS."
+    if @type == "chatwork" or @type == "idobata" or @type == "slack"
+      unless @info
+        console.log "#{@prefix}: Please set the value at HUBOT_IRC_INFO."
         return
 
     if @type == "http_post"
@@ -104,14 +112,17 @@ class SendMessage
 
     switch @type
       when "idobata"
-        @msgLabel       = "source"
-        @msgType        = "html"
-        @fmtLabel       = "format"
+        @msgLabel        = "source"
+        @msgType         = "html"
+        @fmtLabel        = "format"
         @form[@fmtLabel] = @msgType
       when "chatwork"
         @msgLabel = "body"
       when "http_post"
         @form[@fmtLabel] = @msgType
+      when "slack"
+        @msgLabel = "text"
+        @fmtLabel = "payload"
 
     if @msgType == "html"
       @lineFeed = "<br />"
@@ -155,6 +166,8 @@ class SendMessage
         "<b>" + str + "</b>"
       when "chatwork"
         str
+      when "slack"
+        '*' + str + '*'
 
   url: (t_str, u_str) ->
 
@@ -167,6 +180,8 @@ class SendMessage
         "<a href='" + u_str + "' target='_blank'>" + t_str + "</a>"
       when "chatwork"
         t_str + ": " + u_str
+      when "slack"
+        '<' + u_str + '|' + t_str + '>'
 
   underline: (str) ->
 
@@ -179,6 +194,8 @@ class SendMessage
         "<b>" + str + "</b>"
       when "chatwork"
         str
+      when "slack"
+        '*' + str + '*'
 
   makeHtmlList: (commits) ->
     array   = []
@@ -192,6 +209,14 @@ class SendMessage
 
     listmsg = "#{listmsg}" + "</ul>"
     array.push("#{listmsg}")
+
+    return array
+
+  makeMarkdownList: (commits) ->
+    array = []
+
+    for cs in commits
+      array.push('* ' + cs)
 
     return array
 
@@ -223,6 +248,8 @@ class SendMessage
           commitsArray = @makeStrList  commits
       when "idobata"
         commitsArray   = @makeHtmlList commits
+      when "slack"
+        commitsArray   = @makeMarkdownList commits
 
     return commitsArray
 
@@ -246,10 +273,10 @@ class SendMessage
 
     messages = ''
 
-    if @headersFile
-      unless @headerFlag
-        @headers    = @readJson @headersFile, @prefix
-        @headerFlag = true
+    if @infoFile
+      unless @infoFlag
+        @info    = @readJson @infoFile, @prefix
+        @infoFlag = true
 
     # message
     if typeof(msg) == 'object'
@@ -278,7 +305,7 @@ class SendMessage
           else
             request.post
               url: tg
-              headers: @headers
+              headers: @info['header']
               form: @form
             , (err, response, body) ->
               console.log "err: #{err}" if err?
@@ -286,7 +313,7 @@ class SendMessage
           # console.log("form: %j", @form)
           request.post
             url: tg
-            headers: @headers
+            headers: @info['header']
             form: @form
           , (err, response, body) ->
             console.log "err: #{err}" if err?
@@ -296,7 +323,27 @@ class SendMessage
           # console.log "URI: #{uri}"
           request.post
             url: uri
-            headers: @headers
+            headers: @info['header']
+          , (err, response, body) ->
+            console.log "err: #{err}" if err?
+        when "slack"
+          if @info['username']?
+            @form['username'] = @info['username']
+          else
+            @form['username'] = 'hubot'
+
+          if @info['icon_emoji']?
+            @form['icon_emoji'] = @info['icon_emoji']
+
+          uri = 'https://' + @info['team_url'] + '/services/hooks/incoming-webhook?token=' + @info['token']
+          @form['channel'] = tg
+
+          json = JSON.stringify @form
+          # console.log "uri:" + uri
+          # console.log "form: %j", json
+          request.post
+            url: uri
+            form: {payload: json}
           , (err, response, body) ->
             console.log "err: #{err}" if err?
 
