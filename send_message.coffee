@@ -239,7 +239,8 @@ class SendMessage
 
   sleep: (ms) ->
     start = new Date().getTime()
-    continue while new Date().getTime() - start < ms
+    wait = (Math.floor(Math.random() * 10) + 1) * ms
+    continue while new Date().getTime() - start < wait
 
   send: (target, msg) ->
 
@@ -265,8 +266,8 @@ class SendMessage
     for tg in target
       switch @type
         when "irc"
-          @robot.send { "room": tg }, messages
           @sleep 100
+          @robot.send { "room": tg }, messages
         when "http_post"
           unless @heades
             request.post
