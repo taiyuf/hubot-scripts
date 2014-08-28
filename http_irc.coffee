@@ -11,9 +11,9 @@
 #   None
 #
 # URLs:
-#   GET  /http_irc?message=<message>&room=<room>
+#   GET  /http_irc?message=<message>&room=%23<room_name>
 #    or
-#   POST /http_irc?room=<room>
+#   POST /http_irc?room=%23<room_name>
 #
 # Sample:
 #

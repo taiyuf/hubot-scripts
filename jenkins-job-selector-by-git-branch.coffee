@@ -7,7 +7,8 @@
 #
 # Configuration:
 #
-#   JENKINS_JOBSELECTOR_CONFIG_FILE concfigration file path.
+#   JENKINS_JOBSELECTOR_CONFIG_FILE  concfigration file path.
+#   JENKISN_JOBSELECTOR_SEND_MESSAGE if you set true, send the message to chat. default is false
 #
 #   configuration file like this,
 #
@@ -17,7 +18,7 @@
 #                     "auth": {"id": "hoge",
 #                              "password": "fuga"},
 #                     "jobs":{"branchA": "JENKIS_JOB_URL_A",
-#                             "branchB": "JENKIS_JOB_URL_A"}
+#                             "branchB": ["JENKIS_JOB_URL_A", "JENKIS_JOB_URL_B"]}
 #                    }
 #   }
 #
@@ -40,10 +41,20 @@ url         = require('url')
 querystring = require('querystring')
 request     = require 'request'
 configFile  = process.env.JENKINS_JOBSELECTOR_CONFIG_FILE
+send_flag   = process.env.JENKINS_JOBSELECTOR_SEND_MESSAGE
 debug       = process.env.JENKINS_JOBSELECTOR_DEBUG?
 path        = "jenkins-jobselector"
 prefix      = '[#{path}]'
 SendMessage = require './send_message'
+
+request_url = (auth, url) ->
+  if auth?
+    request.post
+      url: url
+      auth: auth
+  else
+    request.post
+    url: url
 
 module.exports = (robot) ->
 
@@ -92,15 +103,20 @@ module.exports = (robot) ->
     catch
       console.log "no auth infomation." if debug
 
-    if auth?
-      request.get
-        url: conf[git_url]['jobs'][branch]
-        auth: auth
+    job_url = conf[git_url]['jobs'][branch]
+    if typeof(job_url) == 'object'
+      for j in job_url
+        request_url(auth, j)
+        @sm.send conf[git_url]['target'], "[Jenkins]: The job has started on #{@sm.bold(branch)} branch at #{git_url}." if send_flag
+        console.log "target_URL: #{j}" if debug
+
     else
-      request.get
-        url: conf[git_url]['jobs'][branch]
+      if typeof(job_url) == 'string'
+        request_url(auth, job_url)
+        @sm.send conf[git_url]['target'], "[Jenkins]: The job has started on #{@sm.bold(branch)} branch at #{git_url}." if send_flag
+        console.log "target_URL: #{job_url}" if debug
 
-    console.log "target_URL: #{conf[git_url]['jobs'][branch]}" if debug
+      else
+        console.log "#{@prefix} unknown message type: " + typeof(msg) + "."
 
-    @sm.send conf[git_url]['target'], "[Jenkins]: The job has started on #{@sm.bold(branch)} branch at #{git_url}."
 
