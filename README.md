@@ -166,12 +166,12 @@ curl http://YOUR_SERVER/http_irc?message=hoge&room=%23test
 
 ### POST
 
-POST /http_irc?room=<room> or POST /http_irc
+POST /http_irc?room=%23<room> or POST /http_irc
 
 ```
-curl -X POST --data-urlencode message="hoge hoge." http://YOUR_SERVER/http_irc?room\=test
+curl -X POST --data-urlencode message="hoge hoge." http://YOUR_SERVER/http_irc?room\=%23test
 
-curl -X POST --data-urlencode message="hoge hoge." -d  room=#foo http://YOUR_SERVER/http_irc
+curl -X POST --data-urlencode message="hoge hoge." -d  room=%23foo http://YOUR_SERVER/http_irc
 ```
 
 ## read_rss
