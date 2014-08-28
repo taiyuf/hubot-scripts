@@ -22,6 +22,14 @@
 #   Put http://<HUBOT_URL>:<PORT>/hubot/jenkins-notify to your Jenkins
 #   Notification config. See here: https://wiki.jenkins-ci.org/display/JENKINS/Notification+Plugin
 #
+#   Job Notifications
+#   -> Notification Endpoints
+#        Format: JSON
+#        Protocol: HTTP
+#        Event: All Event
+#        URL: http://<HUBOT_URL>:<PORT>/hubot/jenkins-notify
+#        Timeout: as you like
+#
 # Commands:
 #   None
 #
