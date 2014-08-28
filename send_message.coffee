@@ -33,10 +33,11 @@
 # for slack
 #
 # {
-#     "team_url": "hoge.slack.com",  # required
-#     "token: "",                    # required
-#     "username": "hubot",           # optional. default is "hubot"
-#     "icon_emoji": ":ghost:"        # optional
+#     "team_url": "hoge.slack.com",      # required
+#     "token: {"#channel1": "hogehoge",  # required
+#              "#channel2": "fugafuga"},
+#     "username": "hubot",               # optional. default is "hubot"
+#     "icon_emoji": ":ghost:"            # optional
 # }
 #
 # Usage:
@@ -335,8 +336,8 @@ class SendMessage
           if @info['icon_emoji']?
             @form['icon_emoji'] = @info['icon_emoji']
 
-          uri = 'https://' + @info['team_url'] + '/services/hooks/incoming-webhook?token=' + @info['token']
           @form['channel'] = tg
+          uri = 'https://' + @info['team_url'] + '/services/hooks/incoming-webhook?token=' + @info['token'][tg]
 
           json = JSON.stringify @form
           # console.log "uri:" + uri

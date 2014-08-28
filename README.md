@@ -136,12 +136,15 @@ HUBOT_IRC_INFO:
 
 ```
 {
-    "team_url": "YOUR_TEAM.slack.com",  # required
-    "token": "YOUR_TOKEN",              # required
-    "username": "hubot",                # optional
-    "icon_emoji": ":ghost:"             # optional
+    "team_url": "hoge.slack.com",      # required
+    "token: {"#channel1": "hogehoge",  # required
+             "#channel2": "fugafuga"},
+    "username": "hubot",               # optional. default is "hubot"
+    "icon_emoji": ":ghost:"            # optional
 }
 ```
+
+token is Slack API's token.
 
 # Modules
 
