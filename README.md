@@ -46,7 +46,7 @@ export PORT=19999
 export HUBOT_IRC_TYPE="http_post"
 export HUBOT_IRC_ROOMS="#dummy" # dummy text
 export HUBOT_IRC_SERVER="hoge"  # dummy text
-export HUBOT_IRC_HEADERS=${HUBOT_HOME}/headers.json # custom headers as json
+export HUBOT_IRC_INFO=${HUBOT_HOME}/headers.json # custom headers as json
 export HUBOT_IRC_MSG_TYPE="string"
 export HUBOT_IRC_MSG_LABEL="message"
 export HUBOT_IRC_FMT_LABEL="format"
@@ -54,11 +54,11 @@ export HUBOT_IRC_FMT_LABEL="format"
 ${HUBOT_HOME}/bin/hubot -a irc
 ```
 
-HUBOT_IRC_HEADERS:
+HUBOT_IRC_INFO:
 
 ```
 {
-    "HEADER_NAME": "HEADER_VALUE"
+    "ITEM_LABEL": "ITEM_VALUE"
 }
 ```
 
@@ -75,16 +75,16 @@ export PORT=19999
 export HUBOT_IRC_TYPE="idobata"
 export HUBOT_IRC_ROOMS="#dummy" # dummy text
 export HUBOT_IRC_SERVER="hoge"  # dummy text
-export HUBOT_IRC_HEADERS=${HUBOT_HOME}/headers.json # custom headers as json
+export HUBOT_IRC_INFO=${HUBOT_HOME}/headers.json # custom headers as json
 
 ${HUBOT_HOME}/bin/hubot -a irc
 ```
 
-HUBOT_IRC_HEADERS:
+HUBOT_IRC_INFO:
 
 ```
 {
-    "X-API-Token": "YOUR_API_TOKEN"
+    "header": {"X-API-Token": "YOUR_API_TOKEN"}
 }
 ```
 
@@ -101,17 +101,45 @@ export PORT=19999
 export HUBOT_IRC_TYPE="chatwork"
 export HUBOT_IRC_ROOMS="#dummy" # dummy text
 export HUBOT_IRC_SERVER="hoge"  # dummy text
-export HUBOT_IRC_HEADERS=${HUBOT_HOME}/headers.json # custom headers as json
+export HUBOT_IRC_INFO=${HUBOT_HOME}/headers.json # custom headers as json
 
 ${HUBOT_HOME}/bin/hubot -a irc
 ```
 
-HUBOT_IRC_HEADERS:
+HUBOT_IRC_INFO:
 
 ```
 {
-    "X-ChatWorkToken": "YOUR_TOKEN",
-    "Content-Type": "text/plain"
+    "header": {"X-ChatWorkToken": "YOUR_TOKEN"}
+}
+```
+
+### slack
+
+```
+# basic
+export HUBOT_HOME=/home/hubot
+export NODE_PATH=${HUBOT_HOME}/node_modules
+export REDIS_URL="redis://127.0.0.1:6379"
+export PORT=19999
+
+# slack
+export HUBOT_IRC_TYPE="slack"
+export HUBOT_IRC_ROOMS="#dummy" # dummy text
+export HUBOT_IRC_SERVER="hoge"  # dummy text
+export HUBOT_IRC_INFO=${HUBOT_HOME}/slack_info.json # custom infomation as json
+
+${HUBOT_HOME}/bin/hubot -a irc
+```
+
+HUBOT_IRC_INFO:
+
+```
+{
+    "team_url": "YOUR_TEAM.slack.com",  # required
+    "token": "YOUR_TOKEN",              # required
+    "username": "hubot",                # optional
+    "icon_emoji": ":ghost:"             # optional
 }
 ```
 
@@ -214,6 +242,8 @@ Put http://<HUBOT_URL>:<PORT>/gitlab/web as your web hook (per repository)
 
 Notifies about Jenkins build errors via Jenkins Notification Plugin.
 
+https://wiki.jenkins-ci.org/display/JENKINS/Notification+Plugin
+
 ### Configuration
 
 * JENKINS_NOTIFY_CONFIG_FILE: concfigration file path.
@@ -264,6 +294,15 @@ commit: 6ff2e02f57d3d43fd49443b2b5f7e26bada64c0d
 
 Put http://<HUBOT_URL>:<PORT>/hubot/jenkins-notify to your Jenkins
 
+* Job Notifications -> Notification Endpoints
+
+```
+Format: JSON
+Protocol: HTTP
+Event: All Event
+URL: http://<HUBOT_URL>:<PORT>/hubot/jenkins-notify
+Timeout: as you like
+```
 
 ## jenkins-job-selector-by-git-branch
 
