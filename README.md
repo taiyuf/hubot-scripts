@@ -163,7 +163,7 @@ HUBOT_IRC_INFO:
 }
 ```
 
-token is Slack API's token.
+token is Slack API IncommingWebhook's token.
 
 # Modules
 
