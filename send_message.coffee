@@ -298,7 +298,6 @@ class SendMessage
     for tg in target
       switch @type
         when "irc"
-          @sleep 100
           @robot.send { "room": tg }, messages
         when "http_post"
           unless @heades
