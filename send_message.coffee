@@ -168,7 +168,7 @@ class SendMessage
       when "chatwork"
         str
       when "slack"
-        '*' + str + '*'
+        ' *' + str + '* '
 
   url: (t_str, u_str) ->
 
@@ -196,7 +196,7 @@ class SendMessage
       when "chatwork"
         str
       when "slack"
-        '*' + str + '*'
+        ' *' + str + '* '
 
   makeHtmlList: (commits) ->
     array   = []
@@ -214,10 +214,14 @@ class SendMessage
     return array
 
   makeMarkdownList: (commits) ->
-    array = []
+    array = ['']
 
     for cs in commits
-      array.push('* ' + cs)
+      cstr = cs.message.replace /\n/g, @lineFeed
+      array.push('* ' + @url(cs.id, cs.url))
+      # array.push(' ```' + cstr + '``` ')
+      array.push(cstr)
+      array.push(@lineFeed)
 
     return array
 
@@ -337,6 +341,7 @@ class SendMessage
             @form['icon_emoji'] = @info['icon_emoji']
 
           @form['channel'] = tg
+          @form['mrkdwn']  = "true"
           uri = 'https://' + @info['team_url'] + '/services/hooks/incoming-webhook?token=' + @info['token'][tg]
 
           json = JSON.stringify @form
