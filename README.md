@@ -132,6 +132,25 @@ export HUBOT_IRC_INFO=${HUBOT_HOME}/slack_info.json # custom infomation as json
 ${HUBOT_HOME}/bin/hubot -a irc
 ```
 
+If you use hubot-slack, Please activate Hubot API.
+
+```
+# basic
+export HUBOT_HOME=/home/hubot
+export NODE_PATH=${HUBOT_HOME}/node_modules
+export REDIS_URL="redis://127.0.0.1:6379"
+export PORT=19999
+
+# slack
+export HUBOT_IRC_SERVER="hoge"  # dummy text
+export HUBOT_IRC_INFO=${HUBOT_HOME}/slack_info.json # custom infomation as json
+export HUBOT_SLACK_TOKEN=******************
+export HUBOT_SLACK_TEAM=YOUR_TEAM
+export HUBOT_SLACK_BOTNAME=slackbot
+
+${HUBOT_HOME}/bin/hubot -a slack
+```
+
 HUBOT_IRC_INFO:
 
 ```
