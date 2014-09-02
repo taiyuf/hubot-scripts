@@ -3,7 +3,7 @@
 #
 # Dependencies:
 #   "request":     "2.34.0"
-#   "read_json":   include this repogitory
+#   "read_json":   included in this repogitory
 #
 # Configuration:
 #   HUBOT_IRC_TYPE: "irc", "http_post", "idobata", "chatwork"
@@ -213,17 +213,38 @@ class SendMessage
 
     return array
 
-  makeMarkdownList: (commits) ->
-    array = ['']
+  slackCommitMessage: (commits, color) ->
+    fallback = []
+    fields   = []
+    unless color?
+      color = "#aaaaaa"
 
     for cs in commits
       cstr = cs.message.replace /\n/g, @lineFeed
-      array.push('* ' + @url(cs.id, cs.url))
-      # array.push(' ```' + cstr + '``` ')
+      array = []
+      field = {}
+      array.push(@url('link', cs.url))
       array.push(cstr)
       array.push(@lineFeed)
+      array.push(@lineFeed)
 
-    return array
+      fallback.push(array.join(@lineFeed))
+
+      field['title'] = '* ' + cs.id
+      field['value']  = array.join(@lineFeed)
+
+      fields.push(field)
+
+    return {fallback: fallback.join(@lineFeed), fields: fields, color: color, mrkdwn_in: ["fallback", "fields"]}
+    # return {fallback: 'test', fields: fields, color: color}
+
+  # slackJenkinsResults: (result) ->
+
+  makeMarkdownList: (commits) ->
+    array = ['']
+    for cs in commits
+      cstr = cs.message.replace /\n/g, @lineFeed
+      array.push('* ' + @url(cs.id, cs.url))
 
   makeStrList: (commits) ->
     array  = []
@@ -269,12 +290,27 @@ class SendMessage
       else
         msg.replace(/<br>/g, @lineFeed).replace(/<br \/>/g, @lineFeed).replace(/<("[^"]*"|'[^']*'|[^'">])*>/g, '').replace(/^$/g, '').replace(/^#{@lineFeed}$/g, '')
 
+  slack_attachments: (title, msg, color) ->
+    message = ""
+    unless color?
+      color = "#aaaaaa"
+
+    if typeof msg == "object"
+      message = msg.join(@lineFeed)
+    else
+      if typeof msg == "string"
+        message = msg
+      else
+        console.log "unknown error on slack_attachment: " + msg
+
+    return [{fallback: message, fields: [{title: title, value: message}], color: color, mrkdwn_in: ["fallback", "fields"]}]
+
   sleep: (ms) ->
     start = new Date().getTime()
     wait = (Math.floor(Math.random() * 10) + 1) * ms
     continue while new Date().getTime() - start < wait
 
-  send: (target, msg) ->
+  send: (target, msg, attachments) ->
 
     messages = ''
 
@@ -340,12 +376,16 @@ class SendMessage
             @form['icon_emoji'] = @info['icon_emoji']
 
           @form['channel'] = tg
-          @form['mrkdwn']  = "true"
+          # @form['mrkdwn']  = "true"
           uri = 'https://' + @info['team_url'] + '/services/hooks/incoming-webhook?token=' + @info['token'][tg]
+
+          if attachments? or attachments != false
+            @form['attachments'] = attachments
+            attachments = false
 
           json = JSON.stringify @form
           # console.log "uri:" + uri
-          # console.log "form: %j", json
+          console.log "form: %j", json
           request.post
             url: uri
             form: {payload: json}
