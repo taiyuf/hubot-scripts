@@ -29,6 +29,22 @@ path        = "/http_irc"
 querystring = require 'querystring'
 SendMessage = require './send_message'
 prefix      = "[http_irc]"
+ircType     = process.env.HUBOT_IRC_TYPE
+
+send_message = (res, room, msg) ->
+  # console.log "room: #{room}"
+  # console.log "msg: #{message}"
+  unless room
+    console.log "#{prefix}: There is no room to say."
+    res.writeHead 200, {'Content-Type': 'text/plain'}
+    res.end 'Error: There is no room to say.'
+
+  if ircType == "slack"
+    @sm.send ["#{room}"], "", @sm.slack_attachments("", msg)
+  else
+    @sm.send ["#{room}"], msg
+  res.writeHead 200, {'Content-Type': 'text/plain'}
+  res.end 'OK'
 
 module.exports = (robot) ->
 
@@ -40,29 +56,12 @@ module.exports = (robot) ->
     query   = querystring.parse(req._parsedUrl.query)
     room    = query.room
     message = query.message
-
-    console.log "room: #{room}"
-    console.log "msg: #{message}"
-
-    @sm.send ["#{room}"], message
-    res.writeHead 200, {'Content-Type': 'text/plain'}
-    res.end 'OK'
+    send_message(res, room, message)
 
   robot.router.post "#{path}", (req, res) ->
     query   = querystring.parse(req._parsedUrl.query)
     room    = query.room or ''
     message = req.body.message
     room    = req.body.room unless room
-
-    console.log "room: #{room}"
-    console.log "msg: #{message}"
-
-    unless room
-      console.log "#{prefix}: There is no room to say."
-      res.writeHead 200, {'Content-Type': 'text/plain'}
-      res.end 'Error: There is no room to say.'
-
-    @sm.send ["#{room}"], message
-    res.writeHead 200, {'Content-Type': 'text/plain'}
-    res.end 'OK'
+    send_message(res, room, message)
 

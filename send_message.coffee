@@ -300,8 +300,8 @@ class SendMessage
     else
       if typeof msg == "string"
         message = msg
-      else
-        console.log "unknown error on slack_attachment: " + msg
+      # else
+      #   console.log "unknown error on slack_attachment: #{msg}, type: " + typeof msg
 
     return [{fallback: message, fields: [{title: title, value: message}], color: color, mrkdwn_in: ["fallback", "fields"]}]
 

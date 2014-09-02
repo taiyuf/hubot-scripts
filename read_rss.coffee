@@ -40,6 +40,7 @@ schedule   = '0 */5 * * * *' # *(sec) *(min) *(hour) *(day) *(month) *(day of th
 # schedule   = '0 * * * * *' # *(sec) *(min) *(hour) *(day) *(month) *(day of the week)
 configFile = process.env.RSS_CONFIG_FILE or '../rss_list.json'
 label      = process.env.RSS_LABEL       or 'read_rss'
+ircType    = process.env.HUBOT_IRC_TYPE
 
 module.exports = (robot) ->
 
@@ -98,10 +99,18 @@ module.exports = (robot) ->
       for key of rss
         read_rss rss[key]['feed']['url'], rss[key]['feed']['id'], rss[key]['feed']['password'], key, rss[key]['target'], (item) ->
           msg = []
+          target = robot.brain.data[label][item.link]['target']
           msg.push("[#{robot.brain.data[label][item.link]['keyword']}] #{@sm.url(item.title, item.link)}")
           msg.push("author: #{item.author}, date: #{item.date}")
-          if item.description
-            msg.push('')
-            msg.push("#{@sm.htmlFilter(item.description)}") if item.description
-          target = robot.brain.data[label][item.link]['target']
-          @sm.send target, msg
+
+          if ircType == "slack"
+            if item.description
+              desc = []
+              desc.push('')
+              desc.push("#{@sm.htmlFilter(item.description)}") if item.description
+            @sm.send target, msg, @sm.slack_attachments("", desc)
+          else
+            if item.description
+              msg.push('')
+              msg.push("#{@sm.htmlFilter(item.description)}") if item.description
+            @sm.send target, msg

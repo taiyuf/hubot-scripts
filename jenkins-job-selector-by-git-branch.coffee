@@ -43,6 +43,7 @@ request     = require 'request'
 configFile  = process.env.JENKINS_JOBSELECTOR_CONFIG_FILE
 send_flag   = process.env.JENKINS_JOBSELECTOR_SEND_MESSAGE
 debug       = process.env.JENKINS_JOBSELECTOR_DEBUG?
+ircType     = process.env.HUBOT_IRC_TYPE
 path        = "jenkins-jobselector"
 prefix      = '[#{path}]'
 SendMessage = require './send_message'
@@ -107,13 +108,19 @@ module.exports = (robot) ->
     if typeof(job_url) == 'object'
       for j in job_url
         request_url(auth, j)
-        @sm.send conf[git_url]['target'], "[Jenkins]: The job has started on #{@sm.bold(branch)} branch at #{git_url}." if send_flag
+        if ircType == "slack" and send_flag
+          @sm.send conf[git_url]['target'], "", @sm.slack_attachments("","[Jenkins]: The job has started on #{@sm.bold(branch)} branch at #{git_url}.")
+        else
+          @sm.send conf[git_url]['target'], "[Jenkins]: The job has started on #{@sm.bold(branch)} branch at #{git_url}." if send_flag
         console.log "target_URL: #{j}" if debug
 
     else
       if typeof(job_url) == 'string'
         request_url(auth, job_url)
-        @sm.send conf[git_url]['target'], "[Jenkins]: The job has started on #{@sm.bold(branch)} branch at #{git_url}." if send_flag
+        if ircType == "slack" and send_flag
+          @sm.send conf[git_url]['target'], "", @sm.slack_attachments("","[Jenkins]: The job has started on #{@sm.bold(branch)} branch at #{git_url}.")
+        else
+          @sm.send conf[git_url]['target'], "[Jenkins]: The job has started on #{@sm.bold(branch)} branch at #{git_url}." if send_flag
         console.log "target_URL: #{job_url}" if debug
 
       else
