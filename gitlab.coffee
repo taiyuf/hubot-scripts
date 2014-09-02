@@ -2,6 +2,7 @@
 #   Post gitlab related events using gitlab hooks
 #
 # Dependencies:
+#   "redis-brain"
 #   "url" :        ""
 #   "querystring": ""
 #   "request":     "2.34.0"
@@ -59,6 +60,7 @@ SendMessage = require './send_message'
 configFile  = process.env.GITLAB_CONFIG_FILE
 gitlabUrl   = process.env.GITLAB_URL
 debug       = process.env.GITLAB_DEBUG?
+ircType     = process.env.HUBOT_IRC_TYPE
 prefix      = '[gitlab]'
 
 # privateToken  = process.env.GITLAB_PRIVATE_TOKEN
@@ -240,8 +242,12 @@ module.exports = (robot) ->
               message.push("#{@sm.bold(hook.user_name)} pushed #{@sm.bold(hook.total_commits_count)} commits to #{@sm.bold(branch)} in #{@sm.bold(hook.repository.name)}")
               message.push("#{@sm.url('compare', compareUrl)}")
 
-              for li in @sm.list(hook.commits)
-                message.push(li)
+              if ircType == "slack"
+                attachments = []
+                attachments.push(@sm.slackCommitMessage(hook.commits))
+              else
+                for li in @sm.list(hook.commits)
+                  message.push(li)
 
               saveInfo hook, git_url
         else
@@ -263,7 +269,10 @@ module.exports = (robot) ->
               console.log "hook: %j", hook
               console.log "git_url: #{git_url}"
 
-        @sm.send target, message
+        if attachments != false
+          @sm.send target, message, attachments
+        else
+          @sm.send target, message
 
   robot.router.post "/gitlab/system", (req, res) ->
     handler "system", req, res

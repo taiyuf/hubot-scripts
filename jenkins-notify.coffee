@@ -1,6 +1,7 @@
 # Notifies about Jenkins build errors via Jenkins Notification Plugin
 #
 # Dependencies:
+#   "redis-brain"
 #   "request":     "2.34.0"
 #   "url": ""
 #   "querystring": ""
@@ -45,6 +46,7 @@ request      = require 'request'
 configFile   = process.env.JENKINS_NOTIFY_CONFIG_FILE
 debug        = process.env.JENKINS_NOTIFY_DEBUG?
 backToNormal = process.env.JENKINS_NOTIFY_BACK_TO_NORMAL
+ircType      = process.env.HUBOT_IRC_TYPE
 prefix       = '[jenkins-notify]'
 SendMessage  = require './send_message'
 
@@ -94,6 +96,29 @@ displayTime = (diffMs) ->
   result  = result + time.join(":")
   return result
 
+printStatus = (target, data, diff, commit) ->
+  msg = []
+  msg.push("build #{@sm.bold('#' + data['build']['number'])} has completed in #{@sm.bold(data['build']['status'])}. (#{@sm.url('details', data['build']['full_url'])})")
+  msg.push("elapsed time: #{diff}");
+  msg.push("")
+  msg.push("project: #{@sm.bold(data['name'])}")
+  msg.push("repository: #{@sm.bold(encodeURI(data['build']['scm']['url']))}")
+  msg.push("branch: #{@sm.bold(data['build']['scm']['branch'])}")
+  msg.push("commit: #{@sm.bold(commit)}")
+
+  if ircType == "slack"
+    title = "[Jenkins]"
+    color = ''
+    if data['build']['status'] == "SUCCESS"
+      color = "good"
+    else
+      color = "danger"
+    @sm.send target, '', @sm.slack_attachments(title, msg, color)
+
+  else
+    msg.unshift("#{@sm.bold('[Jenkins]')}")
+    @sm.send target, msg
+
 module.exports = (robot) ->
 
   @sm     = new SendMessage(robot)
@@ -138,32 +163,16 @@ module.exports = (robot) ->
           if label['status']?
             status = label['status']
 
-          if backToNormal == false
-            msg.push("#{@sm.bold('[Jenkins]')}")
-            msg.push("build #{@sm.bold('#' + data['build']['number'])} has completed in #{@sm.bold(currentstatus)}. (#{@sm.url('details', data['build']['full_url'])})")
-            msg.push("elapsed time: #{diff}");
-            msg.push("")
-            msg.push("project: #{@sm.bold(data['name'])}")
-            msg.push("repository: #{@sm.bold(encodeURI(data['build']['scm']['url']))}")
-            msg.push("branch: #{@sm.bold(data['build']['scm']['branch'])}")
-            msg.push("commit: #{@sm.bold(commit)}")
-            @sm.send target, msg
-
-          else
+          if backToNormal?
             console.log "status: #{status}, #{currentstatus}" if debug
             if currentstatus != status
-              msg.push("#{@sm.bold('[Jenkins]')}")
-              msg.push("build #{@sm.bold('#' + data['build']['number'])} has completed in #{@sm.bold(currentstatus)}. (#{@sm.url('details', data['build']['full_url'])})")
-              msg.push("elapsed time: #{diff}");
-              msg.push("")
-              msg.push("project: #{@sm.bold(data['name'])}")
-              msg.push("repository: #{@sm.bold(encodeURI(data['build']['scm']['url']))}")
-              msg.push("branch: #{@sm.bold(data['build']['scm']['branch'])}")
-              msg.push("commit: #{@sm.bold(commit)}")
-              @sm.send target, msg
+              printStatus(target, data, diff, commit)
 
             else
               console.log "#{data['name']}:#{data['build']['scm']['branch']}:#{data['build']['number']} #{currentstatus}" if debug
+
+          else
+            printStatus(target, data, diff, commit)
 
           if label['status']?
             delete label['status']
