@@ -385,7 +385,7 @@ class SendMessage
 
           json = JSON.stringify @form
           # console.log "uri:" + uri
-          console.log "form: %j", json
+          # console.log "form: %j", json
           request.post
             url: uri
             form: {payload: json}

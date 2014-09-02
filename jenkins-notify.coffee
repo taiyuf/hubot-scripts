@@ -114,7 +114,6 @@ printStatus = (target, data, diff, commit) ->
     else
       color = "danger"
     @sm.send target, '', @sm.slack_attachments(title, msg, color)
-    console.log "ps: %j", @sm.slack_attachments(title, msg, color)
 
   else
     msg.unshift("#{@sm.bold('[Jenkins]')}")
