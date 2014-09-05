@@ -189,6 +189,7 @@ module.exports = (robot) ->
     catch
       try
         p_id = hook.object_attributes.target_project_id
+        git_url = brain[gitlabUrl]['repository'][p_id]['url']
         # console.log "R: " + req.headers.referer
         # url -> http://GITLAB/なので、無理
       catch
