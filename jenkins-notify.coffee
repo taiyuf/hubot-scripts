@@ -102,7 +102,7 @@ printStatus = (target, data, diff, commit) ->
   msg.push("elapsed time: #{diff}");
   msg.push("")
   msg.push("project: #{@sm.bold(data['name'])}")
-  msg.push("repository: #{@sm.bold(encodeURI(data['build']['scm']['url']))}")
+  msg.push("repository: #{encodeURI(data['build']['scm']['url'])}")
   msg.push("branch: #{@sm.bold(data['build']['scm']['branch'])}")
   msg.push("commit: #{@sm.bold(commit)}")
 
