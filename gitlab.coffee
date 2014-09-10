@@ -228,12 +228,12 @@ module.exports = (robot) ->
           if /^0+$/.test(hook.before)
             # this is a new branch or tag.
             message.push("#{@sm.bold(hook.user_name)} pushed a new #{label} (#{@sm.bold(value)}) to #{@sm.bold(hook.repository.name)}")
-            message.push("#{@sm.underline(hook.repository.homepage + '/commit/' + hook.after)}")
+            message.push("#{hook.repository.homepage + '/commit/' + hook.after}")
           else
             if /^0+$/.test(hook.after)
               # branch or tag is deleted.
               message.push("#{@sm.bold(hook.user_name)} deleted #{label} (#{@sm.bold(value)}) to #{@sm.bold(hook.repository.name)}")
-              message.push("#{@sm.underline(hook.repository.homepage + '/commit/' + hook.before)}")
+              message.push("#{hook.repository.homepage + '/commit/' + hook.before}")
             else
               # normal push event.
               branch     = hook.ref.split("/")[2..].join("/")
