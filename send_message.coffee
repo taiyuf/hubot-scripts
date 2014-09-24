@@ -6,10 +6,10 @@
 #   "read_json":   included in this repogitory
 #
 # Configuration:
-#   HUBOT_IRC_TYPE: "irc", "http_post", "idobata", "chatwork"
+#   HUBOT_IRC_TYPE: "irc", "http_post", "idobata", "chatwork", "hipchat"
 #   HUBOT_IRC_MSG_TYPE: if you use "http_post", set the type of message. "string" or "html". default: "string"
 #   HUBOT_IRC_MSG_LABEL: if you use "http_post", set the name of form's label.
-#   HUBOT_IRC_INFO: path to headers file(json).
+#   HUBOT_IRC_INFO: path to group chat system's  infomation file(json).
 #
 # HUBOT_IRC_INFO like this,
 #
@@ -40,6 +40,18 @@
 #     "icon_emoji": ":ghost:"            # optional
 # }
 #
+# for hipchat
+#
+# {
+#         "target": {"ROOM_NAME": {"id": ROOM_ID,
+#                                  "token": "ROOM_TOKEN",
+#                                  "color": "green"}
+#                   },
+#         "header": {"Content-Type": "application/json"}
+# }
+#
+# ROOM_ID, ROOM_TOKEN are Group Admin -> Rooms -> API ID , Room Notification Tokens.
+#
 # Usage:
 #
 # SendMessage = require './send_message'
@@ -69,11 +81,11 @@ class SendMessage
     @fmtLabel    = process.env.HUBOT_IRC_FMT_LABEL
     @infoFile    = process.env.HUBOT_IRC_INFO
     @info        = {}
-    @infoFlag  = false
+    @infoFlag    = false
     @form        = {}
     @lineFeed    = ""
     @typeFlag    = false
-    @typeArray   = ["irc", "http_post", "chatwork", "idobata", "slack"]
+    @typeArray   = ["irc", "http_post", "chatwork", "idobata", "slack", "hipchat"]
     @prefix      = "[send_message]"
     @maxLength   = 128
 
@@ -94,7 +106,7 @@ class SendMessage
       console.log "#{@prefix}: wrong type, #{@type}"
       return
 
-    if @type == "chatwork" or @type == "idobata" or @type == "slack"
+    if @type == "chatwork" or @type == "idobata" or @type == "slack" or @type == "hipchat"
       unless @info
         console.log "#{@prefix}: Please set the value at HUBOT_IRC_INFO."
         return
@@ -124,6 +136,10 @@ class SendMessage
       when "slack"
         @msgLabel = "text"
         @fmtLabel = "payload"
+      when "hipchat"
+        @msgLabel = "message"
+        @msgType  = "html"
+        @fmtLabel = "message_format"
 
     if @msgType == "html"
       @lineFeed = "<br />"
@@ -335,6 +351,7 @@ class SendMessage
       switch @type
         when "irc"
           @robot.send { "room": tg }, messages
+
         when "http_post"
           unless @heades
             request.post
@@ -349,6 +366,7 @@ class SendMessage
               form: @form
             , (err, response, body) ->
               console.log "err: #{err}" if err?
+
         when "idobata"
           # console.log("form: %j", @form)
           request.post
@@ -357,6 +375,7 @@ class SendMessage
             form: @form
           , (err, response, body) ->
             console.log "err: #{err}" if err?
+
         when "chatwork"
           messages = encodeURIComponent "[info]#{messages}[/info]"
           uri      = "#{tg}?#{@msgLabel}=#{messages}"
@@ -365,6 +384,7 @@ class SendMessage
             headers: @info['header']
           , (err, response, body) ->
             console.log "err: #{err}" if err?
+
         when "slack"
           if @info['username']?
             @form['username'] = @info['username']
@@ -388,6 +408,27 @@ class SendMessage
           request.post
             url: uri
             form: {payload: json}
+          , (err, response, body) ->
+            console.log "err: #{err}" if err?
+
+        when "hipchat"
+          room_id    = @info['target'][tg]['id']
+          room_token = @info['target'][tg]['token']
+          uri        = 'https://api.hipchat.com/v2/room/' + room_id + '/notification?auth_token=' + room_token
+          try
+            color = @info['target'][tg]['color']
+          catch
+            color = "blue"
+          form = {}
+          form['color']   = color
+          form[@fmtLabel] = @msgType
+          form[@msgLabel] = messages
+
+          request.post
+            url: uri
+            headers: @info['header']
+            json: true
+            body: JSON.stringify form
           , (err, response, body) ->
             console.log "err: #{err}" if err?
 
