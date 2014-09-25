@@ -198,9 +198,9 @@ HUBOT_IRC_INFO:
 }
 ```
 
-ROOM_ID:    Group Admin -> Rooms -> API ID
-ROOM_TOKEN: Group Admin -> Rooms -> Room Notification Tokens
-"color" is allowed in "yellow", "red", "green", "purple", "gray", or "random".
+* ROOM_ID:    Group Admin -> Rooms -> API ID
+* ROOM_TOKEN: Group Admin -> Rooms -> Room Notification Tokens
+* "color" is allowed in "yellow", "red", "green", "purple", "gray", or "random".
 
 # Modules
 
