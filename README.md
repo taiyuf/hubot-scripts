@@ -165,6 +165,43 @@ HUBOT_IRC_INFO:
 
 token is Slack API IncommingWebhook's token.
 
+### HipChat
+
+```
+# basic
+export HUBOT_HOME=/home/hubot
+export NODE_PATH=$HUBOT_HOME/node_modules
+export REDIS_URL="redis://127.0.0.1:6379"
+export PORT=19998
+
+# hipchat
+export HUBOT_IRC_ROOMS="#dummy"
+export HUBOT_IRC_SERVER="hoge"
+export HUBOT_IRC_TYPE="hipchat"
+export HUBOT_IRC_INFO="$HUBOT_HOME/hipchat_info.json"
+
+${HUBOT_HOME}/bin/hubot -a irc
+```
+
+HUBOT_IRC_INFO:
+
+```
+{
+        "target": {"ROOM1_NAME": {"id": ROOM1_ID,
+                                  "token": "ROOM1_TOKEN",
+                                  "color": "blue"},
+                   "ROOM2_NAME": {"id": ROOM2_ID,
+                                  "token": "ROOM2_TOKEN",
+                                  "color": "green"},
+                  },
+        "color": "blue"  # default back ground color
+}
+```
+
+ROOM_ID:    Group Admin -> Rooms -> API ID
+ROOM_TOKEN: Group Admin -> Rooms -> Room Notification Tokens
+"color" is allowed in "yellow", "red", "green", "purple", "gray", or "random".
+
 # Modules
 
 ## http_irc

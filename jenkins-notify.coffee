@@ -106,18 +106,27 @@ printStatus = (target, data, diff, commit) ->
   msg.push("branch: #{@sm.bold(data['build']['scm']['branch'])}")
   msg.push("commit: #{@sm.bold(commit)}")
 
-  if ircType == "slack"
-    title = "[Jenkins]"
-    color = ''
-    if data['build']['status'] == "SUCCESS"
-      color = "good"
-    else
-      color = "danger"
-    @sm.send target, '', @sm.slack_attachments(title, msg, color)
+  switch ircType
+    when "slack"
+      title = "[Jenkins]"
+      color = ''
+      if data['build']['status'] == "SUCCESS"
+        color = "good"
+      else
+        color = "danger"
+      @sm.send target, '', @sm.slack_attachments(title, msg, color)
 
-  else
-    msg.unshift("#{@sm.bold('[Jenkins]')}")
-    @sm.send target, msg
+    when "hipchat"
+      color = ''
+      if data['build']['status'] == "SUCCESS"
+        color = "green"
+      else
+        color = "red"
+      @sm.send target, msg, color
+
+    else
+      msg.unshift("#{@sm.bold('[Jenkins]')}")
+      @sm.send target, msg
 
 module.exports = (robot) ->
 

@@ -47,10 +47,11 @@
 #                                  "token": "ROOM_TOKEN",
 #                                  "color": "green"}
 #                   },
-#         "header": {"Content-Type": "application/json"}
+#         "color": "blue"  # default back ground color
 # }
 #
 # ROOM_ID, ROOM_TOKEN are Group Admin -> Rooms -> API ID , Room Notification Tokens.
+# "color" is allowed in "yellow", "red", "green", "purple", "gray", or "random".
 #
 # Usage:
 #
@@ -138,7 +139,6 @@ class SendMessage
         @fmtLabel = "payload"
       when "hipchat"
         @msgLabel = "message"
-        @msgType  = "html"
         @fmtLabel = "message_format"
 
     if @msgType == "html"
@@ -185,6 +185,10 @@ class SendMessage
         str
       when "slack"
         ' *' + str + '* '
+      when "hipchat"
+        str
+      else
+        str
 
   url: (t_str, u_str) ->
 
@@ -199,6 +203,10 @@ class SendMessage
         t_str + ": " + u_str
       when "slack"
         '<' + u_str + '|' + t_str + '>'
+      when "hipchat"
+        t_str + ": " + u_str
+      else
+        t_str + ": " + u_str
 
   underline: (str) ->
 
@@ -213,6 +221,10 @@ class SendMessage
         str
       when "slack"
         ' *' + str + '* '
+      when "hipchat"
+        str
+      else
+        str
 
   makeHtmlList: (commits) ->
     array   = []
@@ -326,7 +338,7 @@ class SendMessage
     wait = (Math.floor(Math.random() * 10) + 1) * ms
     continue while new Date().getTime() - start < wait
 
-  send: (target, msg, attachments) ->
+  send: (target, msg, option) ->
 
     messages = ''
 
@@ -398,8 +410,8 @@ class SendMessage
           # @form['mrkdwn']  = "true"
           uri = 'https://' + @info['team_url'] + '/services/hooks/incoming-webhook?token=' + @info['token'][tg]
 
-          if attachments? or attachments != false
-            @form['attachments'] = attachments
+          if option? or option != false
+            @form['attachments'] = option
             attachments = false
 
           json = JSON.stringify @form
@@ -415,18 +427,27 @@ class SendMessage
           room_id    = @info['target'][tg]['id']
           room_token = @info['target'][tg]['token']
           uri        = 'https://api.hipchat.com/v2/room/' + room_id + '/notification?auth_token=' + room_token
+
           try
             color = @info['target'][tg]['color']
           catch
-            color = "blue"
+            try
+              color = @info['color']
+            catch
+              color = 'blue'
+          if option?
+            color = option
+
           form = {}
           form['color']   = color
-          form[@fmtLabel] = @msgType
+          form[@fmtLabel] = 'text'
           form[@msgLabel] = messages
+
+          # console.log JSON.stringify form
 
           request.post
             url: uri
-            headers: @info['header']
+            headers: "Content-Type": "application/json"
             json: true
             body: JSON.stringify form
           , (err, response, body) ->
