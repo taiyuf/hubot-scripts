@@ -22,6 +22,8 @@
 #                    }
 #   }
 #
+#   GIT_URL: http://GITLAB/USER/MODULE
+#
 #   if you have an api key, JENKINS_JOB_URL is like this.
 #   http://USER:USER_API_KEY@JENKINS_SERVER_URL/.../job/PROJECT_NAME/build?token=USER_API_KEY
 #
@@ -124,6 +126,6 @@ module.exports = (robot) ->
         console.log "target_URL: #{job_url}" if debug
 
       else
-        console.log "#{@prefix} unknown message type: " + typeof(msg) + "."
+        console.log "#{prefix} unknown message type: " + typeof(msg) + "."
 
 
