@@ -396,3 +396,45 @@ http://USER:USER_API_KEY@JENKINS_SERVER_URL/.../job/PROJECT_NAME/build?token=USE
 Put http://<HUBOT_URL>:<PORT>/hubot/jenkins-jobselector to web hook at your git repository.
 
 
+## cmd
+
+Let hubot execute shell command.
+
+### Configuration
+
+* CMD_CONFIG: path to configuration file
+
+You need write CMD_CONFIG file in json format like this.
+
+```
+{
+    "TARGET1": {"ACTION1": {"command": "/path/to/cmd1 ACTION1",
+                            "user": ["foo", "bar"],
+                            "message": "/path/to/cmd1 ACTION1 is executed."}
+                "ACTION2": {"command": "/path/to/cmd1 ACTION2",
+                            "user": ["foo"],
+                            "message": "/path/to/cmd1 ACTION2 is executed."}},
+    "TARGET2": {"ACTION1": {"command": "/path/to/cmd2 ACTION1",
+                            "user": ["foo", "bar"],
+                            "message": "/path/to/cmd2 ACTION1 is executed."}}
+}
+```
+
+You need to execute hubot as adapter for each group chat system, too.
+If you use slack, you need to hubot-slack adapter.
+
+You need to let hubot user allow to execute command on your system (ex. sudo).
+
+Each ACTION has these properties:
+
+* command: the expression to execute command.
+* user:    the list of user allowed to execute the command.
+* message: the message to let hubot tell when the command executed.
+
+### Usage
+
+Tell bot to order.
+
+```
+@bot cmd TARGET ACTION
+```
