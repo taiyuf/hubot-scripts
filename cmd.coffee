@@ -1,18 +1,38 @@
 # Description
-#   ""
+#   Let hubot execute shell command.
 #
 # Dependencies:
-#   "querystring": "0.1.0"
+#   send_message: include this module
 #
 # Configuration:
-#   None
+#   CMD_CONFIG: path to configuration file
+#
+# You need write CMD_CONFIG file in json format like this.
+#
+# {
+#     "TARGET1": {"ACTION1": {"command": "/path/to/cmd1 ACTION1",
+#                             "user": ["foo", "bar"],
+#                             "message": "/path/to/cmd1 ACTION1 is executed."}
+#                 "ACTION2": {"command": "/path/to/cmd1 ACTION2",
+#                             "user": ["foo"],
+#                             "message": "/path/to/cmd1 ACTION2 is executed."}},
+#     "TARGET2": {"ACTION1": {"command": "/path/to/cmd2 ACTION1",
+#                             "user": ["foo", "bar"],
+#                             "message": "/path/to/cmd2 ACTION1 is executed."}}
+# }
+#
+# You need to execute hubot as adapter for each group chat system.
+# If you use slack, you need to hubot-slack adapter.
+#
+# You need to let hubot user allow to execute command on your system (ex. sudo).
+# Each ACTION has these properties:
+#   command: the expression to execute command.
+#   user:    the list of user allowed to execute the command.
+#   message: the message to let hubot tell when the command executed.
 #
 # Commands:
-#   None
-#
-#
-# Sample:
-#
+#   Tell bot to order.
+#   @bot cmd TARGET ACTION
 #
 # Author:
 #   Taiyu Fujii
@@ -23,11 +43,7 @@ prefix      = '[cmd]'
 debug       = process.env.CMD_DEBUG
 configFile  = process.env.CMD_CONFIG
 
-
-
 send_message = (room, msg) ->
-  # console.log "room: #{room}"
-  # console.log "msg: #{message}"
   unless room
     console.log "#{prefix}: There is no room to say."
 
@@ -35,8 +51,6 @@ send_message = (room, msg) ->
     @sm.send ["#{room}"], "", @sm.slack_attachments("", msg)
   else
     @sm.send ["#{room}"], msg
-  # res.writeHead 200, {'Content-Type': 'text/plain'}
-  # res.end 'OK'
 
 exec_command = (cmd) ->
   @exec = require('child_process').exec
@@ -45,34 +59,39 @@ exec_command = (cmd) ->
     msg.send stdout
     msg.send stderr
 
-help = () ->
-  return "cmd WORD1 WORD2"
+check_privilege = (list, user) ->
+  flag = false
+  for l in list
+    if l == user
+      flag = true
+  if flag == true
+    return true
+  else
+    return false
+
+help = (msg) ->
+  msg.send "Usage: cmd TARGET ACTION."
+  msg.send "Your order is not match my task list. Please check again."
+  return
 
 module.exports = (robot) ->
-
-  @sm = new SendMessage(robot)
+  @sm  = new SendMessage(robot)
   conf = @sm.readJson configFile, prefix
-  console.log "conf: %j", conf if debug?
 
-  robot.hear /cmd (\w+) (\w+)/i, (msg) ->
-
-    console.log "1: #{msg.match[1]}, 2: #{msg.match[2]}" if debug?
+  robot.respond /cmd (\w+) (\w+)/i, (msg) ->
 
     for key,val of conf
-      console.log "key: #{key}"
       switch msg.match[1]
         when key
-          console.log "match: #{key}"
           for key2,val2 of val
-            console.log "key2: #{key2}"
             switch msg.match[2]
               when key2
-                console.log "match: #{key2}"
-                msg.send val2['message']
-                exec_command val2['command']
+                if check_privilege(val2['user'], msg.message.user.name)
+                  msg.send val2['message']
+                  exec_command val2['command']
+                else
+                  msg.send "Sorry, You are not allowed to let me order."
               else
-                msg.send help()
-
+                help msg
         else
-          msg.send help()
-
+          help msg
