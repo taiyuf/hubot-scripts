@@ -264,9 +264,6 @@ class SendMessage
       fields.push(field)
 
     return {fallback: fallback.join(@lineFeed), fields: fields, color: color, mrkdwn_in: ["fallback", "fields"]}
-    # return {fallback: 'test', fields: fields, color: color}
-
-  # slackJenkinsResults: (result) ->
 
   makeMarkdownList: (commits) ->
     array = ['']

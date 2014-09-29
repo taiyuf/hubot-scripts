@@ -42,22 +42,18 @@ SendMessage = require './send_message'
 prefix      = '[cmd]'
 debug       = process.env.CMD_DEBUG
 configFile  = process.env.CMD_CONFIG
+color       = process.env.CMD_COLOR
+# type        = process.env.HUBOT_IRC_TYPE
 
-send_message = (room, msg) ->
-  unless room
-    console.log "#{prefix}: There is no room to say."
-
-  if ircType == "slack"
-    @sm.send ["#{room}"], "", @sm.slack_attachments("", msg)
-  else
-    @sm.send ["#{room}"], msg
-
-exec_command = (cmd) ->
+exec_command = (msg, cmd) ->
   @exec = require('child_process').exec
   @exec cmd, (error, stdout, stderr) ->
-    msg.send error
-    msg.send stdout
-    msg.send stderr
+    console.log "error: #{error}"
+    console.log "stdout: #{stdout}"
+    console.log "stderr: #{stderr}"
+    msg.send error unless error == null
+    msg.send stdout if stdout
+    msg.send stderr if stderr
 
 check_privilege = (list, user) ->
   flag = false
@@ -69,16 +65,18 @@ check_privilege = (list, user) ->
   else
     return false
 
-help = (msg) ->
+help = (msg, title, color) ->
+  msg.send title
   msg.send "Usage: cmd TARGET ACTION."
   msg.send "Your order is not match my task list. Please check again."
-  return
 
 module.exports = (robot) ->
   @sm  = new SendMessage(robot)
   conf = @sm.readJson configFile, prefix
 
   robot.respond /cmd (\w+) (\w+)/i, (msg) ->
+    title = prefix + " " + msg.match[1] + " " + msg.match[2]
+    flag  = false
 
     for key,val of conf
       switch msg.match[1]
@@ -87,11 +85,12 @@ module.exports = (robot) ->
             switch msg.match[2]
               when key2
                 if check_privilege(val2['user'], msg.message.user.name)
+                  msg.send title
                   msg.send val2['message']
-                  exec_command val2['command']
+                  exec_command msg, val2['command']
+                  flag = true
                 else
-                  msg.send "Sorry, You are not allowed to let me order."
-              else
-                help msg
-        else
-          help msg
+                  tell msg, "Permission error!", "Sorry, You are not allowed to let me order.", '', color
+                  flag = true
+
+    help if flag == false
