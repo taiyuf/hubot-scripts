@@ -326,7 +326,7 @@ class SendMessage
       if typeof msg == "string"
         message = msg
       else
-        console.log "#{@prefix}: msg error #{msg.toSource()}"
+        console.log "#{@prefix}: msg error #{msg}"
             # else
       #   console.log "unknown error on slack_attachment: #{msg}, type: " + typeof msg
     # console.log "sa: #{message}"
@@ -380,7 +380,6 @@ class SendMessage
               console.log "err: #{err}" if err?
 
         when "idobata"
-          # console.log("form: %j", @form)
           request.post
             url: tg
             headers: @info['header']

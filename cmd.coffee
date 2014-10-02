@@ -106,8 +106,9 @@ module.exports = (robot) ->
       when "slack"
         @sm.send target, '', @sm.slack_attachments(title, message, color)
       else
-        @sm.send target, title,   color
-        @sm.send target, message, color
+        # @sm.send target, title,   color
+        # @sm.send target, message, color
+        msg.send message
 
   robot.respond /cmd (\w+) (\w+)/i, (msg) ->
     title = "#{prefix} #{msg.match[1]} #{msg.match[2]}"
@@ -120,11 +121,11 @@ module.exports = (robot) ->
             switch msg.match[2]
               when key2
                 if check_privilege(val2['user'], msg.message.user.name)
-                  tell msg, title, val2['message'], color
+                  tell msg, title, val2['message']
                   exec_command msg, val2['command']
                   flag = true
                 else
-                  tell msg, "Permission error!", "Sorry, You are not allowed to let me order."
+                  tell msg, "Permission error!", "Sorry, You are not allowed to let me order: #{msg.message.user.name}."
                   flag = true
 
     help msg if flag == false
