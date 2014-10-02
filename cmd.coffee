@@ -6,6 +6,9 @@
 #
 # Configuration:
 #   CMD_CONFIG: path to configuration file
+#   CMD_MSG_COLOR: color
+#
+# hipchat "color" is allowed in "yellow", "red", "green", "purple", "gray", or "random".
 #
 # You need write CMD_CONFIG file in json format like this.
 #
@@ -42,40 +45,72 @@ SendMessage = require './send_message'
 prefix      = '[cmd]'
 debug       = process.env.CMD_DEBUG
 configFile  = process.env.CMD_CONFIG
-color       = process.env.CMD_COLOR
-# type        = process.env.HUBOT_IRC_TYPE
-
-exec_command = (msg, cmd) ->
-  @exec = require('child_process').exec
-  @exec cmd, (error, stdout, stderr) ->
-    console.log "error: #{error}"
-    console.log "stdout: #{stdout}"
-    console.log "stderr: #{stderr}"
-    msg.send error unless error == null
-    msg.send stdout if stdout
-    msg.send stderr if stderr
-
-check_privilege = (list, user) ->
-  flag = false
-  for l in list
-    if l == user
-      flag = true
-  if flag == true
-    return true
-  else
-    return false
-
-help = (msg, title, color) ->
-  msg.send title
-  msg.send "Usage: cmd TARGET ACTION."
-  msg.send "Your order is not match my task list. Please check again."
+color       = process.env.CMD_MSG_COLOR
+type        = process.env.HUBOT_IRC_TYPE
 
 module.exports = (robot) ->
   @sm  = new SendMessage(robot)
   conf = @sm.readJson configFile, prefix
 
+  unless color
+    switch type
+      when "slack"
+        color = "#aaaaaa"
+      when "hipchat"
+        color = "gray"
+
+  exec_command = (msg, cmd) ->
+    room = '#' + msg.message.user.room
+    target = []
+    target.push room
+    @exec   = require('child_process').exec
+    message = {}
+    @exec cmd, (error, stdout, stderr) ->
+      # console.log "error: #{error}"
+      # console.log "stdout: #{stdout}"
+      # console.log "stderr: #{stderr}"
+      if error
+        tell msg, "[Unknown error]", "Error!", color
+        tell msg, "[Error]",  stderr, color if stderr
+        return
+
+      if stdout
+        tell msg, "[Result]", stdout, color
+      else
+        unless error
+          tell msg, "[Result]", "executed in success.", color
+      tell msg, "[Error]",  stderr, color if stderr
+
+  check_privilege = (list, user) ->
+    flag = false
+    for l in list
+      if l == user
+        flag = true
+    if flag == true
+      return true
+    else
+      return false
+
+  help = (msg, title, message) ->
+    room    = '#' + msg.message.user.room
+    target  = [room]
+    title   = "Usage: cmd TARGET ACTION." unless title
+    message = "Your order is not match my task list. Please check again." unless message
+    tell msg, title, message
+
+  tell = (msg, title, message) ->
+    room   = '#' + msg.message.user.room
+    target = [room]
+
+    switch type
+      when "slack"
+        @sm.send target, '', @sm.slack_attachments(title, message, color)
+      else
+        @sm.send target, title,   color
+        @sm.send target, message, color
+
   robot.respond /cmd (\w+) (\w+)/i, (msg) ->
-    title = prefix + " " + msg.match[1] + " " + msg.match[2]
+    title = "#{prefix} #{msg.match[1]} #{msg.match[2]}"
     flag  = false
 
     for key,val of conf
@@ -85,12 +120,11 @@ module.exports = (robot) ->
             switch msg.match[2]
               when key2
                 if check_privilege(val2['user'], msg.message.user.name)
-                  msg.send title
-                  msg.send val2['message']
+                  tell msg, title, val2['message'], color
                   exec_command msg, val2['command']
                   flag = true
                 else
-                  tell msg, "Permission error!", "Sorry, You are not allowed to let me order.", '', color
+                  tell msg, "Permission error!", "Sorry, You are not allowed to let me order."
                   flag = true
 
-    help if flag == false
+    help msg if flag == false
