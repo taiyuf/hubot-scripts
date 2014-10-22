@@ -105,6 +105,11 @@ module.exports = (robot) ->
     switch type
       when "slack"
         @sm.send target, '', @sm.slack_attachments(title, message, color)
+      # when "hipchat"
+      #   console.log "hipchat"
+      #   console.log title
+      #   @sm.send target, title,   color
+      #   @sm.send target, message, color
       else
         # @sm.send target, title,   color
         # @sm.send target, message, color
