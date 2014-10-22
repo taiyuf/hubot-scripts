@@ -325,8 +325,11 @@ class SendMessage
     else
       if typeof msg == "string"
         message = msg
-      # else
+      else
+        console.log "#{@prefix}: msg error #{msg}"
+            # else
       #   console.log "unknown error on slack_attachment: #{msg}, type: " + typeof msg
+    # console.log "sa: #{message}"
 
     return [{fallback: message, fields: [{title: title, value: message}], color: color, mrkdwn_in: ["fallback", "fields"]}]
 
@@ -377,7 +380,6 @@ class SendMessage
               console.log "err: #{err}" if err?
 
         when "idobata"
-          # console.log("form: %j", @form)
           request.post
             url: tg
             headers: @info['header']
@@ -405,7 +407,13 @@ class SendMessage
 
           @form['channel'] = tg
           # @form['mrkdwn']  = "true"
-          uri = 'https://' + @info['team_url'] + '/services/hooks/incoming-webhook?token=' + @info['token'][tg]
+
+          token = @info['token'][tg]
+          if token == undefined
+            console.log "#{@prefix}: No token for #{tg} channel."
+            return
+
+          uri = 'https://' + @info['team_url'] + '/services/hooks/incoming-webhook?token=' + token
 
           if option? or option != false
             @form['attachments'] = option
