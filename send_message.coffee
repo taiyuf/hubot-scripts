@@ -408,17 +408,17 @@ class SendMessage
           @form['channel'] = tg
           # @form['mrkdwn']  = "true"
 
-          token = @info['token'][tg]
-          if token == undefined
-            console.log "#{@prefix}: No token for #{tg} channel."
-            return
-
           if @info['team_url'] and @info['token'] 
             uri = 'https://' + @info['team_url'] + '/services/hooks/incoming-webhook?token=' + token
+            token = @info['token'][tg]
+            if token == undefined
+              console.log "#{@prefix}: No token for #{tg} channel."
+              return
+
           else if @info['webhook_url']
             uri = @info['webhook_url']
           else
-            console.log "#{@prefix} URI Not found."
+            console.log "#{@prefix}: URI Not found."
             return
 
           if option? or option != false
