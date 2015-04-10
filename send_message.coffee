@@ -32,12 +32,22 @@
 #
 # for slack
 #
+# old webhook style.
+#
 # {
 #     "team_url": "hoge.slack.com",      # required
 #     "token: {"#channel1": "hogehoge",  # required
 #              "#channel2": "fugafuga"},
 #     "username": "hubot",               # optional. default is "hubot"
 #     "icon_emoji": ":ghost:"            # optional
+# }
+#
+# new webhook style.
+#
+# {
+#     "webhook_url": "https://hooks.slack.com/services/.....",  # required
+#     "username": "hubot",                                      # optional. default is "hubot"
+#     "icon_emoji": ":ghost:"                                   # optional
 # }
 #
 # for hipchat
