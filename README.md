@@ -153,6 +153,8 @@ ${HUBOT_HOME}/bin/hubot -a slack
 
 HUBOT_IRC_INFO:
 
+old webhook style.
+
 ```
 {
     "team_url": "hoge.slack.com",      # required
@@ -160,6 +162,16 @@ HUBOT_IRC_INFO:
              "#channel2": "fugafuga"},
     "username": "hubot",               # optional. default is "hubot"
     "icon_emoji": ":ghost:"            # optional
+}
+```
+
+new webhook style.
+
+```
+{
+    "webhook_url": "https://hooks.slack.com/services/.....",  # required
+    "username": "hubot",                                      # optional. default is "hubot"
+    "icon_emoji": ":ghost:"                                   # optional
 }
 ```
 
