@@ -60,32 +60,37 @@ module.exports = (robot) ->
         color = "gray"
 
   exec_command = (msg, cmd) ->
-    room = '#' + msg.message.user.room
-    target = []
-    target.push room
-    @exec   = require('child_process').exec
+    room    = '#' + msg.message.user.room
+    target  = []
+    exec    = require('child_process').exec
     message = {}
-    @exec cmd, (error, stdout, stderr) ->
+    result  = []
+
+    target.push room
+
+    exec cmd, (error, stdout, stderr) ->
       # console.log "error: #{error}"
       # console.log "stdout: #{stdout}"
       # console.log "stderr: #{stderr}"
       if error
         tell msg, "[Unknown error]", "Error!", color
         tell msg, "[Error]",  stderr, color if stderr
-        return
 
       if stdout
         tell msg, "[Result]", stdout, color
       else
         unless error
           tell msg, "[Result]", "executed in success.", color
+
       tell msg, "[Error]",  stderr, color if stderr
 
   check_privilege = (list, user) ->
     flag = false
+
     for l in list
       if l == user
         flag = true
+
     if flag == true
       return true
     else
@@ -113,7 +118,7 @@ module.exports = (robot) ->
       else
         # @sm.send target, title,   color
         # @sm.send target, message, color
-        msg.send message
+        msg.send "#{title}\n\n#{message}"
 
   robot.respond /cmd (\w+) (\w+)/i, (msg) ->
     title = "#{prefix} #{msg.match[1]} #{msg.match[2]}"
@@ -132,5 +137,13 @@ module.exports = (robot) ->
                 else
                   tell msg, "Permission error!", "Sorry, You are not allowed to let me order: #{msg.message.user.name}."
                   flag = true
+              else
+                console.log "action not found: #{msg.match[2]}"
+                tell msg, "Action not found", "action not found: #{msg.match[2]}."
+                return
+        else
+          console.log "target not found: #{msg.match[1]}"
+          tell msg, "Target not found", "target not found: #{msg.match[1]}."
+          return
 
     help msg if flag == false

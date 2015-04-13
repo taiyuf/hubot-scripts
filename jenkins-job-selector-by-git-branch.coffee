@@ -125,5 +125,3 @@ module.exports = (robot) ->
 
       else
         console.log "#{@prefix} unknown message type: " + typeof(msg) + "."
-
-
