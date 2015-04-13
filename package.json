@@ -25,7 +25,7 @@
     "devDependencies": {
         "request": "2.34.0",
         "feedparser": "0.16.6",
-        "Mocha": "~1.17.1",
+        "mocha": "~1.17.1",
         "chai": "~1.9.0",
         "sinon": "~1.9.0",
         "nock": "",
