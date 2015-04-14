@@ -100,8 +100,14 @@ module.exports = (robot) ->
     room    = '#' + msg.message.user.room
     target  = [room]
     title   = "Usage: cmd TARGET ACTION." unless title
-    message = "Your order is not match my task list. Please check again." unless message
-    tell msg, title, message
+    message = []
+
+    message.push "Your order is not match my task list. Please check again.\n"
+
+    for key, value of conf
+      for key2, value2 of value
+        message.push "- #{key} #{key2}: `#{value2['command']}`\n#{value2['message']}.\n  by #{value2['user'].join(', ')}"
+    tell msg, title, message.join("\n")
 
   tell = (msg, title, message) ->
     room   = '#' + msg.message.user.room
@@ -122,9 +128,9 @@ module.exports = (robot) ->
 
   robot.respond /cmd (\w+) (\w+)/i, (msg) ->
     title = "#{prefix} #{msg.match[1]} #{msg.match[2]}"
-    flag  = false
 
     for key,val of conf
+      console.log "match1: #{msg.match[1]}"
       switch msg.match[1]
         when key
           for key2,val2 of val
@@ -133,17 +139,22 @@ module.exports = (robot) ->
                 if check_privilege(val2['user'], msg.message.user.name)
                   tell msg, title, val2['message']
                   exec_command msg, val2['command']
-                  flag = true
+                  return
                 else
                   tell msg, "Permission error!", "Sorry, You are not allowed to let me order: #{msg.message.user.name}."
-                  flag = true
+                  return
               else
                 console.log "action not found: #{msg.match[2]}"
-                tell msg, "Action not found", "action not found: #{msg.match[2]}."
+                tell msg, "Action not found", "action not found: #{msg.match[2]}.\n\nSee HUBOT_NAME cmd help."
                 return
+
         else
           console.log "target not found: #{msg.match[1]}"
-          tell msg, "Target not found", "target not found: #{msg.match[1]}."
+          tell msg, "Target not found", "target not found: #{msg.match[1]}.\n\nSee HUBOT_NAME cmd help."
           return
 
-    help msg if flag == false
+  robot.respond /cmd help/i, (msg) ->
+    help msg
+
+  # robot.respond /cmd (\w+)/i, (msg) ->
+  #   help msg
