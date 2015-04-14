@@ -1,0 +1,5 @@
+{
+    "webhook_url": "https://hooks.slack.com/services/.....",
+    "username": "hubot",
+    "icon_emoji": ":ghost:"
+}

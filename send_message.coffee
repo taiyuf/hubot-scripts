@@ -158,6 +158,9 @@ class SendMessage
 
   readJson: (file, prefix) ->
 
+    unless prefix
+      prefix = @prefix
+
     unless file
       console.log "#{@prefix}: Please set the value of \"file\"."
       return
