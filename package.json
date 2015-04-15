@@ -1,0 +1,40 @@
+{
+    "name": "hubot-scripts",
+    "version": "1.0.0",
+    "description": "Hubot scripts.",
+    "main": "index.js",
+    "directories": {
+        "test": "test"
+    },
+    "scripts": {
+        "test": "mocha --compilers coffee:coffee-script/register --recursive"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/taiyuf/hubot-scripts.git"
+    },
+    "keywords": [
+        "hubot"
+    ],
+    "author": "Taiyu Fujii",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/taiyuf/hubot-scripts/issues"
+    },
+    "homepage": "https://github.com/taiyuf/hubot-scripts",
+    "devDependencies": {
+        "request": "2.34.0",
+        "feedparser": "0.16.6",
+        "mocha": "~1.17.1",
+        "chai": "~1.9.0",
+        "sinon": "~1.9.0",
+        "nock": "",
+        "coffee-script": "",
+        "hubot-mock-adapter": "~1.0.0",
+        "hubot-mock-adapter-helper": ""
+    },
+    "peerDependencies": {
+        "request": "2.34.0",
+        "feedparser": "0.16.6"
+    }
+}

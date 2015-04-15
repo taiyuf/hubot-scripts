@@ -126,6 +126,10 @@ module.exports = (robot) ->
         console.log "target_URL: #{job_url}" if debug
 
       else
+<<<<<<< HEAD
         console.log "#{prefix} unknown message type: " + typeof(msg) + "."
 
 
+=======
+        console.log "#{@prefix} unknown message type: " + typeof(msg) + "."
+>>>>>>> development

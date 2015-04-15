@@ -1,0 +1,6 @@
+{
+    "test": { "echo": { "command": "echo test",
+                        "user": ["mocha"],
+                        "message": "test command" }
+            }
+}

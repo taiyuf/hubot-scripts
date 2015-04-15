@@ -60,32 +60,37 @@ module.exports = (robot) ->
         color = "gray"
 
   exec_command = (msg, cmd) ->
-    room = '#' + msg.message.user.room
-    target = []
-    target.push room
-    @exec   = require('child_process').exec
+    room    = '#' + msg.message.user.room
+    target  = []
+    exec    = require('child_process').exec
     message = {}
-    @exec cmd, (error, stdout, stderr) ->
+    result  = []
+
+    target.push room
+
+    exec cmd, (error, stdout, stderr) ->
       # console.log "error: #{error}"
       # console.log "stdout: #{stdout}"
       # console.log "stderr: #{stderr}"
       if error
         tell msg, "[Unknown error]", "Error!", color
         tell msg, "[Error]",  stderr, color if stderr
-        return
 
       if stdout
         tell msg, "[Result]", stdout, color
       else
         unless error
           tell msg, "[Result]", "executed in success.", color
+
       tell msg, "[Error]",  stderr, color if stderr
 
   check_privilege = (list, user) ->
     flag = false
+
     for l in list
       if l == user
         flag = true
+
     if flag == true
       return true
     else
@@ -95,8 +100,14 @@ module.exports = (robot) ->
     room    = '#' + msg.message.user.room
     target  = [room]
     title   = "Usage: cmd TARGET ACTION." unless title
-    message = "Your order is not match my task list. Please check again." unless message
-    tell msg, title, message
+    message = []
+
+    message.push "Your order is not match my task list. Please check again.\n"
+
+    for key, value of conf
+      for key2, value2 of value
+        message.push "- #{key} #{key2}: `#{value2['command']}`\n#{value2['message']}.\n  by #{value2['user'].join(', ')}"
+    tell msg, title, message.join("\n")
 
   tell = (msg, title, message) ->
     room   = '#' + msg.message.user.room
@@ -113,13 +124,13 @@ module.exports = (robot) ->
       else
         # @sm.send target, title,   color
         # @sm.send target, message, color
-        msg.send message
+        msg.send "#{title}\n\n#{message}"
 
   robot.respond /cmd (\w+) (\w+)/i, (msg) ->
     title = "#{prefix} #{msg.match[1]} #{msg.match[2]}"
-    flag  = false
 
     for key,val of conf
+      console.log "match1: #{msg.match[1]}"
       switch msg.match[1]
         when key
           for key2,val2 of val
@@ -128,9 +139,22 @@ module.exports = (robot) ->
                 if check_privilege(val2['user'], msg.message.user.name)
                   tell msg, title, val2['message']
                   exec_command msg, val2['command']
-                  flag = true
+                  return
                 else
                   tell msg, "Permission error!", "Sorry, You are not allowed to let me order: #{msg.message.user.name}."
-                  flag = true
+                  return
+              else
+                console.log "action not found: #{msg.match[2]}"
+                tell msg, "Action not found", "action not found: #{msg.match[2]}.\n\nSee HUBOT_NAME cmd help."
+                return
 
-    help msg if flag == false
+        else
+          console.log "target not found: #{msg.match[1]}"
+          tell msg, "Target not found", "target not found: #{msg.match[1]}.\n\nSee HUBOT_NAME cmd help."
+          return
+
+  robot.respond /cmd help/i, (msg) ->
+    help msg
+
+  # robot.respond /cmd (\w+)/i, (msg) ->
+  #   help msg
