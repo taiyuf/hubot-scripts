@@ -130,7 +130,6 @@ module.exports = (robot) ->
     title = "#{prefix} #{msg.match[1]} #{msg.match[2]}"
 
     for key,val of conf
-      console.log "match1: #{msg.match[1]}"
       switch msg.match[1]
         when key
           for key2,val2 of val

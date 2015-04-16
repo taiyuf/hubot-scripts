@@ -24,7 +24,7 @@ class create_sendmessage_instance
   irc_bot: (robot) ->
     process.env.HUBOT_IRC_TYPE  = 'irc'
     process.env.HUBOT_IRC_LABEL = 'message'
-    process.env.HUBOT_IRC_INFO  = './irc_info.json'
+    # process.env.HUBOT_IRC_INFO  = './irc_info.json'
     new @SendMessage robot
 
   http_post_bot: (robot) ->
