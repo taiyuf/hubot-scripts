@@ -215,3 +215,47 @@ describe 'test: ', ->
       array = sm.list(@commits)
       expect(array[0]).to.equal('* <url1|1>')
       expect(array[1]).to.equal('* <url2|2>')
+
+  describe 'htmlFilter', ->
+
+    before ->
+      @msg = 'hoge<br>foo<br /><b>bar</b>'
+
+    it 'message type: html', ->
+      sm = new CS robot, 'http_post'
+      expect(sm.htmlFilter(@msg)).to.equal(@msg)
+
+    # it 'message type: irc'
+    it 'message type: irc', ->
+      sm = new CS robot, 'irc'
+      expect(sm.htmlFilter(@msg)).to.equal("hoge\nfoo\nbar")
+
+  describe 'slack_attachments', ->
+
+    before ->
+      @sm    = new CS robot, 'slack'
+      @title = 'hoge'
+      @color = 'red'
+
+    it 'message: array', ->
+      msg = ['foo', 'bar']
+      # result : [{"fallback":"foo<br />bar","fields":[{"title":"hoge","value":"foo<br />bar"}],"color":"red","mrkdwn_in":["fallback","fields"]}]
+      array = @sm.slack_attachments(@title, msg, @color)
+      expect(array[0]['fallback']).to.equal('foo<br />bar')
+      expect(array[0]['fields'][0]['title']).to.equal('hoge')
+      expect(array[0]['fields'][0]['value']).to.equal('foo<br />bar')
+      expect(array[0]['color']).to.equal('red')
+      expect(array[0]['mrkdwn_in'][0]).to.equal('fallback')
+      expect(array[0]['mrkdwn_in'][1]).to.equal('fields')
+
+    it 'message: text', ->
+      msg = 'foo'
+      # result : [{"fallback":"foo","fields":[{"title":"hoge","value":"foo"}],"color":"red","mrkdwn_in":["fallback","fields"]}]
+      array = @sm.slack_attachments(@title, msg, @color)
+      expect(array[0]['fallback']).to.equal('foo')
+      expect(array[0]['fields'][0]['title']).to.equal('hoge')
+      expect(array[0]['fields'][0]['value']).to.equal('foo')
+      expect(array[0]['color']).to.equal('red')
+      expect(array[0]['mrkdwn_in'][0]).to.equal('fallback')
+      expect(array[0]['mrkdwn_in'][1]).to.equal('fields')
+

@@ -131,25 +131,26 @@ class SendMessage
         return
 
     # initialize
-    unless @msgType
-      @msgType = "string"
-
     switch @type
-      when "idobata"
+      when 'irc'
+        @msgType         = "string"
+      when 'idobata'
         @msgLabel        = "source"
         @msgType         = "html"
         @fmtLabel        = "format"
         @form[@fmtLabel] = @msgType
-      when "chatwork"
+      when 'chatwork'
         @msgLabel = "body"
-      when "http_post"
+      when 'http_post'
         @form[@fmtLabel] = @msgType
-      when "slack"
+      when 'slack'
         @msgLabel = "text"
         @fmtLabel = "payload"
-      when "hipchat"
+      when 'hipchat'
         @msgLabel = "message"
         @fmtLabel = "message_format"
+      else
+        @msgType = "string"
 
     if @msgType == "html"
       @lineFeed = "<br />"
@@ -324,11 +325,7 @@ class SendMessage
     if @msgType == 'html'
       msg
     else
-      if @type == 'irc'
-        # msg.replace(/<br>/g, @lineFeed).replace(/<br \/>/g, @lineFeed).replace(/<("[^"]*"|'[^']*'|[^'">])*>/g, '').replace(/^$/g, '').replace(/^#{@lineFeed}$/g, '')[0..64] + '....'
-        ''
-      else
-        msg.replace(/<br>/g, @lineFeed).replace(/<br \/>/g, @lineFeed).replace(/<("[^"]*"|'[^']*'|[^'">])*>/g, '').replace(/^$/g, '').replace(/^#{@lineFeed}$/g, '')
+      msg.replace(/<br>/g, @lineFeed).replace(/<br \/>/g, @lineFeed).replace(/<("[^"]*"|'[^']*'|[^'">])*>/g, '').replace(/^$/g, '').replace(/^#{@lineFeed}$/g, '')
 
   slack_attachments: (title, msg, color) ->
     message = ""
