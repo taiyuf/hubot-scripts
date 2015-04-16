@@ -178,14 +178,40 @@ describe 'test: ', ->
   describe 'list', ->
 
     before ->
-      commits = [{id: '1', url: 'url1', message: 'message 1'},{id: '2', url: 'url2', message: 'message 2'}]
+      @commits = [{id: '1', url: 'url1', message: 'message 1'},{id: '2', url: 'url2', message: 'message 2'}]
 
-      it 'irc', ->
-        sm    = new CS robot, 'irc'
-        array = sm.list(commits)
-        expect(@array[0]).to.equal('  - 1')
-        expect(@array[1]).to.equal('    message 1')
-        expect(@array[2]).to.equal('    url1')
-        expect(@array[3]).to.equal('  - 2')
-        expect(@array[4]).to.equal('    message 2')
-        expect(@array[5]).to.equal('    url2')
+    it 'irc', ->
+      sm    = new CS robot, 'irc'
+      array = sm.list(@commits)
+      expect(array[0]).to.equal('  - 1')
+      expect(array[1]).to.equal('    message 1')
+      expect(array[2]).to.equal('    url1')
+      expect(array[3]).to.equal('  - 2')
+      expect(array[4]).to.equal('    message 2')
+      expect(array[5]).to.equal('    url2')
+
+    it 'chartwork', ->
+      sm    = new CS robot, 'chatwork'
+      array = sm.list(@commits)
+      expect(array[0]).to.equal('  - 1')
+      expect(array[1]).to.equal('    message 1')
+      expect(array[2]).to.equal('    url1')
+      expect(array[3]).to.equal('  - 2')
+      expect(array[4]).to.equal('    message 2')
+      expect(array[5]).to.equal('    url2')
+
+    it 'http_post', ->
+      sm    = new CS robot, 'http_post'
+      array = sm.list(@commits)
+      expect(array[0]).to.equal("<ul><li><a href='url1' target='_blank'>1</a><br />message 1</li><li><a href='url2' target='_blank'>2</a><br />message 2</li></ul>")
+
+    it 'idobata', ->
+      sm    = new CS robot, 'idobata'
+      array = sm.list(@commits)
+      expect(array[0]).to.equal("<ul><li><a href='url1' target='_blank'>1</a><br />message 1</li><li><a href='url2' target='_blank'>2</a><br />message 2</li></ul>")
+
+    it 'slack', ->
+      sm    = new CS robot, 'slack'
+      array = sm.list(@commits)
+      expect(array[0]).to.equal('* <url1|1>')
+      expect(array[1]).to.equal('* <url2|2>')
