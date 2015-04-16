@@ -120,12 +120,15 @@ describe 'test: ', ->
 
   describe 'makeHtmlList', ->
 
-    it 'result', ->
+    before (done) ->
       sm      = new CS robot, 'http_post'
       commits = [{id: '1', url: 'url1', message: 'message 1'},{id: '2', url: 'url2', message: 'message 2'}]
-      array   = sm.makeHtmlList(commits)
+      @array  = sm.makeHtmlList(commits)
+      done()
 
-      expect(array[0]).to.equal('<ul><li><a href=\'url1\' target=\'_blank\'>1</a><br />message 1</li><li><a href=\'url2\' target=\'_blank\'>2</a><br />message 2</li></ul>')
+    it 'result', ->
+
+      expect(@array[0]).to.equal('<ul><li><a href=\'url1\' target=\'_blank\'>1</a><br />message 1</li><li><a href=\'url2\' target=\'_blank\'>2</a><br />message 2</li></ul>')
 
   describe 'slackCommitMessage', ->
     # result = {"fallback":"\u001flink\u001f: url1\nmessage 1\n\n\n\n\n\u001flink\u001f: url2\nmessage 2\n\n\n\n","fields":[{"title":"* 1","value":"\u001flink\u001f: url1\nmessage 1\n\n\n\n"},{"title":"* 2","value":"\u001flink\u001f: url2\nmessage 2\n\n\n\n"}],"color":"#aaaaaa","mrkdwn_in":["fallback","fields"]}
@@ -145,3 +148,44 @@ describe 'test: ', ->
       expect(@hash['fields'][1]['title']).to.equal('* 2')
       expect(@hash['fields'][1]['value']).to.equal('<url2|link><br />message 2<br /><br /><br /><br />')
 
+  describe 'makeMarkdownList', ->
+
+    before (done) ->
+      sm      = new CS robot, 'slack'
+      commits = [{id: '1', url: 'url1', message: 'message 1'},{id: '2', url: 'url2', message: 'message 2'}]
+      @array  = sm.makeMarkdownList(commits)
+      done()
+
+    it 'result', ->
+      expect(@array[0]).to.equal('* <url1|1>')
+      expect(@array[1]).to.equal('* <url2|2>')
+
+  describe 'makeStrList', ->
+    before (done) ->
+      sm      = new CS robot, 'irc'
+      commits = [{id: '1', url: 'url1', message: 'message 1'},{id: '2', url: 'url2', message: 'message 2'}]
+      @array  = sm.makeStrList(commits)
+      done()
+
+    it 'result', ->
+      expect(@array[0]).to.equal('  - 1')
+      expect(@array[1]).to.equal('    message 1')
+      expect(@array[2]).to.equal('    url1')
+      expect(@array[3]).to.equal('  - 2')
+      expect(@array[4]).to.equal('    message 2')
+      expect(@array[5]).to.equal('    url2')
+
+  describe 'list', ->
+
+    before ->
+      commits = [{id: '1', url: 'url1', message: 'message 1'},{id: '2', url: 'url2', message: 'message 2'}]
+
+      it 'irc', ->
+        sm    = new CS robot, 'irc'
+        array = sm.list(commits)
+        expect(@array[0]).to.equal('  - 1')
+        expect(@array[1]).to.equal('    message 1')
+        expect(@array[2]).to.equal('    url1')
+        expect(@array[3]).to.equal('  - 2')
+        expect(@array[4]).to.equal('    message 2')
+        expect(@array[5]).to.equal('    url2')

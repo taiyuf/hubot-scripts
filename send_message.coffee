@@ -279,10 +279,12 @@ class SendMessage
     return {fallback: fallback.join(@lineFeed), fields: fields, color: color, mrkdwn_in: ["fallback", "fields"]}
 
   makeMarkdownList: (commits) ->
-    array = ['']
+    array = []
     for cs in commits
       cstr = cs.message.replace /\n/g, @lineFeed
       array.push('* ' + @url(cs.id, cs.url))
+
+    return array
 
   makeStrList: (commits) ->
     array  = []
