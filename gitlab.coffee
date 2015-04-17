@@ -193,7 +193,11 @@ module.exports = (robot) ->
         # console.log "R: " + req.headers.referer
         # url -> http://GITLAB/なので、無理
       catch
-        console.log "#{prefix}: Unknown git repository."
+        try
+          p_id = hook.object_attributes.project_id
+          git_url = brain[gitlabUrl]['repository'][p_id]['url']
+        catch
+          console.log "#{prefix}: Unknown git repository."
 
     try
       target = conf[git_url]['target']
