@@ -82,6 +82,7 @@ class SendMessage
 
   fs       = require 'fs'
   request  = require 'request'
+  querystring = require 'querystring'
 
   constructor: (robot) ->
 
@@ -434,15 +435,43 @@ class SendMessage
             return
 
           if option? or option != false
-            @form['attachments'] = option
-            attachments = false
+            # @form['attachments'] = option
+            # attachments = false
+            console.log "option: %j", option
+            if option['color']
+              color = option['color']
+            if option['icon_emoji']
+              icon_emoji = option['icon_emoji']
+            if option['icon_url']
+              icon_url = option['icon_url']
 
           json = JSON.stringify @form
           # console.log "uri:" + uri
           # console.log "form: %j", json
-          request.post
-            url: uri
-            form: {payload: json}
+
+          # request.post
+          #   url: uri
+          #   form: {payload: json}
+          # , (err, response, body) ->
+          #   console.log "err: #{err}" if err?
+          # @robot.send { "room": tg }, messages
+
+          @slack_token = process.env.HUBOT_SLACK_TOKEN
+          uri = 'https://slack.com/api/chat.postMessage'
+          hash = {}
+          # hash['token'] = 'xoxp-2560197782-2560197786-7240418160-91a6aa'
+          hash['token'] = @slack_token
+          hash['channel'] = tg
+          hash['text'] = messages
+          # hash['pretty'] = 1
+          hash['attachments'] = JSON.stringify @slack_attachments('', messages, color)
+
+          if icon_emoji
+            hash['icon_emoji'] = icon_emoji
+          if icon_url
+            hash['icon_url'] = icon_url
+          console.log "url: #{uri}?#{querystring.stringify(hash)}"
+          request.get "#{uri}?#{querystring.stringify(hash)}"
           , (err, response, body) ->
             console.log "err: #{err}" if err?
 

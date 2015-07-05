@@ -31,7 +31,7 @@ SendMessage = require './send_message'
 prefix      = "[http_irc]"
 ircType     = process.env.HUBOT_IRC_TYPE
 
-send_message = (res, room, msg) ->
+send_message = (res, room, msg, query) ->
   # console.log "room: #{room}"
   # console.log "msg: #{message}"
   unless room
@@ -39,8 +39,18 @@ send_message = (res, room, msg) ->
     res.writeHead 200, {'Content-Type': 'text/plain'}
     res.end 'Error: There is no room to say.'
 
+  # console.log "query: %j", query
+  options = {}
+  if query.color?
+    options['color'] = query.color
+  if query.icon_emoji?
+    options['icon_emoji'] = query.icon_emoji
+  if query.icon_url?
+    options['icon_url'] = query.icon_url
+
   if ircType == "slack"
-    @sm.send ["#{room}"], "", @sm.slack_attachments("", msg)
+    # @sm.send ["#{room}"], "", @sm.slack_attachments("", msg)
+    @sm.send ["#{room}"], msg, options
   else
     @sm.send ["#{room}"], msg
   res.writeHead 200, {'Content-Type': 'text/plain'}
@@ -56,12 +66,12 @@ module.exports = (robot) ->
     query   = querystring.parse(req._parsedUrl.query)
     room    = query.room
     message = query.message
-    send_message(res, room, message)
+    send_message(res, room, message, query)
 
   robot.router.post "#{path}", (req, res) ->
     query   = querystring.parse(req._parsedUrl.query)
     room    = query.room or ''
     message = req.body.message
     room    = req.body.room unless room
-    send_message(res, room, message)
+    send_message(res, room, message, req.body)
 
