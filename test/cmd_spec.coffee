@@ -4,7 +4,7 @@ process.env.HUBOT_IRC_ROOMS  = "#dummy"
 process.env.HUBOT_IRC_SERVER = "hoge"
 process.env.CMD_CONFIG       = "./test/cmd_config.json"
 
-src         = process.env.HOME + "/hubot/node_modules/hubot/src"
+src         = process.env.HOME + "/node_modules/hubot/src"
 Robot       = require(src + "/robot")
 TextMessage = require(src + "/message").TextMessage
 
