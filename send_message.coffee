@@ -80,9 +80,11 @@
 
 class SendMessage
 
-  fs       = require 'fs'
-  request  = require 'request'
-  querystring = require 'querystring'
+  fs           = require 'fs'
+  request      = require 'request'
+  querystring  = require 'querystring'
+  IrcMessage   = require './send_message/irc'
+  SlackMessage = require './send_message/slack'
 
   constructor: (robot) ->
 
@@ -100,6 +102,8 @@ class SendMessage
     @typeArray   = ["irc", "http_post", "chatwork", "idobata", "slack", "hipchat"]
     @prefix      = "[send_message]"
     @maxLength   = 128
+
+    @slack = new SlackMessage
 
     # check
     unless @type
@@ -348,7 +352,7 @@ class SendMessage
 
   sleep: (ms) ->
     start = new Date().getTime()
-    wait = (Math.floor(Math.random() * 10) + 1) * ms
+    wait  = (Math.floor(Math.random() * 10) + 1) * ms
     continue while new Date().getTime() - start < wait
 
   send: (target, msg, option) ->
@@ -361,18 +365,24 @@ class SendMessage
         @infoFlag = true
 
     # message
-    if typeof(msg) == 'object'
+    if typeof(msg) is 'object'
       messages = msg.join(@lineFeed)
     else
-      if typeof(msg) == 'string'
+      if typeof(msg) is 'string'
         messages = msg
       else
         console.log "#{@prefix} unknown message type: " + typeof(msg) + "."
 
     @form[@msgLabel] = messages
 
+    if typeof(target) is 'object'
+      targets = target
+    else
+      targets = []
+      targets.push target
+
     # main
-    for tg in target
+    for tg in targets
       switch @type
         when "irc"
           @robot.send { "room": tg }, messages
@@ -410,70 +420,7 @@ class SendMessage
             console.log "err: #{err}" if err?
 
         when "slack"
-          if @info['username']?
-            @form['username'] = @info['username']
-          else
-            @form['username'] = 'hubot'
-
-          if @info['icon_emoji']?
-            @form['icon_emoji'] = @info['icon_emoji']
-
-          @form['channel'] = tg
-          # @form['mrkdwn']  = "true"
-
-          if @info['team_url'] and @info['token'] 
-            uri = 'https://' + @info['team_url'] + '/services/hooks/incoming-webhook?token=' + token
-            token = @info['token'][tg]
-            if token == undefined
-              console.log "#{@prefix}: No token for #{tg} channel."
-              return
-
-          else if @info['webhook_url']
-            uri = @info['webhook_url']
-          else
-            console.log "#{@prefix}: URI Not found."
-            return
-
-          if option? or option != false
-            # @form['attachments'] = option
-            # attachments = false
-            console.log "option: %j", option
-            if option['color']
-              color = option['color']
-            if option['icon_emoji']
-              icon_emoji = option['icon_emoji']
-            if option['icon_url']
-              icon_url = option['icon_url']
-
-          json = JSON.stringify @form
-          # console.log "uri:" + uri
-          # console.log "form: %j", json
-
-          # request.post
-          #   url: uri
-          #   form: {payload: json}
-          # , (err, response, body) ->
-          #   console.log "err: #{err}" if err?
-          # @robot.send { "room": tg }, messages
-
-          @slack_token = process.env.HUBOT_SLACK_TOKEN
-          uri = 'https://slack.com/api/chat.postMessage'
-          hash = {}
-          # hash['token'] = 'xoxp-2560197782-2560197786-7240418160-91a6aa'
-          hash['token'] = @slack_token
-          hash['channel'] = tg
-          hash['text'] = messages
-          # hash['pretty'] = 1
-          hash['attachments'] = JSON.stringify @slack_attachments('', messages, color)
-
-          if icon_emoji
-            hash['icon_emoji'] = icon_emoji
-          if icon_url
-            hash['icon_url'] = icon_url
-          console.log "url: #{uri}?#{querystring.stringify(hash)}"
-          request.get "#{uri}?#{querystring.stringify(hash)}"
-          , (err, response, body) ->
-            console.log "err: #{err}" if err?
+          @slack.default tg, msg, option
 
         when "hipchat"
           room_id    = @info['target'][tg]['id']

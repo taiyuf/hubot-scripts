@@ -50,7 +50,7 @@ send_message = (res, room, msg, query) ->
 
   if ircType == "slack"
     # @sm.send ["#{room}"], "", @sm.slack_attachments("", msg)
-    @sm.send ["#{room}"], msg, options
+    @sm.send ["#{room}"], msg, query
   else
     @sm.send ["#{room}"], msg
   res.writeHead 200, {'Content-Type': 'text/plain'}
@@ -66,6 +66,7 @@ module.exports = (robot) ->
     query   = querystring.parse(req._parsedUrl.query)
     room    = query.room
     message = query.message
+    console.log "query: %j", query
     send_message(res, room, message, query)
 
   robot.router.post "#{path}", (req, res) ->
