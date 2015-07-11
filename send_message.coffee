@@ -80,30 +80,39 @@
 
 class SendMessage
 
-  fs           = require 'fs'
-  request      = require 'request'
-  querystring  = require 'querystring'
-  IrcMessage   = require './send_message/irc'
-  SlackMessage = require './send_message/slack'
+  fs              = require 'fs'
+  request         = require 'request'
+  querystring     = require 'querystring'
+  IrcMessage      = require './send_message/irc'
+  HttpPostMessage = require './send_message/http_post'
+  IdobataMessage  = require './send_message/idobata'
+  ChatworkMessage = require './send_message/chatwork'
+  SlackMessage    = require './send_message/slack'
+  HipchatMessage  = require './send_message/hipchat'
 
   constructor: (robot) ->
 
-    @robot       = robot
-    @type        = process.env.HUBOT_IRC_TYPE
-    @msgLabel    = process.env.HUBOT_IRC_MSG_LABEL
-    @msgType     = process.env.HUBOT_IRC_MSG_TYPE
-    @fmtLabel    = process.env.HUBOT_IRC_FMT_LABEL
-    @infoFile    = process.env.HUBOT_IRC_INFO
-    @info        = {}
-    @infoFlag    = false
-    @form        = {}
-    @lineFeed    = ""
-    @typeFlag    = false
-    @typeArray   = ["irc", "http_post", "chatwork", "idobata", "slack", "hipchat"]
-    @prefix      = "[send_message]"
-    @maxLength   = 128
+    @robot    = robot
+    @type     = process.env.HUBOT_IRC_TYPE
+    @msgLabel = process.env.HUBOT_IRC_MSG_LABEL
+    @msgType  = process.env.HUBOT_IRC_MSG_TYPE
+    @fmtLabel = process.env.HUBOT_IRC_FMT_LABEL
+    @infoFile = process.env.HUBOT_IRC_INFO
+    # @info     = {}
+    # @infoFlag = false
+    # @form     = {}
+    # @lineFeed = ""
+    # @typeFlag = false
+    # @typeArra = ["irc", "http_post", "chatwork", "idobata", "slack", "hipchat"]
+    # @prefix   = "[send_message]"
+    @maxLengt = 128
 
-    @slack = new SlackMessage
+    @irc      = new IrcMessage
+    @http_pos = new HttpPostMessage
+    @idobata  = new IdobataMessage
+    @chatwork = new ChatworkMessage
+    @slack    = new SlackMessage
+    @hipchat  = new HipchatMessage
 
     # check
     unless @type
@@ -115,135 +124,55 @@ class SendMessage
       console.log "#{@prefix}: Usage: @sm = new SendMessage(robot)"
       return
 
-    for tp in @typeArray
-      @typeFlag = true if @type == tp
+    # for tp in @typeArray
+    #   @typeFlag = true if @type == tp
 
-    unless @typeFlag
-      console.log "#{@prefix}: wrong type, #{@type}"
-      return
+    # unless @typeFlag
+    #   console.log "#{@prefix}: wrong type, #{@type}"
+    #   return
 
-    if @type == "chatwork" or @type == "idobata" or @type == "slack" or @type == "hipchat"
-      unless @info
-        console.log "#{@prefix}: Please set the value at HUBOT_IRC_INFO."
-        return
+    # if @type == "chatwork" or @type == "idobata" or @type == "slack" or @type == "hipchat"
+    #   unless @info
+    #     console.log "#{@prefix}: Please set the value at HUBOT_IRC_INFO."
+    #     return
 
-    if @type == "http_post"
-      unless @msgType
-        console.log "#{@prefix}: Please set the value at HUBOT_IRC_MSG_TYPE."
-        console.log "#{@prefix}: \"string\" type has selected."
-      unless @msgLabel
-        console.log "#{@prefix}: Please set the value at HUBOT_IRC_MSG_LABEL."
-        return
+    # if @type == "http_post"
+    #   unless @msgType
+    #     console.log "#{@prefix}: Please set the value at HUBOT_IRC_MSG_TYPE."
+    #     console.log "#{@prefix}: \"string\" type has selected."
+    #   unless @msgLabel
+    #     console.log "#{@prefix}: Please set the value at HUBOT_IRC_MSG_LABEL."
+    #     return
 
-    # initialize
-    switch @type
-      when 'irc'
-        @msgType         = "string"
-      when 'idobata'
-        @msgLabel        = "source"
-        @msgType         = "html"
-        @fmtLabel        = "format"
-        @form[@fmtLabel] = @msgType
-      when 'chatwork'
-        @msgLabel = "body"
-      when 'http_post'
-        @form[@fmtLabel] = @msgType
-      when 'slack'
-        @msgLabel = "text"
-        @fmtLabel = "payload"
-      when 'hipchat'
-        @msgLabel = "message"
-        @fmtLabel = "message_format"
-      else
-        @msgType = "string"
+    # # initialize
+    # switch @type
+    #   when 'irc'
+    #     @msgType         = "string"
+    #   when 'idobata'
+    #     @msgLabel        = "source"
+    #     @msgType         = "html"
+    #     @fmtLabel        = "format"
+    #     @form[@fmtLabel] = @msgType
+    #   when 'chatwork'
+    #     @msgLabel = "body"
+    #   when 'http_post'
+    #     @form[@fmtLabel] = @msgType
+    #   when 'slack'
+    #     @msgLabel = "text"
+    #     @fmtLabel = "payload"
+    #   when 'hipchat'
+    #     @msgLabel = "message"
+    #     @fmtLabel = "message_format"
+    #   else
+    #     @msgType = "string"
 
-    if @msgType == "html"
-      @lineFeed = "<br />"
-    else
-      @lineFeed = "\n"
+    # if @msgType == "html"
+    #   @lineFeed = "<br />"
+    # else
+    #   @lineFeed = "\n"
 
   readJson: (file, prefix) ->
-
-    unless prefix
-      prefix = @prefix
-
-    unless file
-      console.log "#{@prefix}: Please set the value of \"file\"."
-      return
-
-    unless prefix
-      console.log "#{@prefix}: Error occured in loading the file \"#{file}\"."
-      console.log "Please set the value of \"prefix\"."
-      return
-
-    try
-      data = fs.readFileSync file, 'utf-8'
-      try
-        json = JSON.parse(data)
-        console.log "#{@prefix} success to load file: #{file}."
-        return json
-      catch
-        console.log "#{@prefix} Error on parsing the json file: #{file}"
-        return
-    catch
-      console.log "#{@prefix} Error on reading the json file: #{file}"
-      return
-
-  bold: (str) ->
-
-    switch @type
-      when "irc"
-        "\x02" + str + "\x02"
-      when "http_post"
-        "<strong>" + str + "</strong>"
-        # "<b>" + str + "</b>"
-      when "idobata"
-        # "<strong>" + str + "</strong>"
-        "<b>" + str + "</b>"
-      when "chatwork"
-        str
-      when "slack"
-        ' *' + str + '* '
-      when "hipchat"
-        str
-      else
-        str
-
-  url: (t_str, u_str) ->
-
-    switch @type
-      when "irc"
-        "\x1f" + t_str + "\x1f" + ": " + u_str
-      when "http_post"
-        "<a href='" + u_str + "' target='_blank'>" + t_str + "</a>"
-      when "idobata"
-        "<a href='" + u_str + "' target='_blank'>" + t_str + "</a>"
-      when "chatwork"
-        t_str + ": " + u_str
-      when "slack"
-        '<' + u_str + '|' + t_str + '>'
-      when "hipchat"
-        t_str + ": " + u_str
-      else
-        t_str + ": " + u_str
-
-  underline: (str) ->
-
-    switch @type
-      when "irc"
-        "\x1f" + str + "\x1f"
-      when "http_post"
-        "<u>" + str + "</u>"
-      when "idobata"
-        "<b>" + str + "</b>"
-      when "chatwork"
-        str
-      when "slack"
-        ' *' + str + '* '
-      when "hipchat"
-        str
-      else
-        str
+    @irc.readJson file, prefix
 
   makeHtmlList: (commits) ->
     array   = []
@@ -359,21 +288,21 @@ class SendMessage
 
     messages = ''
 
-    if @infoFile
-      unless @infoFlag
-        @info    = @readJson @infoFile, @prefix
-        @infoFlag = true
+    # if @infoFile
+    #   unless @infoFlag
+    #     @info    = @readJson @infoFile, @prefix
+    #     @infoFlag = true
 
     # message
-    if typeof(msg) is 'object'
-      messages = msg.join(@lineFeed)
-    else
-      if typeof(msg) is 'string'
-        messages = msg
-      else
-        console.log "#{@prefix} unknown message type: " + typeof(msg) + "."
+    # if typeof(msg) is 'object'
+    #   messages = msg.join(@lineFeed)
+    # else
+    #   if typeof(msg) is 'string'
+    #     messages = msg
+    #   else
+    #     console.log "#{@prefix} unknown message type: " + typeof(msg) + "."
 
-    @form[@msgLabel] = messages
+    # @form[@msgLabel] = messages
 
     if typeof(target) is 'object'
       targets = target
@@ -385,71 +314,75 @@ class SendMessage
     for tg in targets
       switch @type
         when "irc"
-          @robot.send { "room": tg }, messages
+          @irc.send tg, msg
 
         when "http_post"
-          unless @heades
-            request.post
-              url: tg
-              form: @form
-            , (err, response, body) ->
-              console.log "err: #{err}" if err?
-          else
-            request.post
-              url: tg
-              headers: @info['header']
-              form: @form
-            , (err, response, body) ->
-              console.log "err: #{err}" if err?
+          @http_post.send tg, msg
+          # unless @heades
+          #   request.post
+          #     url: tg
+          #     form: @form
+          #   , (err, response, body) ->
+          #     console.log "err: #{err}" if err?
+          # else
+          #   request.post
+          #     url: tg
+          #     headers: @info['header']
+          #     form: @form
+          #   , (err, response, body) ->
+          #     console.log "err: #{err}" if err?
 
         when "idobata"
-          request.post
-            url: tg
-            headers: @info['header']
-            form: @form
-          , (err, response, body) ->
-            console.log "err: #{err}" if err?
+          @idobata.send tg, msg
+          # request.post
+          #   url: tg
+          #   headers: @info['header']
+          #   form: @form
+          # , (err, response, body) ->
+          #   console.log "err: #{err}" if err?
 
         when "chatwork"
-          messages = encodeURIComponent "[info]#{messages}[/info]"
-          uri      = "#{tg}?#{@msgLabel}=#{messages}"
-          request.post
-            url: uri
-            headers: @info['header']
-          , (err, response, body) ->
-            console.log "err: #{err}" if err?
+          @chatwork.send tg, msg
+          # messages = encodeURIComponent "[info]#{messages}[/info]"
+          # uri      = "#{tg}?#{@msgLabel}=#{messages}"
+          # request.post
+          #   url: uri
+          #   headers: @info['header']
+          # , (err, response, body) ->
+          #   console.log "err: #{err}" if err?
 
         when "slack"
-          @slack.default tg, msg, option
+          @slack.send tg, msg, option
 
         when "hipchat"
-          room_id    = @info['target'][tg]['id']
-          room_token = @info['target'][tg]['token']
-          uri        = 'https://api.hipchat.com/v2/room/' + room_id + '/notification?auth_token=' + room_token
+          @hipchat.send tg, msg
+          # room_id    = @info['target'][tg]['id']
+          # room_token = @info['target'][tg]['token']
+          # uri        = 'https://api.hipchat.com/v2/room/' + room_id + '/notification?auth_token=' + room_token
 
-          try
-            color = @info['target'][tg]['color']
-          catch
-            try
-              color = @info['color']
-            catch
-              color = 'blue'
-          if option?
-            color = option
+          # try
+          #   color = @info['target'][tg]['color']
+          # catch
+          #   try
+          #     color = @info['color']
+          #   catch
+          #     color = 'blue'
+          # if option?
+          #   color = option
 
-          form = {}
-          form['color']   = color
-          form[@fmtLabel] = 'text'
-          form[@msgLabel] = messages
+          # form = {}
+          # form['color']   = color
+          # form[@fmtLabel] = 'text'
+          # form[@msgLabel] = messages
 
-          # console.log JSON.stringify form
+          # # console.log JSON.stringify form
 
-          request.post
-            url: uri
-            headers: "Content-Type": "application/json"
-            json: true
-            body: JSON.stringify form
-          , (err, response, body) ->
-            console.log "err: #{err}" if err?
+          # request.post
+          #   url: uri
+          #   headers: "Content-Type": "application/json"
+          #   json: true
+          #   body: JSON.stringify form
+          # , (err, response, body) ->
+          #   console.log "err: #{err}" if err?
 
 module.exports = SendMessage

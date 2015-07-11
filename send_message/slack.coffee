@@ -21,36 +21,41 @@ class SlackMessage extends IrcMessage
   underline: (str) ->
     ' *' + str + '* '
 
-  commitMessage: (commits, color) ->
-    fallback = []
-    fields   = []
-    result   = []
+  # commitMessage: (commits, color) ->
+  #   fallback = []
+  #   fields   = []
+  #   result   = []
 
-    unless color
-      color = @color
+  #   unless color
+  #     color = @color
 
-    for cs in commits
-      text = []
-      fallback = []
-      cstr  = cs.message.replace /\n/g, @lineFeed
+  #   for cs in commits
+  #     text = []
+  #     fallback = []
+  #     cstr  = cs.message.replace /\n/g, @lineFeed
 
-      # fallback
-      fallback.push("#{cs.id[0..7]}: #{cstr}")
-      fallback.push("- #{cs.author.name}")
+  #     # fallback
+  #     fallback.push("#{cs.id[0..7]}: #{cstr}")
+  #     fallback.push("- #{cs.author.name}")
 
-      # fields
-      c_title = @url("#{cs.id[0..7]}", cs.url)
-      text.push("#{c_title}: #{cs.message}")
-      text.push("- #{cs.author.name}")
+  #     # fields
+  #     c_title = @url("#{cs.id[0..7]}", cs.url)
+  #     text.push("#{c_title}: #{cs.message}")
+  #     text.push("- #{cs.author.name}")
 
-      result.push({ fallback: fallback.join(@lineFeed), text: text.join(@lineFeed), color: color })
-    return result
+  #     result.push({ fallback: fallback.join(@lineFeed), text: text.join(@lineFeed), color: color })
+  #   return result
 
-  build_default_attachments: (msg, query) ->
+  build_attachments: (msg, query) ->
 
     fallback    = []
     at          = {}
-    at['color'] = @color
+
+    if query['color']
+      at['color'] = query['color']
+    else
+      at['color'] = @color
+
     at['text']  = msg
 
     if query['pretext']
@@ -102,14 +107,9 @@ class SlackMessage extends IrcMessage
     if @debug
       console.log "at: %j", JSON.stringify({ 'attachments': [ at ] })
 
-    at
+    JSON.stringify([ at ])
 
-  default: (target, msg, query) ->
-
-    at = @build_default_attachments msg, query
-    @send target, JSON.stringify([ at ]), query
-
-  send: (target, attachments, query) ->
+  send: (target, msg, query) ->
 
     q = {}
 
@@ -119,7 +119,7 @@ class SlackMessage extends IrcMessage
     # q['text']        = query['message']
 
     # option
-    q['attachments'] = attachments
+    q['attachments'] = @build_attachments msg, query
 
     if query['username']
       q['username'] = query['username']
