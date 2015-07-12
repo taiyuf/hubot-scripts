@@ -30,8 +30,14 @@ class IdobataMessage extends IrcMessage
       @info     = @readJson @infoFile, @prefix
       @infoFlag = true
 
+    unless @info
+      console.log "#{@prefix}: Could not find the infomation."
+      return
+
+    @form[@msgLabel] = @msg_filter msg
+
     request.post
-      url: taget
+      url: target
       headers: @info['header']
       form: @form
     , (err, response, body) ->

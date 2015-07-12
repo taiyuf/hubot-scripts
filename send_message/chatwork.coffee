@@ -18,6 +18,9 @@ class ChatworkMessage extends IrcMessage
     str
 
   send: (target, msg) ->
+
+    messages = @msg_filter msg
+
     unless @infoFile
       console.log "#{@prefix}: Please set the value at HUBOT_IRC_INFO."
       return

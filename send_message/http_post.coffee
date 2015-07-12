@@ -26,6 +26,11 @@ class HttpPostMessage extends IrcMessage
 
   send: (target, msg) ->
 
+    if @infoFile
+      unless @infoFlag
+        @info    = @readJson @infoFile, @prefix
+        @infoFlag = true
+
     unless @msgType
       console.log "#{@prefix}: Please set the value at HUBOT_IRC_MSG_TYPE."
       console.log "#{@prefix}: \"string\" type has selected."
@@ -33,16 +38,21 @@ class HttpPostMessage extends IrcMessage
       console.log "#{@prefix}: Please set the value at HUBOT_IRC_MSG_LABEL."
       return
 
-    unless @heades
+    @form[@msgLabel] = @msg_filter msg
+
+    if @info['header']
+      @header = @info['header']
+
+    if @header
       @request.post
         url: target
+        headers: @header
         form: @form
       , (err, response, body) ->
         console.log "err: #{err}" if err?
     else
       @request.post
         url: target
-        headers: @info['header']
         form: @form
       , (err, response, body) ->
         console.log "err: #{err}" if err?

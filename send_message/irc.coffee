@@ -47,7 +47,24 @@ class IrcMessage
       console.log "#{@prefix} Error on reading the json file: #{file}"
       return
 
+  msg_filter: (msg) ->
+    if typeof(msg) is 'object'
+      messages = msg.join(@lineFeed)
+    else
+      if typeof(msg) is 'string'
+        messages = msg
+      else
+        console.log "#{@prefix} unknown message type: " + typeof(msg) + "."
+        return
+
+  htmlFilter: (msg) ->
+    msg.replace(/<br>/g, @lineFeed)
+    .replace(/<br \/>/g, @lineFeed)
+    .replace(/<("[^"]*"|'[^']*'|[^'">])*>/g, '')
+    .replace(/^$/g, '')
+    .replace(/^#{@lineFeed}$/g, '')
+
   send: (target, msg) ->
-    @robot.send { 'room': target }, messages
+    @robot.send { 'room': target }, @msg_filter(msg)
 
 module.exports = IrcMessage

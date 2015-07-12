@@ -107,12 +107,12 @@ class SendMessage
     # @prefix   = "[send_message]"
     @maxLengt = 128
 
-    @irc      = new IrcMessage
-    @http_pos = new HttpPostMessage
-    @idobata  = new IdobataMessage
-    @chatwork = new ChatworkMessage
-    @slack    = new SlackMessage
-    @hipchat  = new HipchatMessage
+    @irc      = new IrcMessage robot
+    @http_pos = new HttpPostMessage robot
+    @idobata  = new IdobataMessage robot
+    @chatwork = new ChatworkMessage robot
+    @slack    = new SlackMessage robot
+    @hipchat  = new HipchatMessage robot
 
     # check
     unless @type

@@ -45,7 +45,7 @@ class HipchatMessage extends IrcMessage
     form            = {}
     form['color']   = color
     form[@fmtLabel] = 'text'
-    form[@msgLabel] = messages
+    form[@msgLabel] = @msg_filter msg
 
     # console.log JSON.stringify form
 
