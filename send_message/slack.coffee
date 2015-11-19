@@ -6,11 +6,11 @@ class SlackMessage extends IrcMessage
 
     super(robot)
 
-    @fmtLabel    = 'payload'
-    @color       = '#aaaaaa'
-    @token       = process.env.HUBOT_SLACK_TOKEN
-    @uri         = 'https://slack.com/api/chat.postMessage'
-    @debug       = process.env.HUBOT_SLACK_DEBUG
+    @fmtLabel = 'payload'
+    @color    = '#aaaaaa'
+    @token    = process.env.HUBOT_SLACK_TOKEN
+    @uri      = 'https://slack.com/api/chat.postMessage'
+    @debug    = process.env.HUBOT_SLACK_DEBUG
 
   bold: (str) ->
     ' *' + str + '* '
@@ -30,9 +30,9 @@ class SlackMessage extends IrcMessage
       color = @color
 
     for cs in commits
-      text = []
+      text     = []
       fallback = []
-      cstr  = cs.message.replace /\n/g, @lineFeed
+      cstr     = cs.message.replace /\n/g, @lineFeed
 
       # fallback
       fallback.push("#{cs.id[0..7]}: #{cstr}")
@@ -48,56 +48,62 @@ class SlackMessage extends IrcMessage
 
   build_default_attachments: (msg, query) ->
 
-    fallback    = []
-    at          = {}
-    at['color'] = @color
-    at['text']  = msg
+    fallback = []
+    at       = {}
+    at.text  = msg
 
-    if query['pretext']
-      fallback.push(query['pretext'])
+    if query.color
+      color = query.color
+    else
+      color = @color
 
-    if query['title']
-      fallback.push(query['title'])
+    at.color = color
 
-    if query['title_link']
-      fallback.push(query['title_link'])
+    if query.pretext
+      fallback.push(query.pretext)
+
+    if query.title
+      fallback.push(query.title)
+
+    if query.title_link
+      fallback.push(query.title_link)
 
     fallback.push(msg)
-    at['fallback'] = fallback.join(' - ')
+    at.fallback = fallback.join(' - ')
 
-    at['mrkdwn_in'] = ['text', 'pretext']
+    at.mrkdwn_in = ['text', 'pretext']
 
-    if query['pretext']
-      at['pretext'] = query['pretext']
+    if query.pretext
+      at.pretext = query.pretext
 
     if query['title']
-      at['title'] = query['title']
+      at.title = query.title
 
-    if query['title_link']
-      at['title_link'] = query['title_link']
+    if query.title_link
+      at.title_link = query.title_link
 
-    if query['author_name']
-      at['author_name'] = query['author_name']
+    if query.author_name
+      at.author_name = query.author_name
 
-    if query['author_link']
-      at['author_link'] = query['author_link']
+    if query.author_link
+      at.author_link = query.author_link
 
-    if query['author_icon']
-      at['author_icon'] = query['author_icon']
+    if query.author_icon
+      at.author_icon = query.author_icon
 
-    if query['image_url']
-      at['image_url'] = query['image_url']
+    if query.image_url
+      at.image_url = query.image_url
 
-    if query['thumb_url']
-      at['thumb_url'] = query['thumb_url']
+    if query.thumb_url
+      at.thumb_url = query.thumb_url
 
-    if query['fields']
-      at['fields'] = query['fields']
+    if query.fields
+      at.fields = query.fields
 
-    if query['mrkdwn']
-      at['mrkdwn'] = query['mrkdwn']
+    if query.mrkdwn
+      at.mrkdwn = query.mrkdwn
     else
-      at['mrkdwn'] = true
+      at.mrkdwn = true
 
     if @debug
       console.log "at: %j", JSON.stringify({ 'attachments': [ at ] })
@@ -114,36 +120,36 @@ class SlackMessage extends IrcMessage
     q = {}
 
     # required
-    q['token']       = @token
-    q['channel']     = target
-    # q['text']        = query['message']
+    q.token       = @token
+    q.channel     = target
+    # q.text        = query.message
 
     # option
-    q['attachments'] = attachments
+    q.attachments = attachments
 
-    if query['username']
-      q['username'] = query['username']
+    if query.username
+      q.username = query.username
 
-    if query['as_user']
-      q['as_user'] = query['as_user']
+    if query.as_user
+      q.as_user = query.as_user
 
-    if query['parse']
-      q['parse'] = query['parse']
+    if query.parse
+      q.parse = query.parse
 
-    if query['link_names']
-      q['link_names'] = query['link_names']
+    if query.link_names
+      q.link_names = query.link_names
 
-    if query['unfurl_links']
-      q['unfurl_links'] = query['unfurl_links']
+    if query.unfurl_links
+      q.unfurl_links = query.unfurl_links
 
-    if query['unfurl_media']
-      q['unfurl_media'] = query['unfurl_media']
+    if query.unfurl_media
+      q.unfurl_media = query.unfurl_media
 
-    if query['icon_url']
-      q['icon_url'] = query['icon_url']
+    if query.icon_url
+      q.icon_url = query.icon_url
 
-    if query['icon_emoji']
-      q['icon_emoji'] = query['icon_emoji']
+    if query.icon_emoji
+      q.icon_emoji = query.icon_emoji
 
     url = "#{@uri}?#{@querystring.stringify(q)}"
 
