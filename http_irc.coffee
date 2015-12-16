@@ -29,7 +29,12 @@ path        = "/http_irc"
 querystring = require 'querystring'
 SendMessage = require './send_message'
 prefix      = "[http_irc]"
-ircType     = process.env.HUBOT_IRC_TYPE
+type        = process.env.HUBOT_IRC_TYPE
+debug       = process.env.HUBOT_HTTP_IRC_DEBUG
+api_key     = process.env.HUBOT_HTTP_IRC_API_KEY
+allow       = process.env.HUBOT_HTTP_IRC_ALLOW
+deny        = process.env.HUBOT_HTTP_IRC_DENY
+allow_flag  = false
 
 send_message = (res, room, msg, query) ->
   # console.log "room: #{room}"
@@ -40,21 +45,58 @@ send_message = (res, room, msg, query) ->
     res.end 'Error: There is no room to say.'
 
   # console.log "query: %j", query
+
   options = {}
   if query.color?
-    options['color'] = query.color
+    options.color = query.color
   if query.icon_emoji?
-    options['icon_emoji'] = query.icon_emoji
+    options.icon_emoji = query.icon_emoji
   if query.icon_url?
-    options['icon_url'] = query.icon_url
+    options.icon_url = query.icon_url
 
-  if ircType == "slack"
-    # @sm.send ["#{room}"], "", @sm.slack_attachments("", msg)
+  if type is "slack"
     @sm.send ["#{room}"], msg, query
   else
     @sm.send ["#{room}"], msg
   res.writeHead 200, {'Content-Type': 'text/plain'}
   res.end 'OK'
+
+check_ip = (req) ->
+  return true if allow_flag
+
+  remote_ip = req.connection.remoteAddress
+
+  if req.headers['X-Forwarded-For']
+    remote_ip = req.headers['X-Forwarded-For']
+
+  deny_ips  = deny.split(',')
+  allow_ips = allow.split(',')
+
+  for ip in deny_ips
+    if remote_ip is ip
+      console.log "#{prefix}: DENY #{remote_ip}."
+      return false
+
+  for ip in allow_ips
+    if remote_ip is ip
+      allow_flag = true
+
+check_api_key = (req) ->
+  console.log "headers: "
+  console.dir req.headers
+  if api_key is req.headers['hubot_http_irc_api_key']
+    allow_flag = true
+    return true
+  else
+    console.log "#{prefix}: INVALID API_KEY."
+    return false
+
+check_request = (req) ->
+  unless check_api_key req
+    unless check_ip req
+      res.writeHead 200, {'Content-Type': 'text/plain'}
+      res.end 'Not allowed to access.'
+
 
 module.exports = (robot) ->
 
@@ -63,16 +105,23 @@ module.exports = (robot) ->
   message = ''
 
   robot.router.get "#{path}", (req, res) ->
+    check_request req
+
     query   = querystring.parse(req._parsedUrl.query)
     room    = query.room
     message = query.message
-    console.log "query: %j", query
+    if debug
+      console.log "query: %j", query
+
     send_message(res, room, message, query)
 
   robot.router.post "#{path}", (req, res) ->
+    check_request req
+
     query   = querystring.parse(req._parsedUrl.query)
     room    = query.room or ''
     message = req.body.message
     room    = req.body.room unless room
+
     send_message(res, room, message, req.body)
 
