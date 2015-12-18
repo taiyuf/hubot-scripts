@@ -6,11 +6,11 @@ class SlackMessage extends IrcMessage
 
     super(robot)
 
-    @fmtLabel    = 'payload'
-    @color       = '#aaaaaa'
-    @token       = process.env.HUBOT_SLACK_TOKEN
-    @uri         = 'https://slack.com/api/chat.postMessage'
-    @debug       = process.env.HUBOT_SLACK_DEBUG
+    @fmtLabel = 'payload'
+    @color    = '#aaaaaa'
+    @token    = process.env.HUBOT_SLACK_TOKEN
+    @uri      = 'https://slack.com/api/chat.postMessage'
+    @debug    = process.env.HUBOT_SLACK_DEBUG
 
   bold: (str) ->
     ' *' + str + '* '
@@ -48,9 +48,9 @@ class SlackMessage extends IrcMessage
 
   build_attachments: (msg, query) ->
 
-    fallback    = []
-    at          = {}
-    messages    = @msg_filter msg
+    fallback = []
+    at       = {}
+    messages = @msg_filter msg
 
     if query.color
       at.color = query.color
