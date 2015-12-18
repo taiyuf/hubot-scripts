@@ -32,17 +32,16 @@ prefix      = "[http_irc]"
 type        = process.env.HUBOT_IRC_TYPE
 debug       = process.env.HUBOT_HTTP_IRC_DEBUG
 api_key     = process.env.HUBOT_HTTP_IRC_API_KEY
-allow       = process.env.HUBOT_HTTP_IRC_ALLOW
-deny        = process.env.HUBOT_HTTP_IRC_DENY
+allow       = process.env.HUBOT_HTTP_IRC_ALLOW || null
+deny        = process.env.HUBOT_HTTP_IRC_DENY  || null
 allow_flag  = false
 
 send_message = (res, room, msg, query) ->
-  # console.log "room: #{room}"
-  # console.log "msg: #{message}"
   unless room
     console.log "#{prefix}: There is no room to say."
-    res.writeHead 200, {'Content-Type': 'text/plain'}
+    res.writeHead 400, {'Content-Type': 'text/plain'}
     res.end 'Error: There is no room to say.'
+    return
 
   # console.log "query: %j", query
 
@@ -58,6 +57,7 @@ send_message = (res, room, msg, query) ->
     @sm.send ["#{room}"], msg, query
   else
     @sm.send ["#{room}"], msg
+
   res.writeHead 200, {'Content-Type': 'text/plain'}
   res.end 'OK'
 
@@ -68,6 +68,9 @@ check_ip = (req) ->
 
   if req.headers['X-Forwarded-For']
     remote_ip = req.headers['X-Forwarded-For']
+
+  return false if deny is null
+  return false if allow is null
 
   deny_ips  = deny.split(',')
   allow_ips = allow.split(',')
@@ -91,12 +94,10 @@ check_api_key = (req) ->
     console.log "#{prefix}: INVALID API_KEY."
     return false
 
-check_request = (req) ->
+check_request = (req, res) ->
   unless check_api_key req
     unless check_ip req
-      res.writeHead 200, {'Content-Type': 'text/plain'}
-      res.end 'Not allowed to access.'
-
+      return false
 
 module.exports = (robot) ->
 
@@ -105,7 +106,10 @@ module.exports = (robot) ->
   message = ''
 
   robot.router.get "#{path}", (req, res) ->
-    check_request req
+    if check_request(req, res) is false
+      res.writeHead 200, {'Content-Type': 'text/plain'}
+      res.end 'Not allowed to access.'
+      return
 
     query   = querystring.parse(req._parsedUrl.query)
     room    = query.room
@@ -116,12 +120,17 @@ module.exports = (robot) ->
     send_message(res, room, message, query)
 
   robot.router.post "#{path}", (req, res) ->
-    check_request req
+    if check_request(req, res) is false
+      res.writeHead 200, {'Content-Type': 'text/plain'}
+      res.end 'Not allowed to access.'
+      return
 
     query   = querystring.parse(req._parsedUrl.query)
     room    = query.room or ''
     message = req.body.message
     room    = req.body.room unless room
-
+    console.log "req:"
+    console.dir req.body
+    console.dir query
     send_message(res, room, message, req.body)
 
