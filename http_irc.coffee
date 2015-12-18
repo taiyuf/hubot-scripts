@@ -64,40 +64,38 @@ send_message = (res, room, msg, query) ->
 check_ip = (req) ->
   return true if allow_flag
 
-  remote_ip = req.connection.remoteAddress
+  remote_ip = req.headers['x-forwarded-for'] ||
+    req.connection.remoteAddress ||
+    req.socket.remoteAddress ||
+    req.connection.socket.remoteAddress;
+  console.log "remote_ip: #{remote_ip}"
 
-  if req.headers['X-Forwarded-For']
-    remote_ip = req.headers['X-Forwarded-For']
+  unless deny is null
+    deny_ips  = deny.split(',')
+    for ip in deny_ips
+      if remote_ip is ip
+        console.log "#{prefix}: DENY #{remote_ip}."
+        return false
 
-  return false if deny is null
-  return false if allow is null
-
-  deny_ips  = deny.split(',')
-  allow_ips = allow.split(',')
-
-  for ip in deny_ips
-    if remote_ip is ip
-      console.log "#{prefix}: DENY #{remote_ip}."
-      return false
-
-  for ip in allow_ips
-    if remote_ip is ip
-      allow_flag = true
+  unless allow is null
+    allow_ips = allow.split(',')
+    for ip in allow_ips
+      if remote_ip is ip
+        console.log "#{prefix}: ALLOW #{remote_ip}."
+        return true
 
 check_api_key = (req) ->
-  console.log "headers: "
-  console.dir req.headers
   if api_key is req.headers['hubot_http_irc_api_key']
-    allow_flag = true
     return true
   else
     console.log "#{prefix}: INVALID API_KEY."
     return false
 
-check_request = (req, res) ->
-  unless check_api_key req
-    unless check_ip req
-      return false
+check_request = (req) ->
+  switch check_ip req
+    when false then return false
+    when true  then return true
+    else return check_api_key req
 
 module.exports = (robot) ->
 
@@ -106,7 +104,7 @@ module.exports = (robot) ->
   message = ''
 
   robot.router.get "#{path}", (req, res) ->
-    if check_request(req, res) is false
+    if check_request(req) is false
       res.writeHead 200, {'Content-Type': 'text/plain'}
       res.end 'Not allowed to access.'
       return
@@ -120,7 +118,7 @@ module.exports = (robot) ->
     send_message(res, room, message, query)
 
   robot.router.post "#{path}", (req, res) ->
-    if check_request(req, res) is false
+    if check_request(req) is false
       res.writeHead 200, {'Content-Type': 'text/plain'}
       res.end 'Not allowed to access.'
       return
