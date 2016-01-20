@@ -31,9 +31,9 @@ SendMessage = require './send_message'
 prefix      = "[http_irc]"
 type        = process.env.HUBOT_IRC_TYPE
 debug       = process.env.HUBOT_HTTP_IRC_DEBUG
-api_key     = process.env.HUBOT_HTTP_IRC_API_KEY
-allow       = process.env.HUBOT_HTTP_IRC_ALLOW || null
-deny        = process.env.HUBOT_HTTP_IRC_DENY  || null
+api_key     = process.env.HUBOT_HTTP_IRC_API_KEY || null
+allow       = process.env.HUBOT_HTTP_IRC_ALLOW   || null
+deny        = process.env.HUBOT_HTTP_IRC_DENY    || null
 allow_flag  = false
 
 send_message = (res, room, msg, query) ->
@@ -62,7 +62,6 @@ send_message = (res, room, msg, query) ->
   res.end 'OK'
 
 check_ip = (req) ->
-  return true if allow_flag
 
   remote_ip = req.headers['x-forwarded-for'] ||
     req.connection.remoteAddress ||

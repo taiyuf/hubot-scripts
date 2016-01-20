@@ -25,6 +25,7 @@ setupRobot = (callback) ->
   adapter = null
   user    = null
   robot   = new Robot null, 'mock-adapter', false, 'hubot'
+  # robot   = new Robot null, 'mock-adapter', true, 'hubot'
 
   robot.adapter.on 'connected', ->
     user  = robot.brain.userForId '1',

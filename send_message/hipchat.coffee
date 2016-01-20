@@ -36,7 +36,7 @@ class HipchatMessage extends IrcMessage
       color = @info['target'][target]['color']
     catch
       try
-        color = @info['color']
+        color = @info.color
       catch
         color = 'blue'
     if option?
