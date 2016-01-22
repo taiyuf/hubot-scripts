@@ -34,7 +34,7 @@ class ChatworkMessage extends IrcMessage
 
     request.post
       url: uri
-      headers: @info['header']
+      headers: @info.header
     , (err, response, body) ->
       console.log "err: #{err}" if err?
 

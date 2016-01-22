@@ -38,7 +38,7 @@ class IdobataMessage extends IrcMessage
 
     request.post
       url: target
-      headers: @info['header']
+      headers: @info.header
       form: @form
     , (err, response, body) ->
       console.log "err: #{err}" if err?

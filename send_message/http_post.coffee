@@ -40,8 +40,8 @@ class HttpPostMessage extends IrcMessage
 
     @form[@msgLabel] = @msg_filter msg
 
-    if @info['header']
-      @header = @info['header']
+    if @info.header
+      @header = @info.header
 
     if @header
       @request.post
