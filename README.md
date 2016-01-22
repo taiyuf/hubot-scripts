@@ -242,6 +242,19 @@ curl -X POST --data-urlencode message="hoge hoge." http://YOUR_SERVER/http_irc?r
 curl -X POST --data-urlencode message="hoge hoge." -d  room=%23foo http://YOUR_SERVER/http_irc
 ```
 
+### for slack
+
+- color
+- pretext
+- title
+- title_link
+- author_name
+- author_icon
+- image_url
+- thumb_url
+- fields
+- mrkdwn
+
 ## read_rss
 
 Simple RSS Reader for irc and group chat system.
@@ -266,48 +279,6 @@ You need to write configuration file as json format.
 
 url, room(idobata channel's url) fields are required. if the site require the basic
 authentication, you need to set id, password fields.
-
-## gitlab
-
-Post gitlab related events using gitlab hooks
-
-### Configuration
-
-* GITLAB_URL: gitlab web site url. if your gitlab module's url is http://hoge.com/USER/MODULE.git, the GITLAB_URL value is http://hoge.com.
-* GITLAB_CONFIG_FILE: the path to configuration file.
-
-configuration file like below,
-
-IRC
-
-```
-{
-    "DEFAULT": {"target": ["#hoge"]},
-    "http://YOUR_GIT_WEB_SITE/USER/HOGE": {"target": ["#hoge", "#fuga"]},
-    "http://YOUR_GIT_WEB_SITE/USER/FUGA": {"target": ["#fuga"]},
-    ...,
-}
-```
-
-Other
-
-```
-{
-    "DEFAULT": {"target": ["http://...."]},
-    "http://YOUR_GIT_WEB_SITE/USER/HOGE": {"target": ["http://....", "http://...."]},
-    "http://YOUR_GIT_WEB_SITE/USER/FUGA": {"target": ["http://...."]},
-    ...,
-}
-```
-
-DEFAULT: "DEFAULT" is string. hubot tell the message to this room which is not specified.
-
-
-### Usage
-
-Put http://<HUBOT_URL>:<PORT>/gitlab/system as your system hook
-
-Put http://<HUBOT_URL>:<PORT>/gitlab/web as your web hook (per repository)
 
 ## jenkins-notify
 

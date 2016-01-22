@@ -36,5 +36,9 @@
   "peerDependencies": {
     "request": "2.34.0",
     "feedparser": "0.16.6"
+  },
+  "dependencies": {
+    "codo": "^2.1.0",
+    "log4js": "^0.6.29"
   }
 }
