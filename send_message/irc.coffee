@@ -1,5 +1,7 @@
 class IrcMessage
 
+  Log = require '../log'
+
   constructor: (robot) ->
 
     @robot       = robot
@@ -9,7 +11,8 @@ class IrcMessage
     @form        = {}
     @msgLabel    = 'text'
     @lineFeed    = "\n"
-    @prefix      = "[send_message]"
+    @log         = new Log 'send_message'
+
 
   bold: (str) ->
     "\x02" + str + "\x02"
@@ -26,25 +29,25 @@ class IrcMessage
       prefix = @prefix
 
     unless file
-      console.log "#{@prefix}: Please set the value of \"file\"."
+      @log.warn 'Please set the value of "file".'
       return
 
     unless prefix
-      console.log "#{@prefix}: Error occured in loading the file \"#{file}\"."
-      console.log "Please set the value of \"prefix\"."
+      @log.warn "Error occured in loading the file \"#{file}\"."
+      @log.warn 'Please set the value of "prefix".'
       return
 
     try
       data = @fs.readFileSync file, 'utf-8'
       try
-        json = JSON.parse(data)
-        console.log "#{@prefix} success to load file: #{file}."
+        json = JSON.parse data
+        @log.info "success to load file: #{file}."
         return json
       catch
-        console.log "#{@prefix} Error on parsing the json file: #{file}"
+        @log.warn "Error on parsing the json file: #{file}"
         return
     catch
-      console.log "#{@prefix} Error on reading the json file: #{file}"
+      @log.warn "Error on reading the json file: #{file}"
       return
 
   msg_filter: (msg) ->
@@ -54,7 +57,7 @@ class IrcMessage
       if typeof(msg) is 'string'
         messages = msg
       else
-        console.log "#{@prefix} unknown message type: " + typeof(msg) + "."
+        @log.warn "#{@prefix} unknown message type: " + typeof(msg) + "."
         return
 
   htmlFilter: (msg) ->

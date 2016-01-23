@@ -13,17 +13,17 @@ class IdobataMessage extends IrcMessage
     @infoFile        = process.env.HUBOT_IRC_INFO
 
   bold: (str) ->
-    "<b>" + str + "</b>"
+    "<b>#{str}</b>"
 
   url: (title, url) ->
-    "<a href='" + u_str + "' target='_blank'>" + t_str + "</a>"
+    "<a href='#{u_str}' target='_blank'>#{t_str}</a>"
 
   underline: (str) ->
-    "<b>" + str + "</b>"
+    "<b>#{str}</b>"
 
   send: (target, msg) ->
     unless @infoFile
-      console.log "#{@prefix}: Please set the value at HUBOT_IRC_INFO."
+      @log.warn 'Please set the value at HUBOT_IRC_INFO.'
       return
 
     unless @infoFlag
@@ -31,7 +31,7 @@ class IdobataMessage extends IrcMessage
       @infoFlag = true
 
     unless @info
-      console.log "#{@prefix}: Could not find the infomation."
+      @log.warn 'Could not find the infomation.'
       return
 
     @form[@msgLabel] = @msg_filter msg
@@ -41,6 +41,6 @@ class IdobataMessage extends IrcMessage
       headers: @info.header
       form: @form
     , (err, response, body) ->
-      console.log "err: #{err}" if err?
+      @log.warn err, 'err: ' if err
 
 module.exports = IdobataMessage

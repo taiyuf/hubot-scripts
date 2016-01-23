@@ -12,7 +12,7 @@ class ChatworkMessage extends IrcMessage
     str
 
   url: (title, url) ->
-    t_str + ": " + u_str
+    "#{t_str}: #{u_str}"
 
   underline: (str) ->
     str
@@ -36,6 +36,6 @@ class ChatworkMessage extends IrcMessage
       url: uri
       headers: @info.header
     , (err, response, body) ->
-      console.log "err: #{err}" if err?
+      @log.debug err, "err: " if err
 
 module.exports = ChatworkMessage

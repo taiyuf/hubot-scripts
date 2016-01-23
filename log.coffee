@@ -8,7 +8,6 @@ class Log
   env       = process.env.NODE_ENV || 'development'
 
   constructor: (tag)->
-    log4js.addAppender log4js.appenders.console()
     @log = log4js.getLogger tag
 
   # Check type of argument.

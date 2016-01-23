@@ -13,7 +13,7 @@ class HipchatMessage extends IrcMessage
     str
 
   url: (title, url) ->
-    t_str + ": " + u_str
+    "#{t_str}: #{u_str}"
 
   underline: (str) ->
     str
@@ -21,7 +21,7 @@ class HipchatMessage extends IrcMessage
   send: (target, msg) ->
 
     unless @infoFile
-      console.log "#{@prefix}: Please set the value at HUBOT_IRC_INFO."
+      @log.warn 'Please set the value at HUBOT_IRC_INFO.'
       return
 
     unless @infoFlag
@@ -43,11 +43,9 @@ class HipchatMessage extends IrcMessage
       color = option
 
     form            = {}
-    form['color']   = color
+    form.color      = color
     form[@fmtLabel] = 'text'
     form[@msgLabel] = @msg_filter msg
-
-    # console.log JSON.stringify form
 
     request.post
       url: uri
@@ -55,6 +53,6 @@ class HipchatMessage extends IrcMessage
       json: true
       body: JSON.stringify form
     , (err, response, body) ->
-      console.log "err: #{err}" if err?
+      @log.warn err, "err: " if err
 
 module.exports = HipchatMessage

@@ -66,7 +66,7 @@ check_ip = (req) ->
     allow_ips = allow.split(',')
     for ip in allow_ips
       if remote_ip is ip
-        log.debug "#{prefix}: ALLOW #{remote_ip}."
+        log.debug "ALLOW #{remote_ip}."
         return true
 
 check_api_key = (req) ->

@@ -21,31 +21,6 @@ class SlackMessage extends IrcMessage
   underline: (str) ->
     ' *' + str + '* '
 
-  # commitMessage: (commits, color) ->
-  #   fallback = []
-  #   fields   = []
-  #   result   = []
-
-  #   unless color
-  #     color = @color
-
-  #   for cs in commits
-  #     text = []
-  #     fallback = []
-  #     cstr  = cs.message.replace /\n/g, @lineFeed
-
-  #     # fallback
-  #     fallback.push("#{cs.id[0..7]}: #{cstr}")
-  #     fallback.push("- #{cs.author.name}")
-
-  #     # fields
-  #     c_title = @url("#{cs.id[0..7]}", cs.url)
-  #     text.push("#{c_title}: #{cs.message}")
-  #     text.push("- #{cs.author.name}")
-
-  #     result.push({ fallback: fallback.join(@lineFeed), text: text.join(@lineFeed), color: color })
-  #   return result
-
   build_attachments: (msg, query) ->
 
     fallback = []
@@ -106,7 +81,7 @@ class SlackMessage extends IrcMessage
       at.mrkdwn = true
 
     if @debug
-      console.log "at: %j", JSON.stringify({ attachments: [ at ] })
+      @log.debug at, "attachment: "
 
     JSON.stringify([ at ])
 
@@ -149,10 +124,10 @@ class SlackMessage extends IrcMessage
     url = "#{@uri}?#{@querystring.stringify(q)}"
 
     if @debug
-      console.log "query: %j", query
-      console.log "url: #{url}"
+      @log.debug query, "query: "
+      @log.debug url, "url: "
 
     @request.get url, (err, response, body) ->
-      console.log "err: #{err}" if err?
+      @log.debug err, "err: " if err
 
 module.exports = SlackMessage

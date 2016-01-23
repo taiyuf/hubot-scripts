@@ -16,13 +16,13 @@ class HttpPostMessage extends IrcMessage
       @lineFeed = "\n"
 
   bold: (str) ->
-    "<strong>" + str + "</strong>"
+    "<strong>#{str}</strong>"
 
   url: (title, url) ->
-    "<a href='" + u_str + "' target='_blank'>" + t_str + "</a>"
+    "<a href='#{u_str}' target='_blank'>#{t_str}</a>"
 
   underline: (str) ->
-    "<u>" + str + "</u>"
+    "<u>#{str}</u>"
 
   send: (target, msg) ->
 
@@ -32,10 +32,10 @@ class HttpPostMessage extends IrcMessage
         @infoFlag = true
 
     unless @msgType
-      console.log "#{@prefix}: Please set the value at HUBOT_IRC_MSG_TYPE."
-      console.log "#{@prefix}: \"string\" type has selected."
+      @log.warn 'Please set the value at HUBOT_IRC_MSG_TYPE.'
+      @log.warn '"string" type has selected.'
     unless @msgLabel
-      console.log "#{@prefix}: Please set the value at HUBOT_IRC_MSG_LABEL."
+      @log.warn 'Please set the value at HUBOT_IRC_MSG_LABEL.'
       return
 
     @form[@msgLabel] = @msg_filter msg
@@ -49,12 +49,12 @@ class HttpPostMessage extends IrcMessage
         headers: @header
         form: @form
       , (err, response, body) ->
-        console.log "err: #{err}" if err?
+        log.warn err, 'err: ' if err
     else
       @request.post
         url: target
         form: @form
       , (err, response, body) ->
-        console.log "err: #{err}" if err?
+        @log.warn err, 'err: ' if err
 
 module.exports = HttpPostMessage
