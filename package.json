@@ -39,6 +39,13 @@
   },
   "dependencies": {
     "codo": "^2.1.0",
-    "log4js": "^0.6.29"
+    "cron": "^1.1.0",
+    "feedparser": "^0.16.6",
+    "fs": "0.0.2",
+    "js-yaml": "^3.5.2",
+    "log4js": "^0.6.29",
+    "querystring": "^0.2.0",
+    "request": "^2.34.0",
+    "url": "^0.11.0"
   }
 }

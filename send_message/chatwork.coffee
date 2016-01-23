@@ -26,7 +26,7 @@ class ChatworkMessage extends IrcMessage
       return
 
     unless @infoFlag
-      @info     = @readJson @infoFile, @prefix
+      @info     = @config.get @infoFile
       @infoFlag = true
 
     messages = encodeURIComponent "[info]#{messages}[/info]"

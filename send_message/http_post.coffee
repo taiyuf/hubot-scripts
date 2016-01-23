@@ -28,7 +28,7 @@ class HttpPostMessage extends IrcMessage
 
     if @infoFile
       unless @infoFlag
-        @info    = @readJson @infoFile, @prefix
+        @info    = @config.get @infoFile
         @infoFlag = true
 
     unless @msgType

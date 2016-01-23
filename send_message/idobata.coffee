@@ -27,7 +27,7 @@ class IdobataMessage extends IrcMessage
       return
 
     unless @infoFlag
-      @info     = @readJson @infoFile, @prefix
+      @info     = @config.get @infoFile
       @infoFlag = true
 
     unless @info

@@ -25,7 +25,7 @@ class HipchatMessage extends IrcMessage
       return
 
     unless @infoFlag
-      @info     = @readJson @infoFile, @prefix
+      @info     = @config.get @infoFile
       @infoFlag = true
 
     room_id    = @info['target'][target]['id']

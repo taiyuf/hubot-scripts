@@ -57,9 +57,7 @@ ${HUBOT_HOME}/bin/hubot -a irc
 HUBOT_IRC_INFO:
 
 ```
-{
-    "ITEM_LABEL": "ITEM_VALUE"
-}
+ITEM_LABEL: "ITEM_VALUE"
 ```
 
 ### idobata
@@ -83,9 +81,8 @@ ${HUBOT_HOME}/bin/hubot -a irc
 HUBOT_IRC_INFO:
 
 ```
-{
-    "header": {"X-API-Token": "YOUR_API_TOKEN"}
-}
+header:
+  X-API-Token: "YOUR_API_TOKEN"
 ```
 
 ### chatwork
@@ -109,9 +106,8 @@ ${HUBOT_HOME}/bin/hubot -a irc
 HUBOT_IRC_INFO:
 
 ```
-{
-    "header": {"X-ChatWorkToken": "YOUR_TOKEN"}
-}
+header:
+  X-ChatWorkToken: "YOUR_TOKEN"
 ```
 
 ### slack
@@ -156,23 +152,20 @@ HUBOT_IRC_INFO:
 old webhook style.
 
 ```
-{
-    "team_url": "hoge.slack.com",      # required
-    "token: {"#channel1": "hogehoge",  # required
-             "#channel2": "fugafuga"},
-    "username": "hubot",               # optional. default is "hubot"
-    "icon_emoji": ":ghost:"            # optional
-}
+team_url: "hoge.slack.com" # required
+token:
+  "#channel1": "hogehoge"  # required
+  "#channel2": "fugafuga"
+username: "hubot"          # optional. default is "hubot"
+icon_emoji: ":ghost:"      # optional
 ```
 
 new webhook style.
 
 ```
-{
-    "webhook_url": "https://hooks.slack.com/services/.....",  # required
-    "username": "hubot",                                      # optional. default is "hubot"
-    "icon_emoji": ":ghost:"                                   # optional
-}
+webhook_url: "https://hooks.slack.com/services/....."  # required
+username: "hubot"                                      # optional. default is "hubot"
+icon_emoji: ":ghost:"                                  # optional
 ```
 
 token is Slack API IncommingWebhook's token.
@@ -198,16 +191,16 @@ ${HUBOT_HOME}/bin/hubot -a irc
 HUBOT_IRC_INFO:
 
 ```
-{
-        "target": {"ROOM1_NAME": {"id": ROOM1_ID,
-                                  "token": "ROOM1_TOKEN",
-                                  "color": "blue"},
-                   "ROOM2_NAME": {"id": ROOM2_ID,
-                                  "token": "ROOM2_TOKEN",
-                                  "color": "green"},
-                  },
-        "color": "blue"  # default back ground color
-}
+target:
+  "ROOM1_NAME":
+    id: ROOM1_ID
+    token: "ROOM1_TOKEN"
+    color: "blue"
+  "ROOM2_NAME":
+    id: ROOM2_ID
+    token: "ROOM2_TOKEN"
+    color: "green"
+color": "blue"  # default back ground color
 ```
 
 * ROOM_ID:    Group Admin -> Rooms -> API ID
@@ -280,104 +273,6 @@ You need to write configuration file as json format.
 url, room(idobata channel's url) fields are required. if the site require the basic
 authentication, you need to set id, password fields.
 
-## jenkins-notify
-
-Notifies about Jenkins build errors via Jenkins Notification Plugin.
-
-https://wiki.jenkins-ci.org/display/JENKINS/Notification+Plugin
-
-### Configuration
-
-* JENKINS_NOTIFY_CONFIG_FILE: concfigration file path.
-* JENKINS_NOTIFY_BACK_TO_NORMAL: if this value set true, send message when the job status change (FAILURE -> SUCCESS or SUCCESS -> FAILURE).
-
-configuration file like this,
-
-IRC
-
-```
-{
-     "GIT_REPOSITORY": {"target": ["#hoge"],
-                        ...,
-                       }
-}
-```
-
-Other
-
-```
-{
-     "GIT_REPOSITORY": {"target": ["http://....."],
-                        ...,
-                       }
-}
-```
-
-hubot send the message like this.
-
-```
-[Jenkins]
-build #60 has completed in SUCCESS. (details)
-elapsed time: 00:00:53
-
-project: Your Project
-repository: ssh://gitlab@gitlab.YOURSITE/SOMEONE/PROJECT_NAME
-branch: origin/BRANCH
-commit: 6ff2e02f57d3d43fd49443b2b5f7e26bada64c0d
-```
-
-
-* GIT_REPOSITORY: ex. ssh://GITLABUSER@GITLAB_URL/USER/PROJECT.git
-
-* TARGET: channel name for IRC, or end point url for other group chat services.
-
-
-### Usage
-
-Put http://<HUBOT_URL>:<PORT>/hubot/jenkins-notify to your Jenkins
-
-* Job Notifications -> Notification Endpoints
-
-```
-Format: JSON
-Protocol: HTTP
-Event: All Event
-URL: http://<HUBOT_URL>:<PORT>/hubot/jenkins-notify
-Timeout: as you like
-```
-
-## jenkins-job-selector-by-git-branch
-
-Do the job selected by the branch of git on jenkins
-
-### Configuration
-
-* JENKINS_JOBSELECTOR_CONFIG_FILE concfigration file path.
-
-configuration file like this,
-
-```
-{
-   "GIT_URL": {
-                  "target": ["hoge", "fuga"],
-                  "auth": {"id": "hoge",
-                           "password": "fuga"},
-                  "jobs":{"branchA": "JENKIS_JOB_URL_A",
-                          "branchB": "JENKIS_JOB_URL_A"}
-                 }
-}
-```
-
-if you have an api key, JENKINS_JOB_URL is like this.
-
-```
-http://USER:USER_API_KEY@JENKINS_SERVER_URL/.../job/PROJECT_NAME/build?token=USER_API_KEY
-```
-
-### Usage
-
-Put http://<HUBOT_URL>:<PORT>/hubot/jenkins-jobselector to web hook at your git repository.
-
 
 ## cmd
 
@@ -390,17 +285,27 @@ Let hubot execute shell command.
 You need write CMD_CONFIG file in json format like this.
 
 ```
-{
-    "TARGET1": {"ACTION1": {"command": "/path/to/cmd1 ACTION1",
-                            "user": ["foo", "bar"],
-                            "message": "/path/to/cmd1 ACTION1 is executed."}
-                "ACTION2": {"command": "/path/to/cmd1 ACTION2",
-                            "user": ["foo"],
-                            "message": "/path/to/cmd1 ACTION2 is executed."}},
-    "TARGET2": {"ACTION1": {"command": "/path/to/cmd2 ACTION1",
-                            "user": ["foo", "bar"],
-                            "message": "/path/to/cmd2 ACTION1 is executed."}}
-}
+TARGET1:
+  ACTION1:
+    command: "/path/to/cmd1 ACTION1"
+    user:
+      - "foo"
+      - "bar"
+    message: "/path/to/cmd1 ACTION1 is executed."
+
+  ACTION2:
+    command: "/path/to/cmd1 ACTION2"
+    user:
+      - "foo"
+    message: "/path/to/cmd1 ACTION2 is executed."
+
+TARGET2:
+  ACTION1:
+    command: "/path/to/cmd2 ACTION1"
+    user:
+      - "foo"
+      - "bar"
+    message: "/path/to/cmd2 ACTION1 is executed."
 ```
 
 You need to execute hubot as adapter for each group chat system, too.

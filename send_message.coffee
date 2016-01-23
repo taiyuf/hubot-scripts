@@ -95,7 +95,9 @@ class SendMessage
   SlackMessage    = require './send_message/slack'
   HipchatMessage  = require './send_message/hipchat'
   Log             = require './log'
+  Config          = require './config'
   log             = new Log 'send_message'
+  config          = new Config
 
   constructor: (robot) ->
 
@@ -123,9 +125,6 @@ class SendMessage
       log.warn 'Please set the value of "robot".'
       log.warn 'Usage: @sm = new SendMessage(robot)'
       return
-
-  readJson: (file, prefix) ->
-    @irc.readJson file, prefix
 
   makeHtmlList: (commits) ->
     array   = []

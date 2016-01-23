@@ -1,6 +1,7 @@
 class IrcMessage
 
-  Log = require '../log'
+  Log    = require '../log'
+  Config = require '../config'
 
   constructor: (robot) ->
 
@@ -12,6 +13,7 @@ class IrcMessage
     @msgLabel    = 'text'
     @lineFeed    = "\n"
     @log         = new Log 'send_message'
+    @config      = new Config
 
 
   bold: (str) ->
@@ -22,33 +24,6 @@ class IrcMessage
 
   underline: (str) ->
     "\x1f" + str + "\x1f"
-
-  readJson: (file, prefix) ->
-
-    unless prefix
-      prefix = @prefix
-
-    unless file
-      @log.warn 'Please set the value of "file".'
-      return
-
-    unless prefix
-      @log.warn "Error occured in loading the file \"#{file}\"."
-      @log.warn 'Please set the value of "prefix".'
-      return
-
-    try
-      data = @fs.readFileSync file, 'utf-8'
-      try
-        json = JSON.parse data
-        @log.info "success to load file: #{file}."
-        return json
-      catch
-        @log.warn "Error on parsing the json file: #{file}"
-        return
-    catch
-      @log.warn "Error on reading the json file: #{file}"
-      return
 
   msg_filter: (msg) ->
     if typeof(msg) is 'object'
