@@ -46,13 +46,13 @@ describe 'Robot', ->
       http_irc = new Http_Irc robot
       done()
 
-    it 'remote ip is denied.', ->
+    # it 'remote ip is denied.', ->
 
-      req.connection['remoteAddres'] = '192.168.11.3'
+    #   req.connection['remoteAddres'] = '192.168.11.3'
 
-      adapter.on 'send', (envelope, strings) ->
-        expect(strings[0]).to.equal('')
-        done()
+    #   adapter.on 'send', (envelope, strings) ->
+    #     expect(strings[0]).to.equal('')
+    #     done()
 
 
   # it 'get method', (done) ->
