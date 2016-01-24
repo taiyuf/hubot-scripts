@@ -139,7 +139,7 @@ export PORT=19999
 
 # slack
 export HUBOT_IRC_SERVER="hoge"  # dummy text
-export HUBOT_IRC_INFO=${HUBOT_HOME}/slack_info.json # custom infomation as json
+export HUBOT_IRC_INFO=${HUBOT_HOME}/slack_info.yml # custom infomation as yaml.
 export HUBOT_SLACK_TOKEN=******************
 export HUBOT_SLACK_TEAM=YOUR_TEAM
 export HUBOT_SLACK_BOTNAME=slackbot
@@ -149,23 +149,8 @@ ${HUBOT_HOME}/bin/hubot -a slack
 
 HUBOT_IRC_INFO:
 
-old webhook style.
-
 ```
-team_url: "hoge.slack.com" # required
-token:
-  "#channel1": "hogehoge"  # required
-  "#channel2": "fugafuga"
-username: "hubot"          # optional. default is "hubot"
-icon_emoji: ":ghost:"      # optional
-```
-
-new webhook style.
-
-```
-webhook_url: "https://hooks.slack.com/services/....."  # required
-username: "hubot"                                      # optional. default is "hubot"
-icon_emoji: ":ghost:"                                  # optional
+webhook_url: "https://hooks.slack.com/services/....."
 ```
 
 token is Slack API IncommingWebhook's token.
@@ -237,6 +222,8 @@ curl -X POST --data-urlencode message="hoge hoge." -d  room=%23foo http://YOUR_S
 
 ### for slack
 
+There are some options.
+
 - color
 - pretext
 - title
@@ -248,30 +235,42 @@ curl -X POST --data-urlencode message="hoge hoge." -d  room=%23foo http://YOUR_S
 - fields
 - mrkdwn
 
-## read_rss
+### Access control
 
-Simple RSS Reader for irc and group chat system.
-
-### Configuration
-
-* RSS_CONFIG_FILE: path to configuration file(json format).
-* RSS_LABEL:       if you create many bots, you define a unique keyword.
-
-You need to write configuration file as json format.
+#### allow and deny by ip address.
 
 ```
-{
-  "keyword1": {"feed": {"url": "http://...."},
-               "target": ["#hoge", "#fuga"]},    # IRC
-  "keyword2": {"feed": {"url": "http://...",
-                        "id": "user",
-                        "password": "password"},
-               "target": ["http://....", "http://...."]}      # Other
-}
+export HUBOT_HTTP_IRC_DENY=192.168.0.1
 ```
 
-url, room(idobata channel's url) fields are required. if the site require the basic
-authentication, you need to set id, password fields.
+deny access from 192.168.0.1.
+
+```
+export HUBOT_HTTP_IRC_DENY=192.168.0.
+```
+
+deny access from 192.168.0.0/24.
+
+
+```
+export HUBOT_HTTP_IRC_ALLOW=x.x.x.x
+```
+
+same as deny.
+
+#### api key
+
+```
+export HUBOT_HTTP_IRC_API_KEY=YYYYYYYYY
+```
+
+please request with header 'HUBOT_HTTP_IRC_API_KEY'.
+
+```
+curl -X POST -H '-H 'HUBOT_HTTP_IRC_API_KEY:ZZZZZZZ' --data-urlencode message="hoge hoge." -d  room=%23foo http://YOUR_SERVER/http_irc
+```
+
+if you set allow or deny by ip address, it's condition will apply.
 
 
 ## cmd
