@@ -1,11 +1,9 @@
-# Description:
-#   Send message to chat system.
+# # Description:
 #
-# Dependencies:
-#   "request":     "2.34.0"
-#   "read_json":   included in this repogitory
+# Send message to chat system.
 #
-# Configuration:
+# # Configuration
+#
 #   HUBOT_IRC_TYPE: "irc", "http_post", "idobata", "chatwork", "hipchat"
 #   HUBOT_IRC_MSG_TYPE: if you use "http_post", set the type of message. "string" or "html". default: "string"
 #   HUBOT_IRC_MSG_LABEL: if you use "http_post", set the name of form's label.
@@ -13,6 +11,7 @@
 #
 # HUBOT_IRC_INFO like this,
 #
+# ```
 # {
 #     "HEADER": "VALUE",
 #     ...
@@ -29,11 +28,13 @@
 # {
 #     "header": {"X-ChatWorkToken": "XXXXXXXXXXXXXX"}
 # }
+# ```
 #
 # for slack
 #
 # old webhook style.
 #
+# ```
 # {
 #     "team_url": "hoge.slack.com",      # required
 #     "token: {"#channel1": "hogehoge",  # required
@@ -41,17 +42,21 @@
 #     "username": "hubot",               # optional. default is "hubot"
 #     "icon_emoji": ":ghost:"            # optional
 # }
+# ```
 #
 # new webhook style.
 #
+# ```
 # {
 #     "webhook_url": "https://hooks.slack.com/services/.....",  # required
 #     "username": "hubot",                                      # optional. default is "hubot"
 #     "icon_emoji": ":ghost:"                                   # optional
 # }
+# ```
 #
 # for hipchat
 #
+# ```
 # {
 #         "target": {"ROOM_NAME": {"id": ROOM_ID,
 #                                  "token": "ROOM_TOKEN",
@@ -59,12 +64,14 @@
 #                   },
 #         "color": "blue"  # default back ground color
 # }
+# ```
 #
 # ROOM_ID, ROOM_TOKEN are Group Admin -> Rooms -> API ID , Room Notification Tokens.
 # "color" is allowed in "yellow", "red", "green", "purple", "gray", or "random".
 #
 # Usage:
 #
+# ```
 # SendMessage = require './send_message'
 #
 # @sm  = new SendMessage(robot)
@@ -74,171 +81,50 @@
 # ...
 #
 # @sm.send target(Array), message(Array or String)
+# ```
 #
-# Author:
-#   Taiyu Fujii
-
 class SendMessage
 
-  fs       = require 'fs'
-  request  = require 'request'
+  fs              = require 'fs'
+  request         = require 'request'
+  querystring     = require 'querystring'
+  IrcMessage      = require './send_message/irc'
+  HttpPostMessage = require './send_message/http_post'
+  IdobataMessage  = require './send_message/idobata'
+  ChatworkMessage = require './send_message/chatwork'
+  SlackMessage    = require './send_message/slack'
+  HipchatMessage  = require './send_message/hipchat'
+  Log             = require './log'
+  Config          = require './config'
+  log             = new Log 'send_message'
+  config          = new Config
 
   constructor: (robot) ->
 
-    @robot       = robot
-    @type        = process.env.HUBOT_IRC_TYPE
-    @msgLabel    = process.env.HUBOT_IRC_MSG_LABEL
-    @msgType     = process.env.HUBOT_IRC_MSG_TYPE
-    @fmtLabel    = process.env.HUBOT_IRC_FMT_LABEL
-    @infoFile    = process.env.HUBOT_IRC_INFO
-    @info        = {}
-    @infoFlag    = false
-    @form        = {}
-    @lineFeed    = ""
-    @typeFlag    = false
-    @typeArray   = ["irc", "http_post", "chatwork", "idobata", "slack", "hipchat"]
-    @prefix      = "[send_message]"
-    @maxLength   = 128
+    @robot    = robot
+    @type     = process.env.HUBOT_IRC_TYPE
+    @msgLabel = process.env.HUBOT_IRC_MSG_LABEL
+    @msgType  = process.env.HUBOT_IRC_MSG_TYPE
+    @fmtLabel = process.env.HUBOT_IRC_FMT_LABEL
+    @infoFile = process.env.HUBOT_IRC_INFO
+    @maxLengt = 128
+
+    @irc      = new IrcMessage robot
+    @http_pos = new HttpPostMessage robot
+    @idobata  = new IdobataMessage robot
+    @chatwork = new ChatworkMessage robot
+    @slack    = new SlackMessage robot
+    @hipchat  = new HipchatMessage robot
 
     # check
     unless @type
-      console.log "#{@prefix}: Please set the value of type at HUBOT_IRC_TYPE."
+      log.warn 'Please set the value of type at HUBOT_IRC_TYPE.'
       return
 
     unless robot
-      console.log "#{@prefix}: Please set the value of \"robot\"."
-      console.log "#{@prefix}: Usage: @sm = new SendMessage(robot)"
+      log.warn 'Please set the value of "robot".'
+      log.warn 'Usage: @sm = new SendMessage(robot)'
       return
-
-    for tp in @typeArray
-      @typeFlag = true if @type == tp
-
-    unless @typeFlag
-      console.log "#{@prefix}: wrong type, #{@type}"
-      return
-
-    if @type == "chatwork" or @type == "idobata" or @type == "slack" or @type == "hipchat"
-      unless @info
-        console.log "#{@prefix}: Please set the value at HUBOT_IRC_INFO."
-        return
-
-    if @type == "http_post"
-      unless @msgType
-        console.log "#{@prefix}: Please set the value at HUBOT_IRC_MSG_TYPE."
-        console.log "#{@prefix}: \"string\" type has selected."
-      unless @msgLabel
-        console.log "#{@prefix}: Please set the value at HUBOT_IRC_MSG_LABEL."
-        return
-
-    # initialize
-    switch @type
-      when 'irc'
-        @msgType         = "string"
-      when 'idobata'
-        @msgLabel        = "source"
-        @msgType         = "html"
-        @fmtLabel        = "format"
-        @form[@fmtLabel] = @msgType
-      when 'chatwork'
-        @msgLabel = "body"
-      when 'http_post'
-        @form[@fmtLabel] = @msgType
-      when 'slack'
-        @msgLabel = "text"
-        @fmtLabel = "payload"
-      when 'hipchat'
-        @msgLabel = "message"
-        @fmtLabel = "message_format"
-      else
-        @msgType = "string"
-
-    if @msgType == "html"
-      @lineFeed = "<br />"
-    else
-      @lineFeed = "\n"
-
-  readJson: (file, prefix) ->
-
-    unless prefix
-      prefix = @prefix
-
-    unless file
-      console.log "#{@prefix}: Please set the value of \"file\"."
-      return
-
-    unless prefix
-      console.log "#{@prefix}: Error occured in loading the file \"#{file}\"."
-      console.log "Please set the value of \"prefix\"."
-      return
-
-    try
-      data = fs.readFileSync file, 'utf-8'
-      try
-        json = JSON.parse(data)
-        console.log "#{@prefix} success to load file: #{file}."
-        return json
-      catch
-        console.log "#{@prefix} Error on parsing the json file: #{file}"
-        return
-    catch
-      console.log "#{@prefix} Error on reading the json file: #{file}"
-      return
-
-  bold: (str) ->
-
-    switch @type
-      when "irc"
-        "\x02" + str + "\x02"
-      when "http_post"
-        "<strong>" + str + "</strong>"
-        # "<b>" + str + "</b>"
-      when "idobata"
-        # "<strong>" + str + "</strong>"
-        "<b>" + str + "</b>"
-      when "chatwork"
-        str
-      when "slack"
-        ' *' + str + '* '
-      when "hipchat"
-        str
-      else
-        str
-
-  url: (t_str, u_str) ->
-
-    switch @type
-      when "irc"
-        "\x1f" + t_str + "\x1f" + ": " + u_str
-      when "http_post"
-        "<a href='" + u_str + "' target='_blank'>" + t_str + "</a>"
-      when "idobata"
-        "<a href='" + u_str + "' target='_blank'>" + t_str + "</a>"
-      when "chatwork"
-        t_str + ": " + u_str
-      when "slack"
-        '<' + u_str + '|' + t_str + '>'
-      when "hipchat"
-        t_str + ": " + u_str
-      else
-        t_str + ": " + u_str
-
-  underline: (str) ->
-
-    switch @type
-      when "irc"
-        "\x1f" + str + "\x1f"
-      when "http_post"
-        "<u>" + str + "</u>"
-      when "idobata"
-        "<b>" + str + "</b>"
-      when "chatwork"
-        str
-      when "slack"
-        ' *' + str + '* '
-      when "hipchat"
-        str
-      else
-        str
 
   makeHtmlList: (commits) ->
     array   = []
@@ -247,11 +133,11 @@ class SendMessage
     for cs in commits
       cstr    = cs.message.replace /\n/g, @lineFeed
       cid     = @url(cs.id, cs.url)
-      listmsg = "#{listmsg}" + "<li>" + cid + @lineFeed
-      listmsg = "#{listmsg}" + cstr + "</li>"
+      listmsg = "#{listmsg}<li>#{cid}#{@lineFeed}"
+      listmsg = "#{listmsg}#{cstr}</li>"
 
-    listmsg = "#{listmsg}" + "</ul>"
-    array.push("#{listmsg}")
+    listmsg = "#{listmsg}</ul>"
+    array.push listmsg
 
     return array
 
@@ -265,17 +151,17 @@ class SendMessage
       cstr = cs.message.replace /\n/g, @lineFeed
       array = []
       field = {}
-      array.push(@url('link', cs.url))
-      array.push(cstr)
-      array.push(@lineFeed)
-      array.push(@lineFeed)
+      array.push @url('link', cs.url)
+      array.push cstr
+      array.push @lineFeed
+      array.push @lineFeed
 
-      fallback.push(array.join(@lineFeed))
+      fallback.push array.join(@lineFeed)
 
-      field['title'] = '* ' + cs.id
-      field['value']  = array.join(@lineFeed)
+      field.title = "* #{cs.id}"
+      field.value = array.join @lineFeed
 
-      fields.push(field)
+      fields.push field
 
     return {fallback: fallback.join(@lineFeed), fields: fields, color: color, mrkdwn_in: ["fallback", "fields"]}
 
@@ -283,7 +169,7 @@ class SendMessage
     array = []
     for cs in commits
       cstr = cs.message.replace /\n/g, @lineFeed
-      array.push('* ' + @url(cs.id, cs.url))
+      array.push "* #{@url(cs.id, cs.url)}"
 
     return array
 
@@ -293,9 +179,9 @@ class SendMessage
 
     for cs in commits
       cstr = cs.message.replace /\n/g, "#{@lineFeed}#{indent}"
-      array.push("  - " + cs.id)
-      array.push(indent + cstr)
-      array.push(indent + cs.url)
+      array.push "  - #{cs.id}"
+      array.push "#{indent}#{cstr}"
+      array.push "#{indent}#{cs.url}"
 
     return array
 
@@ -305,9 +191,9 @@ class SendMessage
 
     switch @type
       when "irc"
-        commitsArray   = @makeStrList  commits
+        commitsArray   = @makeStrList commits
       when "chatwork"
-        commitsArray   = @makeStrList  commits
+        commitsArray   = @makeStrList commits
       when "http_post"
         if @msgType == "html"
           commitsArray = @makeHtmlList commits
@@ -321,11 +207,15 @@ class SendMessage
     return commitsArray
 
   htmlFilter: (msg) ->
-    # return '' if @type == 'irc'
     if @msgType == 'html'
       msg
     else
-      msg.replace(/<br>/g, @lineFeed).replace(/<br \/>/g, @lineFeed).replace(/<("[^"]*"|'[^']*'|[^'">])*>/g, '').replace(/^$/g, '').replace(/^#{@lineFeed}$/g, '')
+      msg
+      .replace(/<br>/g, @lineFeed)
+      .replace(/<br \/>/g, @lineFeed)
+      .replace(/<("[^"]*"|'[^']*'|[^'">])*>/g, '')
+      .replace(/^$/g, '')
+      .replace(/^#{@lineFeed}$/g, '')
 
   slack_attachments: (title, msg, color) ->
     message = ""
@@ -333,147 +223,49 @@ class SendMessage
       color = "#aaaaaa"
 
     if typeof msg == "object"
-      message = msg.join(@lineFeed)
+      message = msg.join @lineFeed
     else
       if typeof msg == "string"
         message = msg
       else
-        console.log "#{@prefix}: msg error #{msg}"
-            # else
-      #   console.log "unknown error on slack_attachment: #{msg}, type: " + typeof msg
-    # console.log "sa: #{message}"
+        log.warn "msg error #{msg}"
 
     return [{fallback: message, fields: [{title: title, value: message}], color: color, mrkdwn_in: ["fallback", "fields"]}]
 
   sleep: (ms) ->
     start = new Date().getTime()
-    wait = (Math.floor(Math.random() * 10) + 1) * ms
+    wait  = (Math.floor(Math.random() * 10) + 1) * ms
     continue while new Date().getTime() - start < wait
 
   send: (target, msg, option) ->
 
     messages = ''
 
-    if @infoFile
-      unless @infoFlag
-        @info    = @readJson @infoFile, @prefix
-        @infoFlag = true
-
-    # message
-    if typeof(msg) == 'object'
-      messages = msg.join(@lineFeed)
+    if typeof(target) is 'object'
+      targets = target
     else
-      if typeof(msg) == 'string'
-        messages = msg
-      else
-        console.log "#{@prefix} unknown message type: " + typeof(msg) + "."
-
-    @form[@msgLabel] = messages
+      targets = []
+      targets.push target
 
     # main
-    for tg in target
+    for tg in targets
       switch @type
         when "irc"
-          @robot.send { "room": tg }, messages
+          @irc.send tg, msg
 
         when "http_post"
-          unless @heades
-            request.post
-              url: tg
-              form: @form
-            , (err, response, body) ->
-              console.log "err: #{err}" if err?
-          else
-            request.post
-              url: tg
-              headers: @info['header']
-              form: @form
-            , (err, response, body) ->
-              console.log "err: #{err}" if err?
+          @http_post.send tg, msg
 
         when "idobata"
-          request.post
-            url: tg
-            headers: @info['header']
-            form: @form
-          , (err, response, body) ->
-            console.log "err: #{err}" if err?
+          @idobata.send tg, msg
 
         when "chatwork"
-          messages = encodeURIComponent "[info]#{messages}[/info]"
-          uri      = "#{tg}?#{@msgLabel}=#{messages}"
-          request.post
-            url: uri
-            headers: @info['header']
-          , (err, response, body) ->
-            console.log "err: #{err}" if err?
+          @chatwork.send tg, msg
 
         when "slack"
-          if @info['username']?
-            @form['username'] = @info['username']
-          else
-            @form['username'] = 'hubot'
-
-          if @info['icon_emoji']?
-            @form['icon_emoji'] = @info['icon_emoji']
-
-          @form['channel'] = tg
-          # @form['mrkdwn']  = "true"
-
-          if @info['team_url'] and @info['token'] 
-            uri = 'https://' + @info['team_url'] + '/services/hooks/incoming-webhook?token=' + token
-            token = @info['token'][tg]
-            if token == undefined
-              console.log "#{@prefix}: No token for #{tg} channel."
-              return
-
-          else if @info['webhook_url']
-            uri = @info['webhook_url']
-          else
-            console.log "#{@prefix}: URI Not found."
-            return
-
-          if option? or option != false
-            @form['attachments'] = option
-            attachments = false
-
-          json = JSON.stringify @form
-          # console.log "uri:" + uri
-          # console.log "form: %j", json
-          request.post
-            url: uri
-            form: {payload: json}
-          , (err, response, body) ->
-            console.log "err: #{err}" if err?
+          @slack.send tg, msg, option
 
         when "hipchat"
-          room_id    = @info['target'][tg]['id']
-          room_token = @info['target'][tg]['token']
-          uri        = 'https://api.hipchat.com/v2/room/' + room_id + '/notification?auth_token=' + room_token
-
-          try
-            color = @info['target'][tg]['color']
-          catch
-            try
-              color = @info['color']
-            catch
-              color = 'blue'
-          if option?
-            color = option
-
-          form = {}
-          form['color']   = color
-          form[@fmtLabel] = 'text'
-          form[@msgLabel] = messages
-
-          # console.log JSON.stringify form
-
-          request.post
-            url: uri
-            headers: "Content-Type": "application/json"
-            json: true
-            body: JSON.stringify form
-          , (err, response, body) ->
-            console.log "err: #{err}" if err?
+          @hipchat.send tg, msg
 
 module.exports = SendMessage

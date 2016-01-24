@@ -42,6 +42,8 @@
 
 path        = "cmd"
 SendMessage = require './send_message'
+Config      = require './config'
+config      = new Config
 prefix      = '[cmd]'
 debug       = process.env.CMD_DEBUG
 configFile  = process.env.CMD_CONFIG
@@ -50,7 +52,7 @@ type        = process.env.HUBOT_IRC_TYPE
 
 module.exports = (robot) ->
   @sm  = new SendMessage(robot)
-  conf = @sm.readJson configFile, prefix
+  conf = config.get configFile
 
   unless color
     switch type

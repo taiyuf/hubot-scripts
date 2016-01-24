@@ -17,7 +17,7 @@ global.shared_context.robot_is_running = (callback) ->
   afterEach ->
     robot.shutdown()
 
-src   = process.env.HOME + "/hubot/node_modules/hubot/src"
+src   = process.env.HOME + "/node_modules/hubot/src"
 Robot = require(src + "/robot")
 
 setupRobot = (callback) ->
@@ -25,6 +25,7 @@ setupRobot = (callback) ->
   adapter = null
   user    = null
   robot   = new Robot null, 'mock-adapter', false, 'hubot'
+  # robot   = new Robot null, 'mock-adapter', true, 'hubot'
 
   robot.adapter.on 'connected', ->
     user  = robot.brain.userForId '1',
