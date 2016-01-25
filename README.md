@@ -7,7 +7,13 @@ hubot scripts.
 
 ## Dependencies
 
-  hubot-irc: "~0.2.2"
+- hubot-irc: "~0.2.2"
+- fs
+- js-yaml
+- log4js
+- querystring
+- request
+- url
 
 ## Usage
 

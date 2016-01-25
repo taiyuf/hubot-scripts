@@ -79,11 +79,11 @@ match_ip = (ip, pattern) ->
   else if pattern.match /^(\d+\.)+$/
     rexp = new RegExp "^#{pattern}"
     result = rexp.exec ip
-    if result.length isnt 0
-      log.debug "success"
+    if result && result.length isnt 0
+      log.debug "match"
       return true
     else
-      log.debug "fail"
+      log.debug "not match"
       return false
 
   else
