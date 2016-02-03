@@ -279,6 +279,43 @@ curl -X POST -H '-H 'HUBOT_HTTP_IRC_API_KEY:ZZZZZZZ' --data-urlencode message="h
 if you set allow or deny by ip address, it's condition will apply.
 
 
+## jenkins-job-selector-by-git-branch
+
+Do the job selected by the branch of git on jenkins
+
+### Configuration
+
+* JENKINS_JOBSELECTOR_CONFIG_FILE concfigration file path.
+
+configuration file like this,
+
+```
+GIT_URL:
+  target:
+    - 'hoge'
+    - 'fuga'
+  auth:
+    id: 'hoge'
+    password: 'fuga'
+    jobs:
+      branchA: 'JENKIS_JOB_URL_A'
+      branchB:
+        - 'JENKIS_JOB_URL_A'
+        - 'JENKIS_JOB_URL_B'
+```
+
+if you have an api key, JENKINS_JOB_URL is like this.
+
+```
+http://USER:USER_API_KEY@JENKINS_SERVER_URL/.../job/PROJECT_NAME/build?token=USER_API_KEY
+```
+
+### Usage
+
+Put http://<HUBOT_URL>:<PORT>/hubot/jenkins-jobselector to web hook at your git repository.
+
+
+
 ## cmd
 
 Let hubot execute shell command.

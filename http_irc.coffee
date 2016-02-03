@@ -70,20 +70,20 @@ send_message = (res, room, msg, query) ->
 match_ip = (ip, pattern) ->
   if pattern.match /^\d+\.\d+\.\d+\.\d+$/
     if ip is pattern
-      log.debug "equal"
+      log.debug "equal: #{pattern}"
       return true
     else
-      log.debug "not equal"
+      log.debug "not equal: #{pattern}"
       return false
 
   else if pattern.match /^(\d+\.)+$/
     rexp = new RegExp "^#{pattern}"
     result = rexp.exec ip
     if result && result.length isnt 0
-      log.debug "match"
+      log.debug "match: #{pattern}"
       return true
     else
-      log.debug "not match"
+      log.debug "not match: #{pattern}"
       return false
 
   else
