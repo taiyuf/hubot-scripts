@@ -290,15 +290,18 @@ Do the job selected by the branch of git on jenkins
 configuration file like this,
 
 ```
-{
-   "GIT_URL": {
-                  "target": ["hoge", "fuga"],
-                  "auth": {"id": "hoge",
-                           "password": "fuga"},
-                  "jobs":{"branchA": "JENKIS_JOB_URL_A",
-                          "branchB": "JENKIS_JOB_URL_A"}
-                 }
-}
+GIT_URL:
+  target:
+    - 'hoge'
+    - 'fuga'
+  auth:
+    id: 'hoge'
+    password: 'fuga'
+    jobs:
+      branchA: 'JENKIS_JOB_URL_A'
+      branchB:
+        - 'JENKIS_JOB_URL_A'
+        - 'JENKIS_JOB_URL_B'
 ```
 
 if you have an api key, JENKINS_JOB_URL is like this.
