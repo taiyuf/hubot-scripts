@@ -12,58 +12,34 @@
 # HUBOT_IRC_INFO like this,
 #
 # ```
-# {
-#     "HEADER": "VALUE",
-#     ...
-# }
+# HEADER: 'VALUE'
 #
 # for idobata
 #
-# {
-#     "header": {"X-API-Token": "XXXXXXXXXXXX"}
-# }
+# header:
+#   "X-API-Token": "XXXXXXXXXXXX"
 #
 # for chatwork
 #
-# {
-#     "header": {"X-ChatWorkToken": "XXXXXXXXXXXXXX"}
-# }
+# header:
+#   "X-ChatWorkToken": "XXXXXXXXXXXXXX"
 # ```
 #
 # for slack
 #
-# old webhook style.
-#
 # ```
-# {
-#     "team_url": "hoge.slack.com",      # required
-#     "token: {"#channel1": "hogehoge",  # required
-#              "#channel2": "fugafuga"},
-#     "username": "hubot",               # optional. default is "hubot"
-#     "icon_emoji": ":ghost:"            # optional
-# }
-# ```
-#
-# new webhook style.
-#
-# ```
-# {
-#     "webhook_url": "https://hooks.slack.com/services/.....",  # required
-#     "username": "hubot",                                      # optional. default is "hubot"
-#     "icon_emoji": ":ghost:"                                   # optional
-# }
+# "webhook_url": "https://hooks.slack.com/services/....."  # required
 # ```
 #
 # for hipchat
 #
 # ```
-# {
-#         "target": {"ROOM_NAME": {"id": ROOM_ID,
-#                                  "token": "ROOM_TOKEN",
-#                                  "color": "green"}
-#                   },
-#         "color": "blue"  # default back ground color
-# }
+# "target":
+# "ROOM_NAME":
+#   "id": ROOM_ID
+#   "token": "ROOM_TOKEN"
+#   "color": "green"
+# "color": "blue"  # default back ground color
 # ```
 #
 # ROOM_ID, ROOM_TOKEN are Group Admin -> Rooms -> API ID , Room Notification Tokens.

@@ -12,15 +12,20 @@
 #
 #   configuration file like this,
 #
-#   {
-#      "GIT_URL": {
-#                     "target": ["hoge", "fuga"],
-#                     "auth": {"id": "hoge",
-#                              "password": "fuga"},
-#                     "jobs":{"branchA": "JENKIS_JOB_URL_A",
-#                             "branchB": ["JENKIS_JOB_URL_A", "JENKIS_JOB_URL_B"]}
-#                    }
-#   }
+# ```
+# GIT_URL:
+#   target:
+#     - 'hoge'
+#     - 'fuga'
+#   auth:
+#     id: 'hoge'
+#     password: 'fuga'
+#     jobs:
+#       branchA: 'JENKIS_JOB_URL_A'
+#       branchB:
+#         - 'JENKIS_JOB_URL_A'
+#         - 'JENKIS_JOB_URL_B'
+# ```
 #
 #   GIT_URL: http://GITLAB/USER/MODULE
 #
@@ -42,6 +47,10 @@
 url         = require('url')
 querystring = require('querystring')
 request     = require 'request'
+Log         = require './log'
+Config      = require './config'
+log         = new Log 'jenkins-job-selector'
+config      = new Config
 configFile  = process.env.JENKINS_JOBSELECTOR_CONFIG_FILE
 send_flag   = process.env.JENKINS_JOBSELECTOR_SEND_MESSAGE
 debug       = process.env.JENKINS_JOBSELECTOR_DEBUG?
@@ -62,7 +71,7 @@ request_url = (auth, url) ->
 module.exports = (robot) ->
 
   @sm      = new SendMessage(robot)
-  conf     = @sm.readJson configFile, prefix
+  conf     = config.get configFile
   git_type = ''
   git_url  = ''
   auth     = ''
@@ -76,11 +85,11 @@ module.exports = (robot) ->
     try
       hook = req.body
     catch error
-      console.log "#{prefix}: There is no hook: #{error}. Data: #{req.body}"
-      console.log error.stack
+      log.warn "There is no hook: #{error}. Data: #{req.body}"
+      log.warn error.stack
 
     unless hook.ref?
-      console.log "#{prefix}: There is no hook.ref: #{error}. Data: #{req.body}"
+      log.warn "There is no hook.ref: #{error}. Data: #{req.body}"
       return
 
     # URL
@@ -92,10 +101,10 @@ module.exports = (robot) ->
       git_url = hook.repository.url
 
     unless git_url
-      console.log "#{prefix}: Unknown git repository."
+      log.warn "Unknown git repository."
       return
 
-    console.log "GIT_URL: #{git_url}" if debug
+    log.debug "GIT_URL: #{git_url}" if debug
 
     # Branch
     branch = hook.ref.replace "refs/heads/", ""
@@ -104,7 +113,7 @@ module.exports = (robot) ->
       if conf[git_url]['auth']?
         auth = {"user": conf[git_url]['auth']['id'], "pass": conf[git_url]['auth']['password']}
     catch
-      console.log "no auth infomation." if debug
+      log.debug "no auth infomation." if debug
 
     job_url = conf[git_url]['jobs'][branch]
     if typeof(job_url) == 'object'
@@ -114,7 +123,7 @@ module.exports = (robot) ->
           @sm.send conf[git_url]['target'], "", @sm.slack_attachments("","[Jenkins]: The job has started on #{@sm.bold(branch)} branch at #{git_url}.")
         else
           @sm.send conf[git_url]['target'], "[Jenkins]: The job has started on #{@sm.bold(branch)} branch at #{git_url}." if send_flag
-        console.log "target_URL: #{j}" if debug
+        log.debug "target_URL: #{j}" if debug
 
     else
       if typeof(job_url) == 'string'
@@ -123,7 +132,7 @@ module.exports = (robot) ->
           @sm.send conf[git_url]['target'], "", @sm.slack_attachments("","[Jenkins]: The job has started on #{@sm.bold(branch)} branch at #{git_url}.")
         else
           @sm.send conf[git_url]['target'], "[Jenkins]: The job has started on #{@sm.bold(branch)} branch at #{git_url}." if send_flag
-        console.log "target_URL: #{job_url}" if debug
+        log.debug "target_URL: #{job_url}" if debug
 
       else
-        console.log "#{prefix} unknown message type: " + typeof(msg) + "."
+        log.warn "unknown message type: " + typeof(msg) + "."
