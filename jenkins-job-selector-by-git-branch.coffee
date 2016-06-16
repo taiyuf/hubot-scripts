@@ -58,6 +58,7 @@ ircType     = process.env.HUBOT_IRC_TYPE
 path        = "jenkins-jobselector"
 prefix      = '[#{path}]'
 SendMessage = require './send_message'
+service     = ''
 
 request_url = (auth, url) ->
   if auth?
@@ -88,17 +89,19 @@ module.exports = (robot) ->
       log.warn "There is no hook: #{error}. Data: #{req.body}"
       log.warn error.stack
 
-    unless hook.ref?
-      log.warn "There is no hook.ref: #{error}. Data: #{req.body}"
-      return
+    # unless hook.ref?
+    #   log.warn "There is no hook.ref: #{error}. Data: #{req.body}"
+    #   return
 
     # URL
     if hook.repository.homepage
       # gitlab
       git_url = hook.repository.homepage
+      service = 'gitlab'
     else
       # github
-      git_url = hook.repository.url
+      git_url = hook.repository.html_url
+      service = 'github'
 
     unless git_url
       log.warn "Unknown git repository."
