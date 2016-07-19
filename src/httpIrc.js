@@ -7,27 +7,28 @@ import Auth        from './Auth';
  * Simple path to have Hubot echo out anything in the message querystring for a given room.
  * @example
  *   curl http://YOUR_SERVER/http_irc?room=%23foo&message=hoge
+ *   curl http://YOUR_SERVER/http_irc/foo?message=hoge
  *   curl -X POST --data-urlencode message="hoge hoge." http://YOUR_SERVER/http_irc?room\=foo
  *   curl -X POST --data-urlencode message="hoge hoge." -d  room=foo http://YOUR_SERVER/http_irc?room=#foo
  */
 
 // the type of irc.
-const type        = process.env.HUBOT_IRC_TYPE;
+const type    = process.env.HUBOT_IRC_TYPE;
 
 // the api key.
-const api_key     = process.env.HUBOT_HTTP_IRC_API_KEY || null;
+const api_key = process.env.HUBOT_HTTP_IRC_API_KEY || null;
 
 // the network or address allowed.
-const allow       = process.env.HUBOT_HTTP_IRC_ALLOW   || null;
+const allow   = process.env.HUBOT_HTTP_IRC_ALLOW   || null;
 
 // the network or addres denied.
-const deny        = process.env.HUBOT_HTTP_IRC_DENY    || null;
+const deny    = process.env.HUBOT_HTTP_IRC_DENY    || null;
 
 // the path of url.
-const urlpath     = "/http_irc";
+const urlpath = "/http_irc";
 
 // this module name.
-const name        = 'httpIrc';
+const name    = 'httpIrc';
 
 /**
  * Check request whether allowed or not.
@@ -101,7 +102,7 @@ module.exports = (robot) => {
 
     log.debug(`${name} query: ${JSON.stringify(query)}`);
 
-    sm.send(query.room, query.message, query, (err, res) => {
+    sm.send(`#${query.room}`, query.message, query, (err, res) => {
       if (err) {
         log.error(err);
       } else {

@@ -1,8 +1,8 @@
-import path      from 'path';
-import request   from 'superagent';
-import Context   from './Context';
-import fs   from 'fs';
-import yaml from 'js-yaml';
+import fs      from 'fs';
+import yaml    from 'js-yaml';
+import path    from 'path';
+import request from 'superagent';
+import Context from './Context';
 
 export default class Slack extends Context {
 
@@ -18,12 +18,10 @@ export default class Slack extends Context {
     }
 
     super();
-    this.robot       = robot;
-    this.formatLabel = 'payload';
-    this.color       = '#aaaaaa';
+    this.robot = robot;
+    this.color = '#aaaaaa';
     const conf = process.env.HUBOT_IRC_INFO;
-    console.log(`conf: ${conf}`);
-    this.info        = yaml.safeLoad(fs.readFileSync(conf));
+    this.info  = yaml.safeLoad(fs.readFileSync(conf));
 
     this.buildAttatchment = this.buildAttatchment.bind(this);
     this.send = this.send.bind(this);
@@ -35,7 +33,7 @@ export default class Slack extends Context {
    * @return {Sring}  bold text for irc.
    */
   bold(str) {
-    return str ? " *#{str}* " : null;
+    return str ? ` *${str}* ` : null;
   }
 
   /**
@@ -58,7 +56,7 @@ export default class Slack extends Context {
    * @return {Sring}  bold text for irc.
    */
   underline(str) {
-    return str ? " *#{str}* " : null;
+    return str ? ` *${str}* ` : null;
   }
 
   /**
