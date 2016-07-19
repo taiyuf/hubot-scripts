@@ -1,6 +1,8 @@
 import path      from 'path';
 import request   from 'superagent';
 import Context   from './Context';
+import fs   from 'fs';
+import yaml from 'js-yaml';
 
 export default class Slack extends Context {
 
@@ -19,7 +21,9 @@ export default class Slack extends Context {
     this.robot       = robot;
     this.formatLabel = 'payload';
     this.color       = '#aaaaaa';
-    this.info        = process.env.HUBOT_IRC_INFO;
+    const conf = process.env.HUBOT_IRC_INFO;
+    console.log(`conf: ${conf}`);
+    this.info        = yaml.safeLoad(fs.readFileSync(conf));
 
     this.buildAttatchment = this.buildAttatchment.bind(this);
     this.send = this.send.bind(this);
@@ -91,27 +95,37 @@ export default class Slack extends Context {
 
     at.color = info.color ? info.color : this.color;
     at.text  = message;
+    at.pretext = message;
 
-    fallback.map((v, i) => {
-      if (info[v]) {
-        fallback.push(v);
+    const hash = fallback.reduce((hash, key) => {
+      if (info[key]) {
+        hash[key] = info[key];
       }
-    });
+      return hash;
+    }, {});
 
-    fallback.push(message);
-    at.fallback = fallback.join(' - ');
+    const f = fallback.reduce((array, a) => {
+      if (info[a]) {
+        array.push(info[a]);
+      }
+      return array;
+    }, []);
+    f.push(message);
+    at.fallback = f.join(' - ');
 
     at.mrkdwn_in = ['text', 'pretext'];
 
     querys.map((v, i) => {
-      at[v] = info[v];
+      if (info[v]) {
+        at[v] = info[v];
+      }
     });
 
     if (this.debugFlag) {
       this.debug(`Slack: attachment: ${JSON.stringify(at)}`);
     }
 
-    return at;
+    return [at];
   }
 
   /**
@@ -123,7 +137,7 @@ export default class Slack extends Context {
    *
    * @throws {Error}  arguments error.
    */
-  send(target, msg, info={}) {
+  send(target, msg, info={}, cb) {
     if (!(target && msg)) {
       throw new Error(`Irc send: arguments error: target: ${target}, msg: ${msg}`);
       this.robot.send({ 'room': target}, this.parseType(msg));
@@ -143,30 +157,21 @@ export default class Slack extends Context {
       'icon_emoji'
     ];
 
-    q.channel = target;
+    q.channel     = target;
     q.attachments = this.buildAttatchment(msg, info);
 
-    params.map((v, i) => {
-      if (info[v]) {
-        q[v] = info[v];
-      }
-    });
+    this.debug(`${name}> json: ${JSON.stringify(q)}`);
+    request
+      .post(this.info.webhook_url)
+      .send(q)
+      .end((err, res) => {
+        if (err || !res.ok) {
+          cb && cb(err);
+          return;
+        }
 
-    this.debugFlag && this.debug(`${name}> json: ${JSON.stringify(q)}`);
-
-    return new Promise((resolve, reject) => {
-      request
-        .post(this.info.webhook_url)
-        .send(q)
-        .end((err, res) => {
-          if (err || !res.ok) {
-            reject(err);
-            return;
-          }
-
-          this.debugFlag && this.debug(`${name}> body from slack; ${res.text}`);
-          resolve(res.text);
-        });
-    });
+        this.debugFlag && this.debug(`${name}> body from slack; ${res.text}`);
+        cb && cb(null, res.text);
+      });
   }
 }

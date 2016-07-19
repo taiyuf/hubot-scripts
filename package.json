@@ -8,9 +8,9 @@
   },
   "scripts": {
     "test": "mocha",
-    "build": "(cd ./src && babel -d ../dist ./*)",
+    "build": "(cd ./src && babel -d ../build ./*)",
     "watch": "npm run watch:start",
-    "watch:start": "(cd ./src && babel -d ../dist ./* --watch &)",
+    "watch:start": "(cd ./src && babel -d ../build ./* --watch &)",
     "watch:stop": "for p in `ps awx|grep 'hubot-scripts/node_modules/.bin/babel'|grep -v 'grep'|awk '{print $1}'`; do kill $p; done"
   },
   "babel": {
@@ -40,6 +40,8 @@
   },
   "homepage": "https://github.com/taiyuf/hubot-scripts",
   "dependencies": {
+    "babel-loader": "^6.2.4",
+    "babel-polyfill": "^6.9.1",
     "fs": "0.0.2",
     "generator-hubot": "^0.4.0",
     "js-yaml": "^3.5.2",
@@ -49,6 +51,7 @@
     "querystring": "^0.2.0",
     "superagent": "^2.1.0",
     "url": "^0.11.0",
+    "webpack": "^1.13.1",
     "yo": "^1.8.4"
   },
   "devDependencies": {
