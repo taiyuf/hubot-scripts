@@ -31,7 +31,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var type = process.env.HUBOT_IRC_TYPE;
 
 // the api key.
-var api_key = process.env.HUBOT_HTTP_IRC_API_KEY || null;
+var apikey = process.env.HUBOT_HTTP_IRC_API_KEY || null;
 
 // the network or address allowed.
 var allow = process.env.HUBOT_HTTP_IRC_ALLOW || null;
@@ -46,31 +46,11 @@ var urlpath = "/http_irc";
 var name = 'httpIrc';
 
 /**
- * Check request whether allowed or not.
- * @param  {Object} req the request object.
- * @param  {Object} res the response object.
- *
- * @throws {Error}  arguments error.
- */
-var checkReq = function checkReq(req, res) {
-  if (!(req && res)) {
-    throw new Error(name + ' checkReq: arguments error: req: ' + req + ', res: ' + res);
-  }
-
-  var auth = new _Auth2.default(req);
-  if (!auth.checkRequest()) {
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('Not allowed to access.');
-    return;
-  }
-};
-
-/**
  * Return the response in success.
  * @param  {Object} res the response object.
  * @return {Object} the http response.
  */
-var responseOk = function responseOk(res) {
+var resOk = function resOk(res) {
   if (!res) {
     throw new Error('responseOk: res is not found.');
   }
@@ -84,8 +64,12 @@ module.exports = function (robot) {
   var log = sm.robot;
 
   robot.router.get('' + urlpath, function (req, res) {
-    checkReq(res, res);
+    var auth = new _Auth2.default(req, allow, deny, apikey);
     var query = _querystring2.default.parse(req._parsedUrl.query);
+
+    if (!auth.checkRequest(res)) {
+      return;
+    }
 
     if (!query.room) {
       log.error(name + ' room is required: query: ' + JSON.stringify(query));
@@ -102,13 +86,17 @@ module.exports = function (robot) {
       }
     });
 
-    responseOk(res);
+    resOk(res);
   });
 
   robot.router.get(urlpath + '/:room', function (req, res) {
-    checkReq(res, res);
+    var auth = new _Auth2.default(req, allow, deny, apikey);
     var room = req.params.room || query.room;
     var query = _querystring2.default.parse(req._parsedUrl.query);
+
+    if (!auth.checkRequest(res)) {
+      return;
+    }
 
     if (!(req.params.room && query.room)) {
       log.error(name + ' room is required: query: ' + JSON.stringify(query));
@@ -125,13 +113,17 @@ module.exports = function (robot) {
       }
     });
 
-    responseOk(res);
+    resOk(res);
   });
 
   robot.router.post(urlpath, function (req, res) {
-    checkReq(res, res);
-
+    var auth = new _Auth2.default(req, allow, deny, apikey);
     var query = _querystring2.default.parse(req._parsedUrl.query);
+
+    if (!auth.checkRequest(res)) {
+      return;
+    }
+
     if (!query.room || !req.body.room) {
       log.error(name + ' room is required: query: ' + JSON.stringify(query) + '\n' + req.body);
       return;
@@ -149,6 +141,6 @@ module.exports = function (robot) {
       }
     });
 
-    responseOk(res);
+    resOk(res);
   });
 };

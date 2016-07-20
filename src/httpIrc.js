@@ -16,7 +16,7 @@ import Auth        from './Auth';
 const type    = process.env.HUBOT_IRC_TYPE;
 
 // the api key.
-const api_key = process.env.HUBOT_HTTP_IRC_API_KEY || null;
+const apikey  = process.env.HUBOT_HTTP_IRC_API_KEY || null;
 
 // the network or address allowed.
 const allow   = process.env.HUBOT_HTTP_IRC_ALLOW   || null;
@@ -31,31 +31,11 @@ const urlpath = "/http_irc";
 const name    = 'httpIrc';
 
 /**
- * Check request whether allowed or not.
- * @param  {Object} req the request object.
- * @param  {Object} res the response object.
- *
- * @throws {Error}  arguments error.
- */
-const checkReq    = (req, res) => {
-  if (!(req && res)) {
-    throw new Error(`${name} checkReq: arguments error: req: ${req}, res: ${res}`);
-  }
-
-  const auth = new Auth(req);
-  if (!auth.checkRequest()) {
-    res.writeHead(200, {'Content-Type': 'text/plain'});
-    res.end('Not allowed to access.');
-    return;
-  }
-};
-
-/**
  * Return the response in success.
  * @param  {Object} res the response object.
  * @return {Object} the http response.
  */
-const responseOk = (res) => {
+const resOk = (res) => {
   if (!res) {
     throw new Error(`responseOk: res is not found.`);
   }
@@ -65,12 +45,16 @@ const responseOk = (res) => {
 };
 
 module.exports = (robot) => {
-  const sm = new SendMessage(robot, type);
-  const log = sm.robot;
+  const sm   = new SendMessage(robot, type);
+  const log  = sm.robot;
 
   robot.router.get(`${urlpath}`, (req, res) => {
-    checkReq(res, res);
+    const auth  = new Auth(req, allow, deny, apikey);
     const query = querystring.parse(req._parsedUrl.query);
+
+    if (!auth.checkRequest(res)) {
+      return;
+    }
 
     if (!query.room) {
       log.error(`${name} room is required: query: ${JSON.stringify(query)}`);
@@ -87,13 +71,17 @@ module.exports = (robot) => {
       }
     });
 
-    responseOk(res);
+    resOk(res);
   });
 
   robot.router.get(`${urlpath}/:room`, (req, res) => {
-    checkReq(res, res);
+    const auth  = new Auth(req, allow, deny, apikey);
     const room  = req.params.room || query.room;
     const query = querystring.parse(req._parsedUrl.query);
+
+    if (!auth.checkRequest(res)) {
+      return;
+    }
 
     if (!(req.params.room && query.room)) {
       log.error(`${name} room is required: query: ${JSON.stringify(query)}`);
@@ -110,13 +98,17 @@ module.exports = (robot) => {
       }
     });
 
-    responseOk(res);
+    resOk(res);
   });
 
   robot.router.post(urlpath, (req, res) => {
-    checkReq(res, res);
-
+    const auth  = new Auth(req, allow, deny, apikey);
     const query = querystring.parse(req._parsedUrl.query);
+
+    if (!auth.checkRequest(res)) {
+      return;
+    }
+
     if (!query.room || !req.body.room) {
       log.error(`${name} room is required: query: ${JSON.stringify(query)}\n${req.body}`);
       return;
@@ -134,6 +126,6 @@ module.exports = (robot) => {
       }
     });
 
-    responseOk(res);
+    resOk(res);
   });
 };

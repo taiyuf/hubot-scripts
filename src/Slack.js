@@ -17,10 +17,15 @@ export default class Slack extends Context {
       throw new Error(`arguments error: robot is not found.`);
     }
 
+    const conf = process.env.HUBOT_IRC_INFO;
+    if (!conf) {
+      console.log(`Slack: there is no info setting. please set HUBOT_IRC_INFO.`);
+      return;
+    }
+
     super();
     this.robot = robot;
     this.color = '#aaaaaa';
-    const conf = process.env.HUBOT_IRC_INFO;
     this.info  = yaml.safeLoad(fs.readFileSync(conf));
 
     this.buildAttatchment = this.buildAttatchment.bind(this);

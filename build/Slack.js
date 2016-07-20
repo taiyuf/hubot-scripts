@@ -51,11 +51,16 @@ var Slack = function (_Context) {
       throw new Error('arguments error: robot is not found.');
     }
 
+    var conf = process.env.HUBOT_IRC_INFO;
+    if (!conf) {
+      console.log('Slack: there is no info setting. please set HUBOT_IRC_INFO.');
+      return _possibleConstructorReturn(_this);
+    }
+
     var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Slack).call(this));
 
     _this.robot = robot;
     _this.color = '#aaaaaa';
-    var conf = process.env.HUBOT_IRC_INFO;
     _this.info = _jsYaml2.default.safeLoad(_fs2.default.readFileSync(conf));
 
     _this.buildAttatchment = _this.buildAttatchment.bind(_this);

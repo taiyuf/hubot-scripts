@@ -1,19 +1,22 @@
 export default class Auth {
   /**
    * Constructor
-   * @param  {Object} req the ip address of client.
+   * @param  {Object} req    the ip address of client.
+   * @param  {String} allow  CIDR allowed to request.
+   * @param  {String} deny   CIDR denied to request.
+   * @param  {String} apikey apikey allowed to request.
    * @throws {Error}  arguments error.
    */
-  constructor(req) {
+  constructor(req, allow=null, deny=null, apikey=null) {
     if (!req) {
       throw new Error(`Auth arguments error: req is not found.`);
     }
 
     this.req          = req;
     this.name         = 'Auth';
-    this.allow        = process.env.HUBOT_HTTP_IRC_ALLOW   || null;
-    this.deny         = process.env.HUBOT_HTTP_IRC_DENY    || null;
-    this.apikey       = process.env.HUBOT_HTTP_IRC_API_KEY || null;
+    this.allow        = allow;
+    this.deny         = deny;
+    this.apikey       = apikey;
     this.remoteIp     = req.headers && req.headers['x-forwarded-for'] ||
       req.connection.remoteAddress ||
       req.socket.remoteAddress ||
@@ -41,25 +44,25 @@ export default class Auth {
 
     if (pattern.match(/^\d+\.\d+\.\d+\.\d+$/)) {
       if (this.remoteIp == pattern) {
-        console.log(`match: ${this.remoteIp}, ${pattern}`);
+        console.log(`${this.name}> match: ${this.remoteIp}, ${pattern}`);
         return true;
       } else {
-        console.log(`NOT match: ${this.remoteIp}, ${pattern}`);
+        console.log(`${this.name}> NOT match: ${this.remoteIp}, ${pattern}`);
         return false;
       }
     } else if (pattern.match(/^(\d+\.)+$/)) {
       const re = new RegExp(`^${pattern}`);
       const result = re.exec(this.remoteIp);
       if (result && result.length != 0) {
-        console.log(`match: ${this.remoteIp}, ${pattern}`);
+        console.log(`${this.name}> match: ${this.remoteIp}, ${pattern}`);
         return true;
       } else {
-        console.log(`NOT match: ${this.remoteIp}, ${pattern}`);
+        console.log(`${this.name}> NOT match: ${this.remoteIp}, ${pattern}`);
         return false;
       }
     } else {
-      this.error(`*** invalid pattern: ${pattern}`);
-      throw new Error(`*** invalid pattern: ${pattern}`);
+      this.error(`*** ${this.name}> invalid pattern: ${pattern}`);
+      throw new Error(`*** ${this.name}> invalid pattern: ${pattern}`);
     }
   }
 
@@ -82,7 +85,7 @@ export default class Auth {
       const denyIps = this.deny.split(',');
       denyIps.map((v, i) => {
         if (this.match(this.remoteIp, v)) {
-          console.log(`DENY: ${this.remoteIp}`);
+          console.log(`${this.name}> DENY: ${this.remoteIp}`);
           flag = false;
         }
       });
@@ -92,7 +95,7 @@ export default class Auth {
       const allowIps = this.allow.split(',');
       allowIps.map((v, i) => {
         if (this.match(this.remoteIp, v)) {
-          console.log(`ALLOW: ${this.remoteIp}`);
+          console.log(`${this.name}> ALLOW: ${this.remoteIp}`);
           flag = true;
         }
       });
@@ -119,18 +122,35 @@ export default class Auth {
 
   /**
    * Check the request is valid.
+   * @param  {Object}  req the request object.
    * @return {Boolean} the request is allowed or not.
    *
    * @throws {Error}   arguments error.
    */
-  checkRequest() {
+  checkRequest(res) {
+    if (!res) {
+      throw new Error(`${this.name}> checkRequest req is not found.`);
+    }
+
     const result = this.checkIp();
+    const resError = () => {
+      res.writeHead(200, {'Content-Type': 'text/plain'});
+      res.end('Not allowed to access.');
+    };
+
     if (result === true) {
       return true;
-    } else if (result === false) {
+    } if (result === false) {
+      resError();
       return false;
+
     } else {
-      return this.checkApiKey();
+      if (!this.checkApiKey()) {
+        resError();
+        return false;
+      } else {
+        return true;
+      }
     }
   }
 

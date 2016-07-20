@@ -11,11 +11,18 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var Auth = function () {
   /**
    * Constructor
-   * @param  {Object} req the ip address of client.
+   * @param  {Object} req    the ip address of client.
+   * @param  {String} allow  CIDR allowed to request.
+   * @param  {String} deny   CIDR denied to request.
+   * @param  {String} apikey apikey allowed to request.
    * @throws {Error}  arguments error.
    */
 
   function Auth(req) {
+    var allow = arguments.length <= 1 || arguments[1] === undefined ? null : arguments[1];
+    var deny = arguments.length <= 2 || arguments[2] === undefined ? null : arguments[2];
+    var apikey = arguments.length <= 3 || arguments[3] === undefined ? null : arguments[3];
+
     _classCallCheck(this, Auth);
 
     if (!req) {
@@ -24,9 +31,9 @@ var Auth = function () {
 
     this.req = req;
     this.name = 'Auth';
-    this.allow = process.env.HUBOT_HTTP_IRC_ALLOW || null;
-    this.deny = process.env.HUBOT_HTTP_IRC_DENY || null;
-    this.apikey = process.env.HUBOT_HTTP_IRC_API_KEY || null;
+    this.allow = allow;
+    this.deny = deny;
+    this.apikey = apikey;
     this.remoteIp = req.headers && req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.socket.remoteAddress || req.connection.socket.remoteAddress;
 
     this.match = this.match.bind(this);
@@ -55,25 +62,25 @@ var Auth = function () {
 
       if (pattern.match(/^\d+\.\d+\.\d+\.\d+$/)) {
         if (this.remoteIp == pattern) {
-          console.log('match: ' + this.remoteIp + ', ' + pattern);
+          console.log(this.name + '> match: ' + this.remoteIp + ', ' + pattern);
           return true;
         } else {
-          console.log('NOT match: ' + this.remoteIp + ', ' + pattern);
+          console.log(this.name + '> NOT match: ' + this.remoteIp + ', ' + pattern);
           return false;
         }
       } else if (pattern.match(/^(\d+\.)+$/)) {
         var re = new RegExp('^' + pattern);
         var result = re.exec(this.remoteIp);
         if (result && result.length != 0) {
-          console.log('match: ' + this.remoteIp + ', ' + pattern);
+          console.log(this.name + '> match: ' + this.remoteIp + ', ' + pattern);
           return true;
         } else {
-          console.log('NOT match: ' + this.remoteIp + ', ' + pattern);
+          console.log(this.name + '> NOT match: ' + this.remoteIp + ', ' + pattern);
           return false;
         }
       } else {
-        this.error('*** invalid pattern: ' + pattern);
-        throw new Error('*** invalid pattern: ' + pattern);
+        this.error('*** ' + this.name + '> invalid pattern: ' + pattern);
+        throw new Error('*** ' + this.name + '> invalid pattern: ' + pattern);
       }
     }
 
@@ -101,7 +108,7 @@ var Auth = function () {
         var denyIps = this.deny.split(',');
         denyIps.map(function (v, i) {
           if (_this.match(_this.remoteIp, v)) {
-            console.log('DENY: ' + _this.remoteIp);
+            console.log(_this.name + '> DENY: ' + _this.remoteIp);
             flag = false;
           }
         });
@@ -111,7 +118,7 @@ var Auth = function () {
         var allowIps = this.allow.split(',');
         allowIps.map(function (v, i) {
           if (_this.match(_this.remoteIp, v)) {
-            console.log('ALLOW: ' + _this.remoteIp);
+            console.log(_this.name + '> ALLOW: ' + _this.remoteIp);
             flag = true;
           }
         });
@@ -139,6 +146,7 @@ var Auth = function () {
 
     /**
      * Check the request is valid.
+     * @param  {Object}  req the request object.
      * @return {Boolean} the request is allowed or not.
      *
      * @throws {Error}   arguments error.
@@ -146,14 +154,29 @@ var Auth = function () {
 
   }, {
     key: 'checkRequest',
-    value: function checkRequest() {
+    value: function checkRequest(res) {
+      if (!res) {
+        throw new Error(this.name + '> checkRequest req is not found.');
+      }
+
       var result = this.checkIp();
+      var resError = function resError() {
+        res.writeHead(200, { 'Content-Type': 'text/plain' });
+        res.end('Not allowed to access.');
+      };
+
       if (result === true) {
         return true;
-      } else if (result === false) {
+      }if (result === false) {
+        resError();
         return false;
       } else {
-        return this.checkApiKey();
+        if (!this.checkApiKey()) {
+          resError();
+          return false;
+        } else {
+          return true;
+        }
       }
     }
   }]);
