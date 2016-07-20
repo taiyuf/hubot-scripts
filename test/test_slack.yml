@@ -1,0 +1,4 @@
+---
+webhook_url: "http://localhost/foo/bar"
+username: "hubot"
+icon_emoji: ":ghost:"

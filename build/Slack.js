@@ -182,7 +182,6 @@ var Slack = function (_Context) {
 
       if (!(target && msg)) {
         throw new Error('Irc send: arguments error: target: ' + target + ', msg: ' + msg);
-        this.robot.send({ 'room': target }, this.parseType(msg));
       }
 
       var name = "Slack send";

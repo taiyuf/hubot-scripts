@@ -7,7 +7,8 @@
     "test": "test"
   },
   "scripts": {
-    "test": "mocha",
+    "test": "mocha test",
+    "testone": "mocha",
     "build": "(cd ./src && babel -d ../build ./*)",
     "watch": "npm run watch:start",
     "watch:start": "(cd ./src && babel -d ../build ./* --watch &)",

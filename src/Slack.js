@@ -24,7 +24,7 @@ export default class Slack extends Context {
     this.info  = yaml.safeLoad(fs.readFileSync(conf));
 
     this.buildAttatchment = this.buildAttatchment.bind(this);
-    this.send = this.send.bind(this);
+    this.send             = this.send.bind(this);
   }
 
   /**
@@ -138,7 +138,6 @@ export default class Slack extends Context {
   send(target, msg, info={}, cb) {
     if (!(target && msg)) {
       throw new Error(`Irc send: arguments error: target: ${target}, msg: ${msg}`);
-      this.robot.send({ 'room': target}, this.parseType(msg));
     }
 
     const name   = "Slack send";
