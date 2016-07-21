@@ -12,6 +12,7 @@ import Auth        from './Auth';
  *
  */
 
+const type       = process.env.HUBOT_IRC_TYPE;
 const configFile = process.env.JENKINS_JOBSELECTOR_CONFIG_FILE;
 const sendFlag   = process.env.JENKINS_JOBSELECTOR_SEND_MESSAGE;
 const icon       = process.env.JENKINS_JOBSELECTOR_ICON;
@@ -30,7 +31,7 @@ module.exports = (robot) => {
   }
 
   const conf = yaml.safeLoad(fs.readFileSync(configFile));
-  const sm   = new SendMessage(robot);
+  const sm   = new SendMessage(robot, type);
   const log  = sm.robot;
   let service;
   let gitUrl;
@@ -43,7 +44,7 @@ module.exports = (robot) => {
       return;
     }
 
-    sm.debug(`data: ${JSON.stringify(req.body)}`);
+    log.debug(`data: ${JSON.stringify(req.body)}`);
     const query = querystring.parse(url.parse(req.url).query);
     res.end('OK');
 
