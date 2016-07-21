@@ -3,15 +3,22 @@ import nock from 'nock';
 import path from 'path';
 import Auth from '../src/Auth';
 let auth;
+const req = {
+  headers: {
+    'x-forwarded-for': '127.0.0.1',
+    'hubot_http_irc_api_key': 'foo'
+  }
+};
+const writeHead = () => console.log;
+const end       = () => console.log;
+const res = {
+  writeHead: writeHead,
+  end: end
+}
 
 describe('Auth', () => {
   before((done) => {
-    auth = new Auth({
-      headers: {
-        'x-forwarded-for': '127.0.0.1',
-        'hubot_http_irc_api_key': 'foo'
-      }
-    });
+    auth = new Auth(req);
     done();
   });
 
@@ -43,15 +50,15 @@ describe('Auth', () => {
 
   describe('checkIp', () => {
     it('should deny.', () => {
-      auth.deny = '127.0.0.1';
+      auth.deny = ['127.0.0.1'];
       assert(auth.checkIp() == false);
     });
 
     it('should deny.', () => {
-      auth.deny = null;
-      auth.allow = '127.0.0.1';
+      auth.deny = [''];
+      auth.allow = ['127.0.0.1'];
       assert(auth.checkIp() == true);
-      auth.allow = null;
+      auth.allow = [''];
     });
   });
 
@@ -71,31 +78,31 @@ describe('Auth', () => {
 
     describe('check ip address.', () => {
       it('invalid ip address in fail.', () => {
-        auth.deny = '127.0.0.1';
-        assert(auth.checkRequest() == false);
-        auth.deny = null;
+        auth.deny = ['127.0.0.1', '192.168.1.1'];
+        assert(auth.checkRequest(res) == false);
+        auth.deny = [''];
       });
       it('valid ip address in success.', () => {
-        auth.allow = '127.0.0.1';
-        assert(auth.checkRequest() == true);
-        auth.allow = null;
+        auth.allow = ['192.168.1.', '127.0.0.1'];
+        assert(auth.checkRequest(res) == true);
+        auth.allow = [''];
       });
     });
 
     describe('check api key.', () => {
       it('valid api key in success.', () => {
         auth.apikey = 'foo';
-        assert(auth.checkRequest() == true);
+        assert(auth.checkRequest(res) == true);
       });
 
       it('invalid api key in fail.', () => {
         auth.apikey = 'bar';
-        assert(auth.checkRequest() == false);
+        assert(auth.checkRequest(res) == false);
       });
 
       it('no api key in fail.', () => {
-        auth.apikey = null;
-        assert(auth.checkRequest() == false);
+        auth.apikey = '';
+        assert(auth.checkRequest(res) == false);
       });
     });
   });
