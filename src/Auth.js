@@ -40,8 +40,6 @@ export default class Auth {
     this.checkIp      = this.checkIp.bind(this);
     this.checkApiKey  = this.checkApiKey.bind(this);
     this.checkRequest = this.checkRequest.bind(this);
-
-    console.log(`remote ip: ${this.remoteIp}`);
   }
 
   /**
@@ -58,20 +56,20 @@ export default class Auth {
 
     if (pattern.match(/^\d+\.\d+\.\d+\.\d+$/)) {
       if (this.remoteIp == pattern) {
-        console.log(`${this.name}> match: ${this.remoteIp}, ${pattern}`);
+        console.log(`${this.name}> ip match: ${this.remoteIp}, ${pattern}`);
         return true;
       } else {
-        console.log(`${this.name}> NOT match: ${this.remoteIp}, ${pattern}`);
+        console.log(`${this.name}> NOT ip match: ${this.remoteIp}, ${pattern}`);
         return false;
       }
     } else if (pattern.match(/^(\d+\.)+$/)) {
       const re = new RegExp(`^${pattern}`);
       const result = re.exec(this.remoteIp);
       if (result && result.length != 0) {
-        console.log(`${this.name}> match: ${this.remoteIp}, ${pattern}`);
+        console.log(`${this.name}> network match: ${this.remoteIp}, ${pattern}`);
         return true;
       } else {
-        console.log(`${this.name}> NOT match: ${this.remoteIp}, ${pattern}`);
+        console.log(`${this.name}> NOT network match: ${this.remoteIp}, ${pattern}`);
         return false;
       }
     } else {
@@ -93,26 +91,28 @@ export default class Auth {
    * @throws {Error}   arguments error.
    */
   checkIp() {
+
     let flag;
 
     if (!(this.deny.length == 1 && this.deny[0] == '')) {
       this.deny.map((v, i) => {
-        if (this.match(this.remoteIp, v)) {
+        if (this.match(v)) {
           console.log(`${this.name}> DENY: ${this.remoteIp}`);
           flag = false;
+          return false;
         }
       });
     }
 
     if (!(this.allow.length == 1 && this.allow[0] == '')) {
       this.allow.map((v, i) => {
-        if (this.match(this.remoteIp, v)) {
-          console.log(`${this.name}> ALLOW: ${this.remoteIp}`);
+        if (this.match(v)) {
+          console.log(`${this.name}> ALLOW: ${this.remoteIp} <- ${v}`);
           flag = true;
+          return true;
         }
       });
     }
-
     return flag;
   }
 
@@ -126,8 +126,10 @@ export default class Auth {
     if (this.req.headers &&
         this.req.headers['hubot_http_irc_api_key'] &&
         this.apikey == this.req.headers['hubot_http_irc_api_key']) {
+      console.log(`match apikey: ${this.req.headers['hubot_http_irc_api_key']}`);
       return true;
     } else {
+      console.log(`NOT match apikey: ${this.req.headers['hubot_http_irc_api_key']}`);
       return false;
     }
   }
@@ -157,11 +159,11 @@ export default class Auth {
       return false;
 
     } else {
-      if (!this.checkApiKey()) {
+      if (this.checkApiKey()) {
+        return true;
+      } else {
         resError();
         return false;
-      } else {
-        return true;
       }
     }
   }

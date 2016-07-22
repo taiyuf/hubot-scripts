@@ -63,6 +63,10 @@ var Auth = function () {
     this.checkRequest = this.checkRequest.bind(this);
 
     console.log('remote ip: ' + this.remoteIp);
+    console.log('allow:');
+    console.dir(this.allow);
+    console.log('deny:');
+    console.dir(this.deny);
   }
 
   /**
@@ -83,20 +87,20 @@ var Auth = function () {
 
       if (pattern.match(/^\d+\.\d+\.\d+\.\d+$/)) {
         if (this.remoteIp == pattern) {
-          console.log(this.name + '> match: ' + this.remoteIp + ', ' + pattern);
+          console.log(this.name + '> ip match: ' + this.remoteIp + ', ' + pattern);
           return true;
         } else {
-          console.log(this.name + '> NOT match: ' + this.remoteIp + ', ' + pattern);
+          console.log(this.name + '> NOT ip match: ' + this.remoteIp + ', ' + pattern);
           return false;
         }
       } else if (pattern.match(/^(\d+\.)+$/)) {
         var re = new RegExp('^' + pattern);
         var result = re.exec(this.remoteIp);
         if (result && result.length != 0) {
-          console.log(this.name + '> match: ' + this.remoteIp + ', ' + pattern);
+          console.log(this.name + '> network match: ' + this.remoteIp + ', ' + pattern);
           return true;
         } else {
-          console.log(this.name + '> NOT match: ' + this.remoteIp + ', ' + pattern);
+          console.log(this.name + '> NOT network match: ' + this.remoteIp + ', ' + pattern);
           return false;
         }
       } else {
@@ -127,22 +131,23 @@ var Auth = function () {
 
       if (!(this.deny.length == 1 && this.deny[0] == '')) {
         this.deny.map(function (v, i) {
-          if (_this2.match(_this2.remoteIp, v)) {
+          if (_this2.match(v)) {
             console.log(_this2.name + '> DENY: ' + _this2.remoteIp);
             flag = false;
+            return false;
           }
         });
       }
 
       if (!(this.allow.length == 1 && this.allow[0] == '')) {
         this.allow.map(function (v, i) {
-          if (_this2.match(_this2.remoteIp, v)) {
-            console.log(_this2.name + '> ALLOW: ' + _this2.remoteIp);
+          if (_this2.match(v)) {
+            console.log(_this2.name + '> ALLOW: ' + _this2.remoteIp + ' <- ' + v);
             flag = true;
+            return true;
           }
         });
       }
-
       return flag;
     }
 
@@ -157,8 +162,10 @@ var Auth = function () {
     key: 'checkApiKey',
     value: function checkApiKey() {
       if (this.req.headers && this.req.headers['hubot_http_irc_api_key'] && this.apikey == this.req.headers['hubot_http_irc_api_key']) {
+        console.log('match apikey: ' + this.req.headers['hubot_http_irc_api_key']);
         return true;
       } else {
+        console.log('NOT match apikey: ' + this.req.headers['hubot_http_irc_api_key']);
         return false;
       }
     }
@@ -190,11 +197,11 @@ var Auth = function () {
         resError();
         return false;
       } else {
-        if (!this.checkApiKey()) {
+        if (this.checkApiKey()) {
+          return true;
+        } else {
           resError();
           return false;
-        } else {
-          return true;
         }
       }
     }

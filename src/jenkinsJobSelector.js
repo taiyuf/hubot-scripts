@@ -48,7 +48,7 @@ module.exports = (robot) => {
     const auth  = new Auth(req, allow, deny, apikey);
 
     if (!auth.checkRequest(res)) {
-      console.log(`not allowed: ${this.remoteIp}`);
+      console.log(`not allowed: ${auth.remoteIp}`);
       return;
     }
 

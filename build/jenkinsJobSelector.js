@@ -75,7 +75,7 @@ module.exports = function (robot) {
     var auth = new _Auth2.default(req, allow, deny, apikey);
 
     if (!auth.checkRequest(res)) {
-      console.log('not allowed: ' + undefined.remoteIp);
+      console.log('not allowed: ' + auth.remoteIp);
       return;
     }
 
