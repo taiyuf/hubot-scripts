@@ -19,25 +19,43 @@ var Auth = function () {
    */
   function Auth(req) {
     var allow = arguments.length <= 1 || arguments[1] === undefined ? '' : arguments[1];
+
+    var _this = this;
+
     var deny = arguments.length <= 2 || arguments[2] === undefined ? '' : arguments[2];
     var apikey = arguments.length <= 3 || arguments[3] === undefined ? '' : arguments[3];
 
     _classCallCheck(this, Auth);
 
+    this.name = 'Auth';
+
     if (!req) {
-      throw new Error('Auth arguments error: req is not found.');
+      throw new Error(this.name + '> arguments error: req is not found.');
     }
 
     var splitString = function splitString(str) {
       return str.replace(/\s+/g, '').split(',');
     };
+    var getRemoteIp = function getRemoteIp(req) {
+      if (req.connection && req.connection.remoteAddress) {
+        return req.connection.remoteAddress;
+      } else if (req.socket && req.socket.remoteAddress) {
+        return req.socket.remoteAddress;
+      } else if (req.connection && req.connection.socket && req.connection.socket.remoteAddress) {
+        return req.connection.socket.remoteAddress;
+      } else if (req.headers && req.headers['x-forwarded-for']) {
+        return req.headers['x-forwarded-for'];
+      } else {
+        console.log(_this.name + '> no ip address detected.');
+        return null;
+      }
+    };
 
     this.req = req;
-    this.name = 'Auth';
     this.allow = splitString(allow);
     this.deny = splitString(deny);
     this.apikey = apikey;
-    this.remoteIp = req.headers && req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.socket.remoteAddress || req.connection.socket.remoteAddress;
+    this.remoteIp = getRemoteIp(req);
 
     this.match = this.match.bind(this);
     this.checkIp = this.checkIp.bind(this);
@@ -103,14 +121,14 @@ var Auth = function () {
   }, {
     key: 'checkIp',
     value: function checkIp() {
-      var _this = this;
+      var _this2 = this;
 
       var flag = void 0;
 
       if (!(this.deny.length == 1 && this.deny[0] == '')) {
         this.deny.map(function (v, i) {
-          if (_this.match(_this.remoteIp, v)) {
-            console.log(_this.name + '> DENY: ' + _this.remoteIp);
+          if (_this2.match(_this2.remoteIp, v)) {
+            console.log(_this2.name + '> DENY: ' + _this2.remoteIp);
             flag = false;
           }
         });
@@ -118,8 +136,8 @@ var Auth = function () {
 
       if (!(this.allow.length == 1 && this.allow[0] == '')) {
         this.allow.map(function (v, i) {
-          if (_this.match(_this.remoteIp, v)) {
-            console.log(_this.name + '> ALLOW: ' + _this.remoteIp);
+          if (_this2.match(_this2.remoteIp, v)) {
+            console.log(_this2.name + '> ALLOW: ' + _this2.remoteIp);
             flag = true;
           }
         });
