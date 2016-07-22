@@ -104,7 +104,7 @@ module.exports = function (robot) {
     log.debug(name + '> git url: ' + gitUrl);
 
     if (!hook.ref) {
-      throw new Error(name + '> Unknown ref.');
+      return;
     }
 
     var branch = hook.ref.replace(/refs\/heads\//, '');
@@ -158,7 +158,7 @@ module.exports = function (robot) {
     } else if (sm.robot.checkType('String', jobUrl)) {
       jobRequest(jobUrl);
     } else {
-      log.error(name + '> unknown jobUrl: ' + JSON.stringify(jobUrl));
+      log.info(name + '> no jobUrl for ' + branch);
     }
   });
 };
