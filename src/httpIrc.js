@@ -16,13 +16,13 @@ import Auth        from './Auth';
 const type    = process.env.HUBOT_IRC_TYPE;
 
 // the api key.
-const apikey  = process.env.HUBOT_HTTP_IRC_API_KEY || null;
+const apikey  = process.env.HUBOT_HTTP_IRC_API_KEY || '';
 
 // the network or address allowed.
-const allow   = process.env.HUBOT_HTTP_IRC_ALLOW   || null;
+const allow   = process.env.HUBOT_HTTP_IRC_ALLOW   || '';
 
 // the network or addres denied.
-const deny    = process.env.HUBOT_HTTP_IRC_DENY    || null;
+const deny    = process.env.HUBOT_HTTP_IRC_DENY    || '';
 
 // the path of url.
 const urlpath = "/http_irc";
