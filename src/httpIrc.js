@@ -109,16 +109,17 @@ module.exports = (robot) => {
       return;
     }
 
-    if (!query.room || !req.body.room) {
-      log.error(`${name} room is required: query: ${JSON.stringify(query)}\n${req.body}`);
+    if (!(query.room || req.body.room)) {
+      log.error(`${name} room is required: query: ${JSON.stringify(query)}\n${JSON.stringify(req.body)}`);
       return;
     }
     log.debug(`${name} query: ${JSON.stringify(query)}`);
     log.debug(`${name} body: ${JSON.stringify(req.body)}`);
 
     const room = query.room || req.body.room;
+    const message = query.message || req.body.message;
 
-    sm.send(query.room, query.message, query, (err, res) => {
+    sm.send(room, message, query, (err, res) => {
       if (err) {
         log.error(err);
       } else {

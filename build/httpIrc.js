@@ -124,16 +124,17 @@ module.exports = function (robot) {
       return;
     }
 
-    if (!query.room || !req.body.room) {
-      log.error(name + ' room is required: query: ' + JSON.stringify(query) + '\n' + req.body);
+    if (!(query.room || req.body.room)) {
+      log.error(name + ' room is required: query: ' + JSON.stringify(query) + '\n' + JSON.stringify(req.body));
       return;
     }
     log.debug(name + ' query: ' + JSON.stringify(query));
     log.debug(name + ' body: ' + JSON.stringify(req.body));
 
     var room = query.room || req.body.room;
+    var message = query.message || req.body.message;
 
-    sm.send(query.room, query.message, query, function (err, res) {
+    sm.send(room, message, query, function (err, res) {
       if (err) {
         log.error(err);
       } else {

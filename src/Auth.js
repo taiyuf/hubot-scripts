@@ -106,6 +106,10 @@ export default class Auth {
 
     if (!(this.allow.length == 1 && this.allow[0] == '')) {
       this.allow.map((v, i) => {
+        if (v == '*') {
+          flag = true;
+          return true;
+        }
         if (this.match(v)) {
           console.log(`${this.name}> ALLOW: ${this.remoteIp} <- ${v}`);
           flag = true;

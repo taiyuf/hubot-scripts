@@ -61,12 +61,6 @@ var Auth = function () {
     this.checkIp = this.checkIp.bind(this);
     this.checkApiKey = this.checkApiKey.bind(this);
     this.checkRequest = this.checkRequest.bind(this);
-
-    console.log('remote ip: ' + this.remoteIp);
-    console.log('allow:');
-    console.dir(this.allow);
-    console.log('deny:');
-    console.dir(this.deny);
   }
 
   /**
@@ -141,6 +135,10 @@ var Auth = function () {
 
       if (!(this.allow.length == 1 && this.allow[0] == '')) {
         this.allow.map(function (v, i) {
+          if (v == '*') {
+            flag = true;
+            return true;
+          }
           if (_this2.match(v)) {
             console.log(_this2.name + '> ALLOW: ' + _this2.remoteIp + ' <- ' + v);
             flag = true;
