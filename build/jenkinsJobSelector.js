@@ -73,7 +73,7 @@ module.exports = function (robot) {
 
   robot.router.post(urlpath, function (req, res) {
     var auth = new _Auth2.default(req, allow, deny, apikey);
-    console.log('here');
+
     if (!auth.checkRequest(res)) {
       console.log('not allowed: ' + undefined.remoteIp);
       return;
@@ -119,18 +119,18 @@ module.exports = function (robot) {
       log.debug(name + '> No auth infomation.');
     }
 
-    var jobUrl = gitInfo['job'][branch];
+    var jobUrl = gitInfo['jobs'][branch];
     var jobRequest = function jobRequest(url) {
 
       if (authInfo) {
-        _superagent2.default.get(url).auth(authInfo.user, authInfo.pass).end(function (err, res) {
+        _superagent2.default.post(url).auth(authInfo.user, authInfo.pass).end(function (err, res) {
           if (err) {
             log.error(name + '> request error: ' + err);
             return;
           }
         });
       } else {
-        _superagent2.default.get(url).end(function (err, res) {
+        _superagent2.default.post(url).end(function (err, res) {
           if (err) {
             log.error(name + '> request error: ' + err);
             return;

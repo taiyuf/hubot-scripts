@@ -8,21 +8,33 @@ export default class Auth {
    * @throws {Error}  arguments error.
    */
   constructor(req, allow='', deny='', apikey='') {
+    this.name = 'Auth';
+
     if (!req) {
-      throw new Error(`Auth arguments error: req is not found.`);
+      throw new Error(`${this.name}> arguments error: req is not found.`);
     }
 
     const splitString = (str) => str.replace(/\s+/g, '').split(',');
+    const getRemoteIp = (req) => {
+      if (req.connection && req.connection.remoteAddress) {
+        return req.connection.remoteAddress;
+      } else if (req.socket && req.socket.remoteAddress) {
+        return req.socket.remoteAddress;
+      } else if (req.connection && req.connection.socket && req.connection.socket.remoteAddress) {
+        return req.connection.socket.remoteAddress;
+      } else if (req.headers && req.headers['x-forwarded-for']) {
+        return  req.headers['x-forwarded-for'];
+      } else {
+        console.log(`${this.name}> no ip address detected.`);
+        return null;
+      }
+    };
 
     this.req          = req;
-    this.name         = 'Auth';
     this.allow        = splitString(allow);
     this.deny         = splitString(deny);
     this.apikey       = apikey;
-    this.remoteIp     = req.headers && req.headers['x-forwarded-for'] ||
-      req.connection.remoteAddress ||
-      req.socket.remoteAddress ||
-      req.connection.socket.remoteAddress;
+    this.remoteIp     = getRemoteIp(req);
 
     this.match        = this.match.bind(this);
     this.checkIp      = this.checkIp.bind(this);

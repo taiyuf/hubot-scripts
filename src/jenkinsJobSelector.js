@@ -46,7 +46,7 @@ module.exports = (robot) => {
 
   robot.router.post(urlpath, (req, res) => {
     const auth  = new Auth(req, allow, deny, apikey);
-    console.log('here');
+
     if (!auth.checkRequest(res)) {
       console.log(`not allowed: ${this.remoteIp}`);
       return;
@@ -92,12 +92,12 @@ module.exports = (robot) => {
       log.debug(`${name}> No auth infomation.`);
     }
 
-    const jobUrl = gitInfo['job'][branch];
+    const jobUrl = gitInfo['jobs'][branch];
     const jobRequest = (url) => {
 
       if (authInfo) {
         request
-          .get(url)
+          .post(url)
           .auth(authInfo.user, authInfo.pass)
           .end((err, res) => {
             if (err) {
@@ -107,7 +107,7 @@ module.exports = (robot) => {
           });
       } else {
         request
-          .get(url)
+          .post(url)
           .end((err, res) => {
             if (err) {
               log.error(`${name}> request error: ${err}`);
