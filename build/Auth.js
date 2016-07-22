@@ -17,11 +17,10 @@ var Auth = function () {
    * @param  {String} apikey apikey allowed to request.
    * @throws {Error}  arguments error.
    */
-
   function Auth(req) {
-    var allow = arguments.length <= 1 || arguments[1] === undefined ? null : arguments[1];
-    var deny = arguments.length <= 2 || arguments[2] === undefined ? null : arguments[2];
-    var apikey = arguments.length <= 3 || arguments[3] === undefined ? null : arguments[3];
+    var allow = arguments.length <= 1 || arguments[1] === undefined ? '' : arguments[1];
+    var deny = arguments.length <= 2 || arguments[2] === undefined ? '' : arguments[2];
+    var apikey = arguments.length <= 3 || arguments[3] === undefined ? '' : arguments[3];
 
     _classCallCheck(this, Auth);
 
@@ -29,10 +28,14 @@ var Auth = function () {
       throw new Error('Auth arguments error: req is not found.');
     }
 
+    var splitString = function splitString(str) {
+      return str.replace(/\s+/g, '').split(',');
+    };
+
     this.req = req;
     this.name = 'Auth';
-    this.allow = allow;
-    this.deny = deny;
+    this.allow = splitString(allow);
+    this.deny = splitString(deny);
     this.apikey = apikey;
     this.remoteIp = req.headers && req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.socket.remoteAddress || req.connection.socket.remoteAddress;
 
@@ -104,9 +107,8 @@ var Auth = function () {
 
       var flag = void 0;
 
-      if (!!this.deny) {
-        var denyIps = this.deny.split(',');
-        denyIps.map(function (v, i) {
+      if (!(this.deny.length == 1 && this.deny[0] == '')) {
+        this.deny.map(function (v, i) {
           if (_this.match(_this.remoteIp, v)) {
             console.log(_this.name + '> DENY: ' + _this.remoteIp);
             flag = false;
@@ -114,9 +116,8 @@ var Auth = function () {
         });
       }
 
-      if (!!this.allow) {
-        var allowIps = this.allow.split(',');
-        allowIps.map(function (v, i) {
+      if (!(this.allow.length == 1 && this.allow[0] == '')) {
+        this.allow.map(function (v, i) {
           if (_this.match(_this.remoteIp, v)) {
             console.log(_this.name + '> ALLOW: ' + _this.remoteIp);
             flag = true;

@@ -12,35 +12,43 @@ import Auth        from './Auth';
  *
  */
 
+// the type of irc service.
 const type       = process.env.HUBOT_IRC_TYPE;
+
+// the configuration file for me.
 const configFile = process.env.JENKINS_JOBSELECTOR_CONFIG_FILE;
+
+// the flag whether tell message to irc service.
 const sendFlag   = process.env.JENKINS_JOBSELECTOR_SEND_MESSAGE;
-const icon       = process.env.JENKINS_JOBSELECTOR_ICON;
+const icon       = process.env.JENKINS_JOBSELECTOR_ICON   || null;
 const color      = process.env.JENKINS_JOBSELECTOR_COLOR  || '#aaaaaa';
-const debug      = process.env.JENKINS_JOBSELECTOR_DEBUG;
-const allow      = process.env.JENKINS_JOBSELECTOR_ALLOW  || null;
-const deny       = process.env.JENKINS_JOBSELECTOR_DENY   || null;
-const apikey     = process.env.JENKINS_JOBSELECTOR_APIKEY || null;
+const debug      = process.env.JENKINS_JOBSELECTOR_DEBUG  || process.env.DEBUG || null;
+const allow      = process.env.JENKINS_JOBSELECTOR_ALLOW  || '';
+const deny       = process.env.JENKINS_JOBSELECTOR_DENY   || '';
+const apikey     = process.env.JENKINS_JOBSELECTOR_APIKEY || '';
 const ircType    = process.env.HUBOT_IRC_TYPE;
 const urlpath    = '/hubot/jenkins-jobselector';
 const name       = 'JobSelector';
 
 module.exports = (robot) => {
+  const sm   = new SendMessage(robot, type);
+  const log  = sm.robot;
+
   if (!configFile) {
+    log.Error(`${name}> no config file.`);
     return;
   }
 
   const conf = yaml.safeLoad(fs.readFileSync(configFile));
-  const sm   = new SendMessage(robot, type);
-  const log  = sm.robot;
   let service;
   let gitUrl;
   let auth;
 
   robot.router.post(urlpath, (req, res) => {
     const auth  = new Auth(req, allow, deny, apikey);
-
+    console.log('here');
     if (!auth.checkRequest(res)) {
+      console.log(`not allowed: ${this.remoteIp}`);
       return;
     }
 
@@ -72,7 +80,7 @@ module.exports = (robot) => {
       throw new Error(`${name}> Unknown ref.`);
     }
 
-    const branch = hook.ref.replace(/refs\/heads\//, '');
+    const branch  = hook.ref.replace(/refs\/heads\//, '');
     const gitInfo = conf[gitUrl];
     let authInfo;
 

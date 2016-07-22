@@ -7,15 +7,17 @@ export default class Auth {
    * @param  {String} apikey apikey allowed to request.
    * @throws {Error}  arguments error.
    */
-  constructor(req, allow=null, deny=null, apikey=null) {
+  constructor(req, allow='', deny='', apikey='') {
     if (!req) {
       throw new Error(`Auth arguments error: req is not found.`);
     }
 
+    const splitString = (str) => str.replace(/\s+/g, '').split(',');
+
     this.req          = req;
     this.name         = 'Auth';
-    this.allow        = allow;
-    this.deny         = deny;
+    this.allow        = splitString(allow);
+    this.deny         = splitString(deny);
     this.apikey       = apikey;
     this.remoteIp     = req.headers && req.headers['x-forwarded-for'] ||
       req.connection.remoteAddress ||
@@ -81,9 +83,8 @@ export default class Auth {
   checkIp() {
     let flag;
 
-    if (!!this.deny) {
-      const denyIps = this.deny.split(',');
-      denyIps.map((v, i) => {
+    if (!(this.deny.length == 1 && this.deny[0] == '')) {
+      this.deny.map((v, i) => {
         if (this.match(this.remoteIp, v)) {
           console.log(`${this.name}> DENY: ${this.remoteIp}`);
           flag = false;
@@ -91,9 +92,8 @@ export default class Auth {
       });
     }
 
-    if (!!this.allow) {
-      const allowIps = this.allow.split(',');
-      allowIps.map((v, i) => {
+    if (!(this.allow.length == 1 && this.allow[0] == '')) {
+      this.allow.map((v, i) => {
         if (this.match(this.remoteIp, v)) {
           console.log(`${this.name}> ALLOW: ${this.remoteIp}`);
           flag = true;

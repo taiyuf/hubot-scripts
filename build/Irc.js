@@ -27,7 +27,6 @@ var Irc = function (_Context) {
    *
    * @throws {Error}  arguments error.
    */
-
   function Irc(robot) {
     _classCallCheck(this, Irc);
 

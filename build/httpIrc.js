@@ -31,13 +31,13 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var type = process.env.HUBOT_IRC_TYPE;
 
 // the api key.
-var apikey = process.env.HUBOT_HTTP_IRC_API_KEY || null;
+var apikey = process.env.HUBOT_HTTP_IRC_API_KEY || '';
 
 // the network or address allowed.
-var allow = process.env.HUBOT_HTTP_IRC_ALLOW || null;
+var allow = process.env.HUBOT_HTTP_IRC_ALLOW || '';
 
 // the network or addres denied.
-var deny = process.env.HUBOT_HTTP_IRC_DENY || null;
+var deny = process.env.HUBOT_HTTP_IRC_DENY || '';
 
 // the path of url.
 var urlpath = "/http_irc";

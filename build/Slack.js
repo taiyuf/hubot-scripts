@@ -43,7 +43,6 @@ var Slack = function (_Context) {
    *
    * @throws {Error}  arguments error.
    */
-
   function Slack(robot) {
     _classCallCheck(this, Slack);
 

@@ -28,7 +28,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  *
  * @throws {Error}  arguments error.
  */
-
 var Log = function () {
   function Log(serverLog, accessLog, errorLog) {
     _classCallCheck(this, Log);

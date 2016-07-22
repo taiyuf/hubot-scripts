@@ -11,7 +11,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 /**
  * Context
  */
-
 var Context = function () {
   function Context() {
     _classCallCheck(this, Context);

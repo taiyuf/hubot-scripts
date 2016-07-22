@@ -29,7 +29,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 /**
  * send
  */
-
 var SendMessage = function () {
   function SendMessage(robot, type) {
     _classCallCheck(this, SendMessage);

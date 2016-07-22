@@ -39,38 +39,47 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  *
  */
 
+// the type of irc service.
+var type = process.env.HUBOT_IRC_TYPE;
+
+// the configuration file for me.
 var configFile = process.env.JENKINS_JOBSELECTOR_CONFIG_FILE;
+
+// the flag whether tell message to irc service.
 var sendFlag = process.env.JENKINS_JOBSELECTOR_SEND_MESSAGE;
-var icon = process.env.JENKINS_JOBSELECTOR_ICON;
+var icon = process.env.JENKINS_JOBSELECTOR_ICON || null;
 var color = process.env.JENKINS_JOBSELECTOR_COLOR || '#aaaaaa';
-var debug = process.env.JENKINS_JOBSELECTOR_DEBUG;
-var allow = process.env.JENKINS_JOBSELECTOR_ALLOW || null;
-var deny = process.env.JENKINS_JOBSELECTOR_DENY || null;
-var apikey = process.env.JENKINS_JOBSELECTOR_APIKEY || null;
+var debug = process.env.JENKINS_JOBSELECTOR_DEBUG || process.env.DEBUG || null;
+var allow = process.env.JENKINS_JOBSELECTOR_ALLOW || '';
+var deny = process.env.JENKINS_JOBSELECTOR_DENY || '';
+var apikey = process.env.JENKINS_JOBSELECTOR_APIKEY || '';
 var ircType = process.env.HUBOT_IRC_TYPE;
 var urlpath = '/hubot/jenkins-jobselector';
 var name = 'JobSelector';
 
 module.exports = function (robot) {
+  var sm = new _SendMessage2.default(robot, type);
+  var log = sm.robot;
+
   if (!configFile) {
+    log.Error(name + '> no config file.');
     return;
   }
 
   var conf = _jsYaml2.default.safeLoad(_fs2.default.readFileSync(configFile));
-  var sm = new _SendMessage2.default(robot);
-  var log = sm.robot;
   var service = void 0;
   var gitUrl = void 0;
   var auth = void 0;
 
   robot.router.post(urlpath, function (req, res) {
     var auth = new _Auth2.default(req, allow, deny, apikey);
-
+    console.log('here');
     if (!auth.checkRequest(res)) {
+      console.log('not allowed: ' + undefined.remoteIp);
       return;
     }
 
-    sm.debug('data: ' + JSON.stringify(req.body));
+    log.debug('data: ' + JSON.stringify(req.body));
     var query = _querystring2.default.parse(_url2.default.parse(req.url).query);
     res.end('OK');
 
