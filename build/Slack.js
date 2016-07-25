@@ -133,7 +133,6 @@ var Slack = function (_Context) {
 
       at.color = info.color ? info.color : this.color;
       at.text = message;
-      at.pretext = message;
 
       var hash = fallback.reduce(function (hash, key) {
         if (info[key]) {

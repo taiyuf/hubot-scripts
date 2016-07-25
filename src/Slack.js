@@ -98,7 +98,6 @@ export default class Slack extends Context {
 
     at.color = info.color ? info.color : this.color;
     at.text  = message;
-    at.pretext = message;
 
     const hash = fallback.reduce((hash, key) => {
       if (info[key]) {
