@@ -1,7 +1,0 @@
-{
-    "target": {"ROOM_NAME": {"id": ROOM_ID,
-                             "token": "ROOM_TOKEN",
-                             "color": "green"}
-              },
-    "color": "blue"
-}
