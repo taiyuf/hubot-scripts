@@ -35,7 +35,7 @@ module.exports = (robot) => {
   const log  = sm.robot;
 
   if (!configFile) {
-    log.Error(`${name}> no config file.`);
+    log.debug(`${name}> no config file.`);
     return;
   }
 

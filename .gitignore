@@ -1,3 +1,5 @@
 /node_modules
 /npm-debug.log
 /doc/*
+/build/*
+/.node_version
