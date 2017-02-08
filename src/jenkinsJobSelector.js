@@ -60,13 +60,28 @@ module.exports = (robot) => {
       throw new Error(`${name}> no body: ${JSON.stringify(req)}`);
     }
 
-    const hook = req.body;
+    const body = req.body;
+    let payload;
+    if (body.payload) {
+       payload = JSON.parse(body.payload);
+    }
 
-    if (hook.repository.homepage) {
-      gitUrl = hook.repository.homepage;
+    // gitlab
+    if (body.repository && body.repository.homepage) {
+      gitUrl = body.repository.homepage;
       service = 'gitlab';
-    } else {
-      gitUrl = hook.repository.html_url;
+    }                             
+    log.debug(`payload.repository: ${JSON.stringify(payload.repository)}`);
+
+    // github
+    if (payload && payload.repository && payload.repository.url) {
+      log.debug(`github pattern 1.`);
+      gitUrl = payload.repository.url;
+      service = 'github';
+    }
+    if (body.repository && body.repository.html_url) {
+      log.debug(`github pattern 2.`);
+      gitUrl = body.repository.html_url;
       service = 'github';
     }
 
@@ -76,11 +91,21 @@ module.exports = (robot) => {
 
     log.debug(`${name}> git url: ${gitUrl}`);
 
-    if (!hook.ref) {
-      return;
+//    if (!(body.ref || payload.ref)) {
+//      return;
+//    }
+
+    let branch = '';
+    if (service == 'github') {
+      if (payload) {
+        branch = payload.ref.replace(/refs\/heads\//, '');
+      } else {
+        branch = body.ref.replace(/refs\/heads\//, '');
+      }
+    } else {
+        branch = body.ref.replace(/refs\/heads\//, '');
     }
 
-    const branch  = hook.ref.replace(/refs\/heads\//, '');
     const gitInfo = conf[gitUrl];
     let authInfo;
 
@@ -115,11 +140,13 @@ module.exports = (robot) => {
             }
           });
       }
-      
+
       const info = { color: color };
+
       if (icon) {
         info.icon_url = icon;
       }
+
       sendFlag && sm.send(gitInfo['target'], `[Jenkins]: The job has started on ${sm.bold(branch)} branch at ${gitUrl}.`, info, (err, res) => {
         if (err) {
           log.error(`${name}> send error: ${err}.`);
@@ -134,7 +161,7 @@ module.exports = (robot) => {
     } else if (sm.robot.checkType('String', jobUrl)) {
       jobRequest(jobUrl);
     } else {
-      log.info(`${name}> no jobUrl for ${branch}`);
+      log.debug(`${name}> no jobUrl for ${branch}`);
     }
     
   });
