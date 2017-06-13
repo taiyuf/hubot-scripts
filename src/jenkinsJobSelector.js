@@ -75,6 +75,7 @@ module.exports = (robot) => {
 
     // github
     if (payload && payload.repository && payload.repository.url) {
+      log.debug(`payload.repository: ${JSON.stringify(payload.repository)}`);
       log.debug(`github pattern 1.`);
       gitUrl = payload.repository.url;
       service = 'github';
