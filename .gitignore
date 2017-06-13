@@ -2,4 +2,5 @@
 /npm-debug.log
 /doc/*
 /build/*
+/src/.tern-port
 /.node-version

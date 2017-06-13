@@ -1,0 +1,10 @@
+[ignore]
+.*/node_modules/.*
+
+[include]
+
+[libs]
+./src/flow-typed
+
+[options]
+experimental.strict_type_args=false

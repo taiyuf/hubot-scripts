@@ -11,12 +11,11 @@ module.exports = (robot) => {
     const body = req.body;
     const room = req.params.room;
     const sm   = new SendMessage(robot, type);
-    
     let label;
     let url;
     let message;
 
-console.log(`body: ${JSON.stringify(req.body)}`);
+    console.log(`body: ${JSON.stringify(req.body)}`);
     try {
       switch (body.type) {
       case 1:
@@ -65,12 +64,12 @@ console.log(`body: ${JSON.stringify(req.body)}`);
       message += `${url}`;
 
       if (!message) {
-//        robot.messageRoom(room, 'Backlog integration error.');
+        //        robot.messageRoom(room, 'Backlog integration error.');
         sm.send(room, 'Backlog integration error.');
         res.end('Error');
       }
 
-//      robot.messageRoom(room, message);
+      //      robot.messageRoom(room, message);
       sm.send(room, message, {});
       res.end('OK');
 
@@ -80,4 +79,3 @@ console.log(`body: ${JSON.stringify(req.body)}`);
 
   });
 };
-

@@ -1,0 +1,19 @@
+{
+  "presets": [
+    "es2015",
+    "stage-0",
+    "flow",
+    "babel-preset-power-assert"
+  ],
+  "plugins": [
+    "transform-class-properties",
+    "transform-flow-strip-types"
+  ],
+  "env": {
+    "development": {
+      "presets": [
+        "power-assert"
+      ]
+    }
+  }
+}

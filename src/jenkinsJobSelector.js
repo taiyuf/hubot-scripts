@@ -35,7 +35,7 @@ module.exports = (robot) => {
   const log  = sm.robot;
 
   if (!configFile) {
-    log.debug(`${name}> no config file.`);
+    log.error(`${name}> no config file.`);
     return;
   }
 
@@ -70,7 +70,7 @@ module.exports = (robot) => {
     if (body.repository && body.repository.homepage) {
       gitUrl = body.repository.homepage;
       service = 'gitlab';
-    }                             
+    }
     log.debug(`payload.repository: ${JSON.stringify(payload.repository)}`);
 
     // github
@@ -163,6 +163,6 @@ module.exports = (robot) => {
     } else {
       log.debug(`${name}> no jobUrl for ${branch}`);
     }
-    
+
   });
 };
