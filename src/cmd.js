@@ -100,7 +100,8 @@ module.exports = (robot) => {
         return;
       }
 
-      tell(msg, '[Result]', stdout);
+      // tell(msg, '[Result]', stdout);
+      msg.send(`[Result]\nstdout`);
     });
   };
 
@@ -136,7 +137,8 @@ module.exports = (robot) => {
       });
     });
 
-    tell(msg, title, messages.join("\n"));
+    msg.send(`[${title}]\n${messages.join("\n")}`);
+    // tell(msg, title, messages.join("\n"));
   };
 
   robot.hear(/cmd help/i, (msg) => {
@@ -155,11 +157,13 @@ module.exports = (robot) => {
 
           if (!checkPrivilege(value2['user']), msg.message.user.name) {
             console.log(`action not found: ${msg.match[2]}`);
-            tell(msg, 'Action not found.', `action not found: ${msg.match[2]}.\n\nSee HUBOT_NAME cmd help.`);
+            // tell(msg, 'Action not found.', `action not found: ${msg.match[2]}.\n\nSee HUBOT_NAME cmd help.`);
+            msg.send(`Action not found: ${msg.match[2]}.\n\nSee HUBOT_NAME cmd help.`);
             return;
           }
 
-          tell(msg, title, value2['message']);
+          // tell(msg, title, value2['message']);
+          msg.send(`[${title}\n${value2['message']}]`);
           execCommand(msg, value2['command']);
           return;
         });
@@ -167,7 +171,8 @@ module.exports = (robot) => {
 
       default:
         console.log(`target not found: ${msg.match[1]}`);
-        tell(msg, 'Target not found', `target not found: ${msg.match[1]}.\n\nSee HUBOT_NAME cmd help.`);
+        // tell(msg, 'Target not found', `target not found: ${msg.match[1]}.\n\nSee HUBOT_NAME cmd help.`);
+        msg.send(`Target not found: ${msg.match[1]}.\n\nSee HUBOT_NAME cmd help.`);
         return;
       }
     });
