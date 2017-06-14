@@ -56,9 +56,11 @@ import Auth          from './Auth';
 const prefix      = '[cmd]';
 const debug       = process.env.CMD_DEBUG;
 const configFile  = process.env.CMD_CONFIG;
-const color       = process.env.CMD_MSG_COLOR || '#aaaaaa';
 const type        = process.env.HUBOT_IRC_TYPE;
 const name        = 'cmd';
+const USER        = 'user';
+const MESSAGE     = 'message';
+const COMMAND     = 'command';
 
 module.exports = (robot) => {
   const sm      = new SendMessage(robot, type);
@@ -121,14 +123,14 @@ module.exports = (robot) => {
       title = 'Usage: cmd TARGET ACTION.';
     }
 
-    messages.push("Your order is not match my task list. Please check again.\n");
-    Object.keys(conf).map((key) => {
-      Object.keys(conf[key]).map((key2) => {
-        messages.push(`- ${key} ${key2}: ${conf[key][key2]['command']}\n${conf[key][key2]['message']}.\n  by ${conf[key][key2]['user'].join(', ')}`);
+    messages.push("Here is my task list.\n\n");
+    Object.keys(conf).map((target) => {
+      Object.keys(conf[target]).map((action) => {
+        messages.push(`- ${target} ${action}: \n${conf[target][action][MESSAGE]}\ncommand: ${conf[target][action][COMMAND]}\n  by ${conf[target][action][USER].join(', ')}`);
       });
     });
 
-    msg.send(`[${title}]\n\n${messages.join("\n")}`);
+    msg.send(`[${title}]\n\n${messages.join("\n\n")}`);
   };
 
   robot.hear(/cmd help/i, (msg) => {
@@ -147,21 +149,21 @@ module.exports = (robot) => {
         Object.keys(actions).map((a) => {
           const act = actions[a];
 
-          if (!checkPrivilege(act['user']), msg.message.user.name) {
+          if (!checkPrivilege(act[USER]), msg.message.user.name) {
             console.log(`action not found: ${action}`);
             msg.send(`Action not found: ${action}.\n\nSee HUBOT_NAME cmd help.`);
             return;
           }
 
-          msg.send(`[${title}\n\n${act['message']}]`);
-          execCommand(msg, act['command']);
+          msg.send(`[${title}\n\n${act[MESSAGE]}]`);
+          execCommand(msg, act[COMMAND]);
           return;
         });
         break;
 
       default:
         console.log(`target not found: ${target}`);
-        msg.send(`Target not found: ${target}.\n\nSee HUBOT_NAME cmd help.`);
+        msg.send(`Target not found: ${target}.\n\nTry @HUBOT_NAME cmd help.`);
         return;
       }
     });
