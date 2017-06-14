@@ -139,6 +139,10 @@ module.exports = (robot) => {
     tell(msg, title, messages.join("\n"));
   };
 
+  robot.hear(/cmd help/i, (msg) => {
+    help(msg);
+  });
+
   robot.hear(/cmd (\w+) (\w+)/i, (msg) => {
     const title = `${prefix} ${msg.match[1]} ${msg.match[2]}`;
 
@@ -167,9 +171,5 @@ module.exports = (robot) => {
         return;
       }
     });
-  });
-
-  robot.hear(/cmd help/i, (msg) => {
-    help(msg);
   });
 };
