@@ -7,26 +7,29 @@
  *
  * Configuration:
  * CMD_CONFIG: path to configuration file
- * CMD_MSG_COLOR: color
- *
- * hipchat "color" is allowed in "yellow", "red", "green", "purple", "gray", or "random".
  *
  * You need write CMD_CONFIG file in yaml format like this.
  *
- * "TARGET1":
- *   "ACTION1":
- *     "command": "/path/to/cmd1 ACTION1"
- *     "user": ["foo", "bar"]
- *     "message": "/path/to/cmd1 ACTION1 is executed."
- *   "ACTION2":
- *     "command": "/path/to/cmd1 ACTION2"
- *     "user": ["foo"]
- *     "message": "/path/to/cmd1 ACTION2 is executed."
- * "TARGET2":
- *   "ACTION1":
- *     "command": "/path/to/cmd2 ACTION1"
- *     "user": ["foo", "bar"]
- *     "message": "/path/to/cmd2 ACTION1 is executed."
+ * TARGET1:
+ *   ACTION1:
+ *     command: "/path/to/cmd1 ACTION1"
+ *     user:
+ *       - "foo"
+ *       - "bar"
+ *     message: "/path/to/cmd1 ACTION1 is executed."
+ *   ACTION2:
+ *     command: "/path/to/cmd1 ACTION2"
+ *     user:
+ *       - "foo"
+ *       - "bar"
+ *     message: "/path/to/cmd1 ACTION2 is executed."
+ * TARGET2:
+ *   ACTION1:
+ *     command: "/path/to/cmd2 ACTION1"
+ *     user:
+ *       - "foo"
+ *       - "bar"
+ *     message: "/path/to/cmd2 ACTION1 is executed."
  *
  * You need to execute hubot as adapter for each group chat system.
  * If you use slack, you need to hubot-slack adapter.
@@ -39,7 +42,7 @@
  *
  * Commands:
  * Tell bot to order.
- * @bot cmd TARGET ACTION
+ * @hubot cmd TARGET ACTION ARG
  *
  * Author:
  * Taiyu Fujii
@@ -73,14 +76,15 @@ module.exports = (robot) => {
 
   const conf = yaml.safeLoad(fs.readFileSync(configFile));
 
-  const execCommand = (msg, cmd) => {
+  const execCommand = (msg, cmd, arg) => {
     const room    = `#${msg.message.user.room}`;
     const target  = [ room ];
     const exec    = child_process.exec;
     const message = {};
     const result  = [];
+    const command = arg ? `${cmd} ${arg}` : cmd;
 
-    exec(cmd, (err, stdout, stderr) => {
+    exec(command, (err, stdout, stderr) => {
       if (err || stderr) {
         msg.send(`[Unknown error]\n\n${err}\n${stderr}`);
         return;
@@ -104,11 +108,7 @@ module.exports = (robot) => {
       }
     });
 
-    if (flag == false) {
-      return false;
-    }
-
-    return true;
+    return flag === true ? true : false;
   };
 
   const help = (msg, title, message) => {
@@ -123,7 +123,7 @@ module.exports = (robot) => {
     messages.push("Here is my task list.\n\n");
     Object.keys(conf).map((target) => {
       Object.keys(conf[target]).map((action) => {
-        messages.push(`- ${target} ${action}: \n${conf[target][action][MESSAGE]}\ncommand: ${conf[target][action][COMMAND]}\n  by ${conf[target][action][USER].join(', ')}`);
+        messages.push(`- ${target} ${action}: \n  ${conf[target][action][MESSAGE]}\n  [command] ${conf[target][action][COMMAND]}\n     by ${conf[target][action][USER].join(', ')}`);
       });
     });
 
@@ -134,9 +134,10 @@ module.exports = (robot) => {
     help(msg);
   });
 
-  robot.hear(/cmd (\w+) (\w+)/i, (msg) => {
+  robot.hear(/cmd (\w+) (\w+) (\w+)/i, (msg) => {
     const target  = msg.match[1];
     const action  = msg.match[2];
+    const arg     = msg.match[3];
     const title   = `${prefix} ${target} ${action}`;
 
     Object.keys(conf).map((t) => {
@@ -153,7 +154,7 @@ module.exports = (robot) => {
           }
 
           msg.send(`${title}\n\n${act[MESSAGE]}`);
-          execCommand(msg, act[COMMAND]);
+          execCommand(msg, act[COMMAND], arg);
           return;
         });
         break;
