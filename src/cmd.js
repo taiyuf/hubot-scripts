@@ -85,7 +85,7 @@ module.exports = (robot) => {
     const command = arg ? `${cmd} ${arg}` : cmd;
 
     exec(command, (err, stdout, stderr) => {
-      if (err || stderr) {
+      if (err) {
         msg.send(`[Unknown error]\n\n${err}\n${stderr}`);
         return;
       }
