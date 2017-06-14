@@ -149,13 +149,13 @@ module.exports = (robot) => {
         Object.keys(actions).map((a) => {
           const act = actions[a];
 
-          if (!checkPrivilege(act[USER]), msg.message.user.name) {
-            console.log(`action not found: ${action}`);
-            msg.send(`Action not found: ${action}.\n\nSee HUBOT_NAME cmd help.`);
+          if (!checkPrivilege(act[USER], msg.message.user.name)) {
+            console.log(`Not allowed user: ${msg.message.user.name}`);
+            msg.send(`Not allowed user: ${msg.message.user.name}.\n\nPlease contact the administrator.`);
             return;
           }
 
-          msg.send(`[${title}\n\n${act[MESSAGE]}]`);
+          msg.send(`${title}\n\n${act[MESSAGE]}`);
           execCommand(msg, act[COMMAND]);
           return;
         });
