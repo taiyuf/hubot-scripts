@@ -136,30 +136,32 @@ module.exports = (robot) => {
   });
 
   robot.hear(/cmd (\w+) (\w+)/i, (msg) => {
-    const title = `${prefix} ${msg.match[1]} ${msg.match[2]}`;
+    const target  = msg.match[1];
+    const action  = msg.match[2];
+    const title   = `${prefix} ${target} ${action}`;
 
-    Object.keys(conf).map((key) => {
-      const value = conf[key];
-      switch (msg.match[1]) {
-      case key:
-        Object.keys(value).map((key2) => {
-          const value2 = value[key2];
+    Object.keys(conf).map((t) => {
+      const actions = conf[target];
+      switch (target) {
+      case t:
+        Object.keys(actions).map((a) => {
+          const act = actions[a];
 
-          if (!checkPrivilege(value2['user']), msg.message.user.name) {
-            console.log(`action not found: ${msg.match[2]}`);
-            msg.send(`Action not found: ${msg.match[2]}.\n\nSee HUBOT_NAME cmd help.`);
+          if (!checkPrivilege(act['user']), msg.message.user.name) {
+            console.log(`action not found: ${action}`);
+            msg.send(`Action not found: ${action}.\n\nSee HUBOT_NAME cmd help.`);
             return;
           }
 
-          msg.send(`[${title}\n\n${value2['message']}]`);
-          execCommand(msg, value2['command']);
+          msg.send(`[${title}\n\n${act['message']}]`);
+          execCommand(msg, act['command']);
           return;
         });
         break;
 
       default:
-        console.log(`target not found: ${msg.match[1]}`);
-        msg.send(`Target not found: ${msg.match[1]}.\n\nSee HUBOT_NAME cmd help.`);
+        console.log(`target not found: ${target}`);
+        msg.send(`Target not found: ${target}.\n\nSee HUBOT_NAME cmd help.`);
         return;
       }
     });
