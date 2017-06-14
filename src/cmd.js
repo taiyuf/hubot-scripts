@@ -133,7 +133,7 @@ module.exports = (robot) => {
     help(msg);
   });
 
-  robot.hear(/cmd (\w+) (\w+) (\w+)/i, (msg) => {
+  robot.hear(/cmd (\w+) (\w+) ?(\w+)?/i, (msg) => {
     const target  = msg.match[1];
     const action  = msg.match[2];
     const arg     = msg.match[3];
