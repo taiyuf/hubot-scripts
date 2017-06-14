@@ -11,29 +11,22 @@
  *
  * hipchat "color" is allowed in "yellow", "red", "green", "purple", "gray", or "random".
  *
- * You need write CMD_CONFIG file in json format like this.
+ * You need write CMD_CONFIG file in yaml format like this.
  *
- * {
- *   "TARGET1": {
- *     "ACTION1": {
- *       "command": "/path/to/cmd1 ACTION1",
- *       "user": ["foo", "bar"],
- *       "message": "/path/to/cmd1 ACTION1 is executed."
- *     },
- *     "ACTION2": {
- *       "command": "/path/to/cmd1 ACTION2",
- *       "user": ["foo"],
- *       "message": "/path/to/cmd1 ACTION2 is executed."
- *     }
- *   },
- *   "TARGET2": {
- *     "ACTION1": {
- *       "command": "/path/to/cmd2 ACTION1",
- *       "user": ["foo", "bar"],
- *       "message": "/path/to/cmd2 ACTION1 is executed."
- *     }
- *   }
- * }
+ * "TARGET1":
+ *   "ACTION1":
+ *     "command": "/path/to/cmd1 ACTION1"
+ *     "user": ["foo", "bar"]
+ *     "message": "/path/to/cmd1 ACTION1 is executed."
+ *   "ACTION2":
+ *     "command": "/path/to/cmd1 ACTION2"
+ *     "user": ["foo"]
+ *     "message": "/path/to/cmd1 ACTION2 is executed."
+ * "TARGET2":
+ *   "ACTION1":
+ *     "command": "/path/to/cmd2 ACTION1"
+ *     "user": ["foo", "bar"]
+ *     "message": "/path/to/cmd2 ACTION1 is executed."
  *
  * You need to execute hubot as adapter for each group chat system.
  * If you use slack, you need to hubot-slack adapter.
@@ -146,7 +139,7 @@ module.exports = (robot) => {
     tell(msg, title, messages.join("\n"));
   };
 
-  robot.respond(/cmd (\w+) (\w+)/i, (msg) => {
+  robot.hear(/cmd (\w+) (\w+)/i, (msg) => {
     const title = `${prefix} ${msg.match[1]} ${msg.match[2]}`;
 
     Object.keys(conf).map((key) => {
@@ -167,16 +160,16 @@ module.exports = (robot) => {
           return;
         });
         break;
-        
+
       default:
         console.log(`target not found: ${msg.match[1]}`);
         tell(msg, 'Target not found', `target not found: ${msg.match[1]}.\n\nSee HUBOT_NAME cmd help.`);
         return;
       }
-    });    
+    });
   });
 
-  robot.respond(/cmd help/i, (msg) => {
+  robot.hear(/cmd help/i, (msg) => {
     help(msg);
   });
 };
