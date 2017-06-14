@@ -63,11 +63,8 @@ const MESSAGE     = 'message';
 const COMMAND     = 'command';
 
 module.exports = (robot) => {
-  const sm      = new SendMessage(robot, type);
-  const log     = sm.robot;
-  const options = {
-    color: color
-  };
+  const sm  = new SendMessage(robot, type);
+  const log = sm.robot;
 
   if (!configFile) {
     log.error(`${name}> no config file.`);
