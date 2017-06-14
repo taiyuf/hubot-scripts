@@ -74,14 +74,6 @@ module.exports = (robot) => {
 
   const conf = yaml.safeLoad(fs.readFileSync(configFile));
 
-  const tell = (msg, title, message) => {
-    const room    = `#${msg.message.user.room}`;
-    const target  = [ room ];
-    options.title = title;
-
-    sm.send(target, message, options);
-  };
-
   const execCommand = (msg, cmd) => {
     const room    = `#${msg.message.user.room}`;
     const target  = [ room ];
@@ -91,17 +83,16 @@ module.exports = (robot) => {
 
     exec(cmd, (err, stdout, stderr) => {
       if (err || stderr) {
-        tell(msg, '[Unknown error]', `#{err}\n#{stderr}`);
+        msg.send(`[Unknown error]\n\n${err}\n${stderr}`);
         return;
       }
 
       if (!stdout) {
-        tell(msg, '[Result]', 'executed in success.');
+        msg.send(`[Result]\n\nexecuted in success.`);
         return;
       }
 
-      // tell(msg, '[Result]', stdout);
-      msg.send(`[Result]\nstdout`);
+      msg.send(`[Result]\n\n${stdout}`);
     });
   };
 
@@ -133,12 +124,11 @@ module.exports = (robot) => {
     messages.push("Your order is not match my task list. Please check again.\n");
     Object.keys(conf).map((key) => {
       Object.keys(conf[key]).map((key2) => {
-        messages.push(`- ${key} ${key2}: ${conf[key]['command']}\n${conf[key][key2]['message']}.\n  by ${conf[key][key2]['user'].join(', ')}`);
+        messages.push(`- ${key} ${key2}: ${conf[key][key2]['command']}\n${conf[key][key2]['message']}.\n  by ${conf[key][key2]['user'].join(', ')}`);
       });
     });
 
-    msg.send(`[${title}]\n${messages.join("\n")}`);
-    // tell(msg, title, messages.join("\n"));
+    msg.send(`[${title}]\n\n${messages.join("\n")}`);
   };
 
   robot.hear(/cmd help/i, (msg) => {
@@ -157,13 +147,11 @@ module.exports = (robot) => {
 
           if (!checkPrivilege(value2['user']), msg.message.user.name) {
             console.log(`action not found: ${msg.match[2]}`);
-            // tell(msg, 'Action not found.', `action not found: ${msg.match[2]}.\n\nSee HUBOT_NAME cmd help.`);
             msg.send(`Action not found: ${msg.match[2]}.\n\nSee HUBOT_NAME cmd help.`);
             return;
           }
 
-          // tell(msg, title, value2['message']);
-          msg.send(`[${title}\n${value2['message']}]`);
+          msg.send(`[${title}\n\n${value2['message']}]`);
           execCommand(msg, value2['command']);
           return;
         });
@@ -171,7 +159,6 @@ module.exports = (robot) => {
 
       default:
         console.log(`target not found: ${msg.match[1]}`);
-        // tell(msg, 'Target not found', `target not found: ${msg.match[1]}.\n\nSee HUBOT_NAME cmd help.`);
         msg.send(`Target not found: ${msg.match[1]}.\n\nSee HUBOT_NAME cmd help.`);
         return;
       }
