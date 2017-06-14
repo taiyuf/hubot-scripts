@@ -91,11 +91,10 @@ module.exports = (robot) => {
       }
 
       if (!stdout) {
-        msg.send(`[Result]\n\nexecuted in success.`);
+        msg.send(`[Result]\n  executed in success.`);
         return;
       }
-
-      msg.send(`[Result]\n\n${stdout}`);
+      msg.send(`[Result]\n  \`${stdout}\``);
     });
   };
 
@@ -117,13 +116,13 @@ module.exports = (robot) => {
     const messages = [message];
 
     if (!title) {
-      title = 'Usage: cmd TARGET ACTION.';
+      title = 'Usage: cmd TARGET ACTION (ARGUMENT).';
     }
 
     messages.push("Here is my task list.\n\n");
     Object.keys(conf).map((target) => {
       Object.keys(conf[target]).map((action) => {
-        messages.push(`- ${target} ${action}: \n  ${conf[target][action][MESSAGE]}\n  [command] ${conf[target][action][COMMAND]}\n     by ${conf[target][action][USER].join(', ')}`);
+        messages.push(`*${target} ${action}*: \n  ${conf[target][action][MESSAGE]}\n\n  [command]\n    \`${conf[target][action][COMMAND]}\`\n\n  [user]\n    ${conf[target][action][USER].join(', ')}`);
       });
     });
 
@@ -138,32 +137,36 @@ module.exports = (robot) => {
     const target  = msg.match[1];
     const action  = msg.match[2];
     const arg     = msg.match[3];
-    const title   = `${prefix} ${target} ${action}`;
+    const title   = `*${target} ${action}*`;
+    let flag      = false;
 
     Object.keys(conf).map((t) => {
       const actions = conf[target];
-      switch (target) {
-      case t:
+      if (target == t) {
         Object.keys(actions).map((a) => {
           const act = actions[a];
+
+          if (action != a) {
+            return;
+          }
+          
+          flag = true;
 
           if (!checkPrivilege(act[USER], msg.message.user.name)) {
             console.log(`Not allowed user: ${msg.message.user.name}`);
             msg.send(`Not allowed user: ${msg.message.user.name}.\n\nPlease contact the administrator.`);
             return;
           }
-
-          msg.send(`${title}\n\n${act[MESSAGE]}`);
+          const cmd = arg ? `${act[COMMAND]} ${arg}` : `${act[COMMAND]}`;
+          msg.send(`${title}\n  ${act[MESSAGE]}\n\n[command]\n  \`${cmd}\`\n\n`);
           execCommand(msg, act[COMMAND], arg);
-          return;
         });
-        break;
-
-      default:
-        console.log(`target not found: ${target}`);
-        msg.send(`Target not found: ${target}.\n\nTry @HUBOT_NAME cmd help.`);
-        return;
       }
     });
+    
+    if (flag === false) {
+      console.log(`target not found: ${target}`);
+      msg.send(`Target not found: ${target}.\n\nTry @HUBOT_NAME cmd help.`);
+    }
   });
 };
