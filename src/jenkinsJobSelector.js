@@ -64,6 +64,7 @@ module.exports = (robot) => {
     let payload;
     if (body.payload) {
        payload = JSON.parse(body.payload);
+       log.debug(`payload.repository: ${JSON.stringify(payload.repository)}`);
     }
 
     // gitlab
@@ -71,7 +72,6 @@ module.exports = (robot) => {
       gitUrl = body.repository.homepage;
       service = 'gitlab';
     }
-    log.debug(`payload.repository: ${JSON.stringify(payload.repository)}`);
 
     // github
     if (payload && payload.repository && payload.repository.url) {
