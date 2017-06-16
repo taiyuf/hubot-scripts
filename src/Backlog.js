@@ -10,7 +10,7 @@ const name: string       = 'Backlog';
 module.exports = (robot: any): void => {
 
   if (!backlogUrl) {
-    throw new Error(`Backlog: no backlogUrl.`);
+    return;
   }
 
   robot.router.post(urlpath, (req: any, res: any) => {
