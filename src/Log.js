@@ -1,3 +1,4 @@
+/* @flow */
 import log4js from 'log4js';
 
 /**
@@ -16,7 +17,14 @@ import log4js from 'log4js';
  */
 export default class Log {
 
-  constructor(serverLog, accessLog, errorLog) {
+  env:        string;
+  debugFlag:  string;
+  parse:      () => any;
+  server:     () => any;
+  access:     () => any;
+  error:      () => any;
+
+  constructor(serverLog: string, accessLog: string, errorLog: string): void {
 
     if (!(serverLog && accessLog && errorLog)) {
       throw new Error(`Log: arguments error: serverLog: ${serverLog}, accessLog: ${accessLog}, errorLog: ${errorLog}`);
@@ -26,15 +34,15 @@ export default class Log {
     this.env       = process.env.NODE_ENV || 'production';
 
     // debug flag.
-    this.debugFlag = process.env.DEBUG || false;
+    this.debugFlag = process.env.DEBUG || 'false';
 
     // binded functions.
-    this.parse = this.parse.bind(this);
+    this.parse     = this.parse.bind(this);
 
     // the configuration of log4js.
-    let logConfig;
+    let logConfig: any;
 
-    if (this.debugFlag != false) {
+    if (this.debugFlag != 'false') {
       logConfig = {
         appenders: [
           { type: 'console', category: 'server' },
@@ -106,8 +114,8 @@ export default class Log {
    * @param  {Object}  obj  the object you want to know its type.
    * @return {Boolean} true or false.
    */
-  checkType(type, obj) {
-    let klass = Object.prototype.toString.call(obj).slice(8, -1);
+  checkType(type: string, obj: any): boolean {
+    const klass: string = Object.prototype.toString.call(obj).slice(8, -1);
     return obj !== undefined && obj !== null && klass === type;
   }
 
@@ -116,8 +124,8 @@ export default class Log {
    * @param {Object}  obj something to want to logging.
    * @return {String} the content.
    */
-  parse(obj) {
-    let log;
+  parse(obj: any): string {
+    let log: string;
 
     // console.log(`type: ${Object.prototype.toString.call(obj).slice(8, -1)}`);
 

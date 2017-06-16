@@ -1,21 +1,34 @@
+/* @flow */
 export default class Auth {
+
+  name:         string;
+  req:          any;
+  allow:        Array<string>;
+  deny:         Array<string>;
+  apikey:       string;
+  remoteIp:     string;
+  match:        () => any;
+  checkIp:      () => any;
+  checkApiKey:  () => any;
+  checkRequest: () => any;
+
   /**
    * Constructor
-   * @param  {Object} req    the ip address of client.
-   * @param  {String} allow  CIDR allowed to request.
-   * @param  {String} deny   CIDR denied to request.
-   * @param  {String} apikey apikey allowed to request.
-   * @throws {Error}  arguments error.
+   * @param  {Object}        req    the ip address of client.
+   * @param  {Array<String>} allow  CIDR allowed to request.
+   * @param  {Array<String>} deny   CIDR denied to request.
+   * @param  {String}        apikey apikey allowed to request.
+   * @throws {Error}         arguments error.
    */
-  constructor(req, allow='', deny='', apikey='') {
+  constructor(req: any, allow: string='', deny: string='', apikey: string=''): void {
     this.name = 'Auth';
 
     if (!req) {
       throw new Error(`${this.name}> arguments error: req is not found.`);
     }
 
-    const splitString = (str) => str.replace(/\s+/g, '').split(',');
-    const getRemoteIp = (req) => {
+    const splitString: (str: string) => any = (str: string): Array<string> => str.replace(/\s+/g, '').split(',');
+    const getRemoteIp: () => any = (req: any): string => {
       if (req.connection && req.connection.remoteAddress) {
         return req.connection.remoteAddress;
       } else if (req.socket && req.socket.remoteAddress) {
@@ -26,7 +39,7 @@ export default class Auth {
         return  req.headers['x-forwarded-for'];
       } else {
         console.log(`${this.name}> no ip address detected.`);
-        return null;
+        return '';
       }
     };
 
@@ -49,7 +62,7 @@ export default class Auth {
    *
    * @throws {Error}   arguments error.
    */
-  match(pattern) {
+  match(pattern: string): boolean {
     if (!pattern) {
       throw new Error(`${this.name} match> arguments error.`);
     }
@@ -73,7 +86,7 @@ export default class Auth {
         return false;
       }
     } else {
-      this.error(`*** ${this.name}> invalid pattern: ${pattern}`);
+      console.error(`*** ${this.name}> invalid pattern: ${pattern}`);
       throw new Error(`*** ${this.name}> invalid pattern: ${pattern}`);
     }
   }
@@ -90,9 +103,9 @@ export default class Auth {
    *
    * @throws {Error}   arguments error.
    */
-  checkIp() {
+  checkIp(): boolean {
 
-    let flag;
+    let flag: boolean = false;
 
     if (!(this.deny.length == 1 && this.deny[0] == '')) {
       this.deny.map((v, i) => {
@@ -126,7 +139,7 @@ export default class Auth {
    *
    * @throws {Error}   arguments error.
    */
-  checkApiKey() {
+  checkApiKey(): boolean {
     if (this.req.headers &&
         this.req.headers['hubot_http_irc_api_key'] &&
         this.apikey == this.req.headers['hubot_http_irc_api_key']) {
@@ -145,7 +158,7 @@ export default class Auth {
    *
    * @throws {Error}   arguments error.
    */
-  checkRequest(res) {
+  checkRequest(res: any): boolean {
     if (!res) {
       throw new Error(`${this.name}> checkRequest req is not found.`);
     }

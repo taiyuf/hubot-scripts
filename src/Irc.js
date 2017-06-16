@@ -1,13 +1,21 @@
+/* @flow */
 import Context from './Context';
 
 export default class Irc extends Context {
+
+  robot:      any;
+  msgLabel:   string;
+  lineFeed:   string;
+  htmlFilter: () => any;
+  send:       () => any;
+
   /**
    * Constructor
    * @param  {Object} robot hubot object.
    *
    * @throws {Error}  arguments error.
    */
-  constructor(robot) {
+  constructor(robot: any): void {
     if (!robot) {
       throw new Error(`arguments error: robot is not found.`);
     }
@@ -25,8 +33,8 @@ export default class Irc extends Context {
    * @param  {String} str text.
    * @return {Sring}  bold text for irc.
    */
-  bold(str) {
-    return str ? "\x02" + str + "\x02" : null;
+  bold(str: string): string {
+    return str ? "\x02" + str + "\x02" : '';
   }
 
   /**
@@ -35,12 +43,12 @@ export default class Irc extends Context {
    * @param  {String} url   url.
    * @return {String} url text for irc.
    */
-  url(title, url) {
+  url(title: string, url: string): string {
     if (!(title && url)) {
-      return null;
-    } else {
-      return "\x1f" + title + "\x1f" + ": " + url;
+      return '';
     }
+
+    return "\x1f" + title + "\x1f" + ": " + url;
   }
 
   /**
@@ -48,16 +56,16 @@ export default class Irc extends Context {
    * @param  {String} html html.
    * @return {String} text.
    */
-  htmlFilter(html) {
+  htmlFilter(html: string): string {
     if (!html) {
-      return null;
-    } else {
-      return html.replace(/<br>/g, this.lineFeed)
-        .replace(/<br \/>/g, this.lineFeed)
-        .replace(/<("[^"]*"|'[^']*'|[^'">])*>/g, '')
-        .replace(/^$/g, '')
-        .replace(/^${this.lineFeed}$/g, '');
+      return '';
     }
+
+    return html.replace(/<br>/g, this.lineFeed)
+      .replace(/<br \/>/g, this.lineFeed)
+      .replace(/<("[^"]*"|'[^']*'|[^'">])*>/g, '')
+      .replace(/^$/g, '')
+      .replace(/^${this.lineFeed}$/g, '');
   }
 
   /**
@@ -67,10 +75,11 @@ export default class Irc extends Context {
    *
    * @throws {Error}  arguments error.
    */
-  send(target, msg) {
+  send(target: string, msg: string): void {
     if (!(target && msg)) {
       throw new Error(`Irc send: arguments error: target: ${target}, msg: ${msg}`);
-      this.robot.send({ 'room': target}, this.parseType(msg));
     }
+
+    this.robot.send({ room: target }, this.parseType(msg));
   }
 }

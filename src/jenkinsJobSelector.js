@@ -36,7 +36,6 @@ module.exports = (robot: any) => {
     throw new Error(`*** Please set: configFile.`);
   }
 
-
   const sm: any   = new SendMessage(robot, type);
   const log: any  = sm.robot;
 
@@ -105,10 +104,6 @@ module.exports = (robot: any) => {
     }
 
     log.debug(`${name}> git url: ${gitUrl}`);
-
-//    if (!(body.ref || payload.ref)) {
-//      return;
-//    }
 
     let branch: string = '';
     if (service == 'github') {

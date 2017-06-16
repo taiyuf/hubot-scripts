@@ -1,3 +1,4 @@
+/* @flow */
 import fs   from 'fs';
 import yaml from 'js-yaml';
 import _    from 'lodash';
@@ -14,17 +15,17 @@ import _    from 'lodash';
  * @param  {String} dir the directory of yaml file.
  * @return {Object} the hash of configuration.
  */
-export default function getConfig(dir) {
-  const name = 'getConfig';
+export default function getConfig(dir: string): any {
+  const name: string = 'getConfig';
 
   if (!dir) {
     throw new Error(`*** ${name}: argument error: dir: ${dir}`);
   }
 
-  let defaultYaml;
-  let envYaml;
-  let result = {};
-  const env  = process.env.NODE_ENV || 'development';
+  let defaultYaml: any;
+  let envYaml: any;
+  let result: mixed = {};
+  const env: string  = process.env.NODE_ENV || 'development';
 
   try {
     defaultYaml = yaml.safeLoad(fs.readFileSync(`${dir}/default.yml`, 'utf8'));

@@ -1,3 +1,5 @@
+/* @flow */
+
 /**
  * Description
  * Let hubot execute shell command.
@@ -48,7 +50,6 @@
  * Taiyu Fujii
  */
 
-/* @flow */
 import fs            from 'fs';
 import yaml          from 'js-yaml';
 import child_process from 'child_process';
@@ -76,7 +77,7 @@ module.exports = (robot: any) => {
 
   const conf: any = yaml.safeLoad(fs.readFileSync(configFile));
 
-  const execCommand = (msg, cmd, arg) => {
+  const execCommand = (msg, cmd, arg): void => {
     const room: string           = `#${msg.message.user.room}`;
     const target: Array<string>  = [ room ];
     const exec: any              = child_process.exec;
@@ -96,7 +97,7 @@ module.exports = (robot: any) => {
     });
   };
 
-  const checkPrivilege = (list: Array<string>, user: string) => {
+  const checkPrivilege = (list: Array<string>, user: string): boolean => {
     let flag = false;
 
     list.map((l) => {
@@ -108,7 +109,7 @@ module.exports = (robot: any) => {
     return flag === true ? true : false;
   };
 
-  const help = (msg: any, title: string, message: string = '') => {
+  const help = (msg: any, title: string, message: string = ''): void => {
     const room     = `#${msg.message.user.room}`;
     const target   = [ room ];
     const messages = [message];

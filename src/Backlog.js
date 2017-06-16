@@ -1,19 +1,25 @@
+/* @flow */
 import SendMessage from './SendMessage';
 import Auth        from './Auth';
 
-const type       = process.env.HUBOT_IRC_TYPE;
-const backlogUrl = process.env.BACKLOG_URL;
-const urlpath    = '/hubot/backlog/:room';
-const name       = 'Backlog';
+const type: string       = process.env.HUBOT_IRC_TYPE || 'slack';
+const backlogUrl: string = process.env.BACKLOG_URL || '';
+const urlpath: string    = '/hubot/backlog/:room';
+const name: string       = 'Backlog';
 
-module.exports = (robot) => {
-  robot.router.post(urlpath, (req, res) => {
-    const body = req.body;
-    const room = req.params.room;
-    const sm   = new SendMessage(robot, type);
-    let label;
-    let url;
-    let message;
+module.exports = (robot: any): void => {
+
+  if (!backlogUrl) {
+    throw new Error(`Backlog: no backlogUrl.`);
+  }
+
+  robot.router.post(urlpath, (req: any, res: any) => {
+    const body: any    = req.body;
+    const room: string = req.params.room;
+    const sm           = new SendMessage(robot, type);
+    let label: string  = '';
+    let url: string;
+    let message: string;
 
     console.log(`body: ${JSON.stringify(req.body)}`);
     try {

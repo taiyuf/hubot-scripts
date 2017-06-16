@@ -1,3 +1,4 @@
+/* @flow */
 import fs      from 'fs';
 import yaml    from 'js-yaml';
 import path    from 'path';
@@ -6,27 +7,33 @@ import Context from './Context';
 
 export default class Slack extends Context {
 
+  robot:            any;
+  color:            string;
+  info:             any;
+  buildAttatchment: () => any;
+  send:             () => any;
+
   /**
    * Constructor
    * @param  {Object} robot hubot object.
    *
    * @throws {Error}  arguments error.
    */
-  constructor(robot) {
+  constructor(robot: any): void {
     if (!robot) {
       throw new Error(`arguments error: robot is not found.`);
     }
 
-    const conf = process.env.HUBOT_IRC_INFO;
+    const conf: string = process.env.HUBOT_IRC_INFO || '';
     if (!conf) {
       console.log(`Slack: there is no info setting. please set HUBOT_IRC_INFO.`);
       return;
     }
 
     super();
-    this.robot = robot;
-    this.color = '#aaaaaa';
-    this.info  = yaml.safeLoad(fs.readFileSync(conf));
+    this.robot            = robot;
+    this.color            = '#aaaaaa';
+    this.info             = yaml.safeLoad(fs.readFileSync(conf));
 
     this.buildAttatchment = this.buildAttatchment.bind(this);
     this.send             = this.send.bind(this);
@@ -37,8 +44,8 @@ export default class Slack extends Context {
    * @param  {String} str text.
    * @return {Sring}  bold text for irc.
    */
-  bold(str) {
-    return str ? ` *${str}* ` : null;
+  bold(str: string): string {
+    return str ? ` *${str}* ` : '';
   }
 
   /**
@@ -47,9 +54,9 @@ export default class Slack extends Context {
    * @param  {String} url   url.
    * @return {String} url text for irc.
    */
-  url(title, url) {
+  url(title: string, url: string): string {
     if (!(title && url)) {
-      return null;
+      return '';
     } else {
       return `<${url}|${title}>`;
     }
@@ -60,8 +67,8 @@ export default class Slack extends Context {
    * @param  {String} str text.
    * @return {Sring}  bold text for irc.
    */
-  underline(str) {
-    return str ? ` *${str}* ` : null;
+  underline(str: string): string {
+    return str ? ` *${str}* ` : '';
   }
 
   /**
@@ -70,17 +77,17 @@ export default class Slack extends Context {
    * @param  {Object} info the infomation for building attachment.
    * @return {String} attachment for slack.
    */
-  buildAttatchment(msg, info={}) {
+  buildAttatchment(msg: string, info: any={}): any {
     if (!msg) {
       return null;
     }
 
-    const fallback = [
+    const fallback: Array<string> = [
       'pretext',
       'title',
       'title_link'
     ];
-    const querys = [
+    const querys: Array<string> = [
       'pretext',
       'title',
       'title_link',
@@ -93,20 +100,20 @@ export default class Slack extends Context {
       'color'
     ];
 
-    const at       = {};
-    const message  = this.parseType(msg);
+    const at: any          = {};
+    const message: string  = this.parseType(msg);
 
     at.color = info.color ? info.color : this.color;
     at.text  = message;
 
-    const hash = fallback.reduce((hash, key) => {
+    const hash: mixed = fallback.reduce((hash, key) => {
       if (info[key]) {
         hash[key] = info[key];
       }
       return hash;
     }, {});
 
-    const f = fallback.reduce((array, a) => {
+    const f: Array<string> = fallback.reduce((array, a) => {
       if (info[a]) {
         array.push(info[a]);
       }
@@ -139,14 +146,14 @@ export default class Slack extends Context {
    *
    * @throws {Error}  arguments error.
    */
-  send(target, msg, info={}, cb) {
+  send(target: string, msg: string, info: mixed={}, cb: () => any) {
     if (!(target && msg)) {
       throw new Error(`Irc send: arguments error: target: ${target}, msg: ${msg}`);
     }
 
-    const name   = "Slack send";
-    const q      = {};
-    const params = [
+    const name: string          = "Slack send";
+    const q: any                = {};
+    const params: Array<string> = [
       'color',
       'username',
       'as_user',
