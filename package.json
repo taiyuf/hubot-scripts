@@ -10,22 +10,10 @@
     "test": "mocha test",
     "testone": "mocha",
     "build": "(cd ./src && babel -d ../build ./*)",
+    "lint": "flow",
     "watch": "npm run watch:start",
     "watch:start": "(cd ./src && babel -d ../build ./* --watch &)",
     "watch:stop": "for p in `ps awx|grep 'hubot-scripts/node_modules/.bin/babel'|grep -v 'grep'|awk '{print $1}'`; do kill $p; done"
-  },
-  "babel": {
-    "presets": [
-      "es2015",
-      "babel-preset-power-assert"
-    ],
-    "env": {
-      "development": {
-        "presets": [
-          "power-assert"
-        ]
-      }
-    }
   },
   "repository": {
     "type": "git",
@@ -42,7 +30,12 @@
   "homepage": "https://github.com/taiyuf/hubot-scripts",
   "dependencies": {
     "babel-loader": "^6.2.4",
+    "babel-plugin-transform-class-properties": "^6.24.1",
+    "babel-plugin-transform-flow-strip-types": "^6.22.0",
     "babel-polyfill": "^6.9.1",
+    "babel-preset-flow": "^6.23.0",
+    "babel-preset-stage-0": "^6.24.1",
+    "flowtype": "^2.0.0",
     "fs": "0.0.2",
     "generator-hubot": "^0.4.0",
     "js-yaml": "^3.5.2",

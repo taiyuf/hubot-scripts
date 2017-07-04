@@ -1,3 +1,4 @@
+/* @flow */
 import fs      from 'fs';
 import request from 'superagent';
 import Irc     from './Irc';
@@ -7,7 +8,11 @@ import Slack   from './Slack';
  * send
  */
 export default class SendMessage {
-  constructor(robot, type) {
+
+  name:  string;
+  robot: any;
+
+  constructor(robot: any, type: string): void {
     if (!(robot && type)) {
       throw new Error(`${this.name} arguments error: robot: ${robot}, type: ${type}`);
     }
@@ -26,12 +31,12 @@ export default class SendMessage {
     }
   }
 
-  send(target, msg, option={}) {
+  send(target: any, msg: any, option: mixed={}): void {
     if (!(target && msg)) {
       throw new Error(`${this.name}> arguments error: target: ${target}, msg: ${msg}`);
     }
 
-    let targets;
+    let targets: string|Array<string>;
     if (this.robot.checkType('String', target)) {
       targets = [target];
     } else {

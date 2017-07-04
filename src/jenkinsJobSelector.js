@@ -1,3 +1,4 @@
+/* @flow */
 import url         from 'url';
 import fs          from 'fs';
 import yaml        from 'js-yaml';
@@ -13,38 +14,42 @@ import Auth        from './Auth';
  */
 
 // the type of irc service.
-const type       = process.env.HUBOT_IRC_TYPE;
+const type: string       = process.env.HUBOT_IRC_TYPE || 'slack';
 
 // the configuration file for me.
-const configFile = process.env.JENKINS_JOBSELECTOR_CONFIG_FILE;
+const configFile: string = process.env.JENKINS_JOBSELECTOR_CONFIG_FILE || '';
 
 // the flag whether tell message to irc service.
-const sendFlag   = process.env.JENKINS_JOBSELECTOR_SEND_MESSAGE;
-const icon       = process.env.JENKINS_JOBSELECTOR_ICON   || null;
-const color      = process.env.JENKINS_JOBSELECTOR_COLOR  || '#aaaaaa';
-const debug      = process.env.JENKINS_JOBSELECTOR_DEBUG  || process.env.DEBUG || null;
-const allow      = process.env.JENKINS_JOBSELECTOR_ALLOW  || '';
-const deny       = process.env.JENKINS_JOBSELECTOR_DENY   || '';
-const apikey     = process.env.JENKINS_JOBSELECTOR_APIKEY || '';
-const ircType    = process.env.HUBOT_IRC_TYPE;
-const urlpath    = '/hubot/jenkins-jobselector';
-const name       = 'JobSelector';
+const sendFlag: string   = process.env.JENKINS_JOBSELECTOR_SEND_MESSAGE || '';
+const icon: string       = process.env.JENKINS_JOBSELECTOR_ICON   || '';
+const color: string      = process.env.JENKINS_JOBSELECTOR_COLOR  || '#aaaaaa';
+const debug: string      = process.env.JENKINS_JOBSELECTOR_DEBUG  || process.env.DEBUG || '';
+const allow: string      = process.env.JENKINS_JOBSELECTOR_ALLOW  || '';
+const deny: string       = process.env.JENKINS_JOBSELECTOR_DENY   || '';
+const apikey: string     = process.env.JENKINS_JOBSELECTOR_APIKEY || '';
+const urlpath: string    = '/hubot/jenkins-jobselector';
+const name: string       = 'JobSelector';
 
-module.exports = (robot) => {
-  const sm   = new SendMessage(robot, type);
-  const log  = sm.robot;
+module.exports = (robot: any) => {
 
   if (!configFile) {
-    log.Error(`${name}> no config file.`);
+    throw new Error(`*** Please set: configFile.`);
+  }
+
+  const sm: any   = new SendMessage(robot, type);
+  const log: any  = sm.robot;
+
+  if (!configFile) {
+    log.error(`${name}> no config file.`);
     return;
   }
 
   const conf = yaml.safeLoad(fs.readFileSync(configFile));
-  let service;
-  let gitUrl;
-  let auth;
+  let service: string;
+  let gitUrl: string;
+  let auth: any;
 
-  robot.router.post(urlpath, (req, res) => {
+  robot.router.post(urlpath, (req: any, res: any) => {
     const auth  = new Auth(req, allow, deny, apikey);
 
     if (!auth.checkRequest(res)) {
@@ -52,21 +57,45 @@ module.exports = (robot) => {
       return;
     }
 
-    log.debug(`data: ${JSON.stringify(req.body)}`);
-    const query = querystring.parse(url.parse(req.url).query);
-    res.end('OK');
-
     if (!req.body) {
       throw new Error(`${name}> no body: ${JSON.stringify(req)}`);
     }
 
-    const hook = req.body;
+    log.debug(`data: ${JSON.stringify(req.body)}`);
+    const query: string = querystring.parse(url.parse(req.url).query);
+    res.end('OK');
 
-    if (hook.repository.homepage) {
-      gitUrl = hook.repository.homepage;
-      service = 'gitlab';
+    const body: any = req.body;
+    let payload;
+
+    if (body.payload) {
+      payload = body.payload;
     } else {
-      gitUrl = hook.repository.html_url;
+      payload = body;
+    }
+
+    if (!payload.repository) {
+      throw new Error(`${name}> no repository: ${JSON.stringify(payload)}`);
+    }
+
+    log.debug(`payload.repository: ${JSON.stringify(payload.repository)}`);
+
+    // gitlab
+    if (payload.repository.homepage) {
+      gitUrl = payload.repository.homepage;
+      service = 'gitlab';
+    }
+
+    // github
+    if (payload.repository.url) {
+      log.debug(`payload.repository: ${JSON.stringify(payload.repository)}`);
+      log.debug(`github pattern 1.`);
+      gitUrl = payload.repository.url;
+      service = 'github';
+    }
+    if (payload.repository.html_url) {
+      log.debug(`github pattern 2.`);
+      gitUrl = payload.repository.html_url;
       service = 'github';
     }
 
@@ -76,30 +105,36 @@ module.exports = (robot) => {
 
     log.debug(`${name}> git url: ${gitUrl}`);
 
-    if (!hook.ref) {
-      return;
+    let branch: string = '';
+    if (service == 'github') {
+      if (!payload.ref){
+        throw new Error(`${name}> github: no ref: ${payload.ref} `);
+      }
+
+      branch = payload.ref.replace(/refs\/heads\//, '');
     }
 
-    const branch  = hook.ref.replace(/refs\/heads\//, '');
-    const gitInfo = conf[gitUrl];
-    let authInfo;
+    const gitInfo: any = conf[gitUrl];
+    let authInfo: typeAuthInfo;
 
     if (gitInfo['auth']) {
-      authInfo = {};
-      authInfo.user = gitInfo['auth']['id'];
-      authInfo.pass = gitInfo['auth']['password'];
-    } else {
-      log.debug(`${name}> No auth infomation.`);
+      authInfo = {
+        user: gitInfo['auth']['id'],
+        pass: gitInfo['auth']['password']
+      };
+    // } else {
+    //   log.debug(`${name}> No auth infomation.`);
     }
 
-    const jobUrl = gitInfo['jobs'][branch];
-    const jobRequest = (url) => {
+    // const jobUrl: string | Array<string> = gitInfo['jobs'][branch];
+    const jobUrl: any = gitInfo['jobs'][branch];
+    const jobRequest: any = (url: string) => {
 
       if (authInfo) {
         request
           .post(url)
           .auth(authInfo.user, authInfo.pass)
-          .end((err, res) => {
+          .end((err:string, res: any) => {
             if (err) {
               log.error(`${name}> request error: ${err}`);
               return;
@@ -108,25 +143,26 @@ module.exports = (robot) => {
       } else {
         request
           .post(url)
-          .end((err, res) => {
+          .end((err: string, res: any) => {
             if (err) {
               log.error(`${name}> request error: ${err}`);
               return;
             }
           });
       }
-      
-      const info = { color: color };
+
+      const info: typeMessageInfo = { color: color };
+
       if (icon) {
         info.icon_url = icon;
       }
-      sendFlag && sm.send(gitInfo['target'], `[Jenkins]: The job has started on ${sm.bold(branch)} branch at ${gitUrl}.`, info, (err, res) => {
+      sendFlag && gitInfo['target'].map((t, i) => sm.send(t, `[Jenkins]: The job has started on ${sm.bold(branch)} branch at ${gitUrl}.`, info, (err, res) => {
         if (err) {
           log.error(`${name}> send error: ${err}.`);
         } else {
           log.debug(`${name}> send: ${res}`);
         }
-      });
+      }));
     };
 
     if (sm.robot.checkType('Array', jobUrl)) {
@@ -134,8 +170,8 @@ module.exports = (robot) => {
     } else if (sm.robot.checkType('String', jobUrl)) {
       jobRequest(jobUrl);
     } else {
-      log.info(`${name}> no jobUrl for ${branch}`);
+      log.debug(`${name}> no jobUrl for ${branch}`);
     }
-    
+
   });
 };

@@ -1,3 +1,4 @@
+/* @flow */
 import querystring from 'querystring';
 import path        from 'path';
 import SendMessage from './SendMessage';
@@ -13,29 +14,29 @@ import Auth        from './Auth';
  */
 
 // the type of irc.
-const type    = process.env.HUBOT_IRC_TYPE;
+const type: string    = process.env.HUBOT_IRC_TYPE || 'slack';
 
 // the api key.
-const apikey  = process.env.HUBOT_HTTP_IRC_API_KEY || '';
+const apikey: string  = process.env.HUBOT_HTTP_IRC_API_KEY || '';
 
 // the network or address allowed.
-const allow   = process.env.HUBOT_HTTP_IRC_ALLOW   || '';
+const allow: string   = process.env.HUBOT_HTTP_IRC_ALLOW   || '';
 
 // the network or addres denied.
-const deny    = process.env.HUBOT_HTTP_IRC_DENY    || '';
+const deny: string    = process.env.HUBOT_HTTP_IRC_DENY    || '';
 
 // the path of url.
-const urlpath = "/http_irc";
+const urlpath: string = "/http_irc";
 
 // this module name.
-const name    = 'httpIrc';
+const name: string    = 'httpIrc';
 
 /**
  * Return the response in success.
  * @param  {Object} res the response object.
  * @return {Object} the http response.
  */
-const resOk = (res) => {
+const resOk = (res: any): any => {
   if (!res) {
     throw new Error(`responseOk: res is not found.`);
   }
@@ -44,13 +45,13 @@ const resOk = (res) => {
   res.end('OK');
 };
 
-module.exports = (robot) => {
-  const sm   = new SendMessage(robot, type);
-  const log  = sm.robot;
+module.exports = (robot: any) => {
+  const sm: any   = new SendMessage(robot, type);
+  const log: any  = sm.robot;
 
-  robot.router.get(`${urlpath}`, (req, res) => {
-    const auth  = new Auth(req, allow, deny, apikey);
-    const query = querystring.parse(req._parsedUrl.query);
+  robot.router.get(`${urlpath}`, (req: any, res: any) => {
+    const auth: any  = new Auth(req, allow, deny, apikey);
+    const query: any = querystring.parse(req._parsedUrl.query);
 
     if (!auth.checkRequest(res)) {
       return;
@@ -75,9 +76,9 @@ module.exports = (robot) => {
   });
 
   robot.router.get(`${urlpath}/:room`, (req, res) => {
-    const auth  = new Auth(req, allow, deny, apikey);
-    const room  = req.params.room || query.room;
-    const query = querystring.parse(req._parsedUrl.query);
+    const auth: any    = new Auth(req, allow, deny, apikey);
+    const query: any   = querystring.parse(req._parsedUrl.query);
+    const room: string = req.params.room || query.room;
 
     if (!auth.checkRequest(res)) {
       return;
@@ -90,7 +91,7 @@ module.exports = (robot) => {
 
     log.debug(`${name} query: ${JSON.stringify(query)}`);
 
-    sm.send(`#${query.room}`, query.message, query, (err, res) => {
+    sm.send(`#${room}`, query.message, query, (err, res) => {
       if (err) {
         log.error(err);
       } else {
@@ -102,8 +103,8 @@ module.exports = (robot) => {
   });
 
   robot.router.post(urlpath, (req, res) => {
-    const auth  = new Auth(req, allow, deny, apikey);
-    const query = querystring.parse(req._parsedUrl.query);
+    const auth: any  = new Auth(req, allow, deny, apikey);
+    const query: any = querystring.parse(req._parsedUrl.query);
 
     if (!auth.checkRequest(res)) {
       return;
@@ -116,15 +117,15 @@ module.exports = (robot) => {
     log.debug(`${name} query: ${JSON.stringify(query)}`);
     log.debug(`${name} body: ${JSON.stringify(req.body)}`);
 
-    const room = query.room || req.body.room;
-    const message = query.message || req.body.message;
+    const room : string   = query.room || req.body.room;
+    const message: string = query.message || req.body.message;
 
     sm.send(room, message, query, (err, res) => {
       if (err) {
         log.error(err);
-      } else {
-        log.debug(res);
       }
+
+      log.debug(res);
     });
 
     resOk(res);

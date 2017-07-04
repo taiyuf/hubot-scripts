@@ -1,11 +1,21 @@
+/* @flow */
 /**
  * Context
  */
 export default class Context {
 
+  env:       string;
+  debugFlag: string;
+  checkType: () => any;
+  parseType: () => any;
+  debug:     () => any;
+  info:      () => any;
+  warn:      () => any;
+  error:     () => any;
+
   constructor() {
-    this.env        = process.env.NODE_ENV;
-    this.debugFlag  = process.env.DEBUG || false;
+    this.env        = process.env.NODE_ENV || 'development';
+    this.debugFlag  = process.env.DEBUG    || 'false';
 
     // binded funtions
     this.checkType = this.checkType.bind(this);
@@ -40,7 +50,7 @@ export default class Context {
    * @param  {Object}  obj  the object you want to know its type.
    * @return {Boolean} true or false.
    */
-  checkType(type, obj) {
+  checkType(type: string, obj: any): boolean {
     let klass = Object.prototype.toString.call(obj).slice(8, -1);
     return !!obj && klass === type;
   }
@@ -49,7 +59,7 @@ export default class Context {
    * @param  {Object} obj something.
    * @return {String} Strings.
    */
-  parseType(obj) {
+  parseType(obj: any): string {
     let str;
 
     if(this.checkType('Object', obj)) {
@@ -71,7 +81,7 @@ export default class Context {
    * @param  {Object} obj something.
    * @return {String} output to console.log
    */
-  debug(obj) {
+  debug(obj: any): void {
     const str = this.parseType(obj);
     this.env != 'production' && console.log(`DEBUG: ${str}`);
   };
@@ -81,7 +91,7 @@ export default class Context {
    * @param  {Object} obj something.
    * @return {String} output to console.log
    */
-  info(obj) {
+  info(obj: any): void {
     const str = this.parseType(obj);
     console.log(`INFO: ${str}`);
   };
@@ -91,7 +101,7 @@ export default class Context {
    * @param  {Object} obj something.
    * @return {String} output to console.log
    */
-  warn(obj) {
+  warn(obj: any): void {
     const str = this.parseType(obj);
     console.log(`*** WARNING: ${str}`);
   };
@@ -101,7 +111,7 @@ export default class Context {
    * @param  {Object} obj something.
    * @return {String} output to console.log
    */
-  error(obj) {
+  error(obj: any): void {
     const str = this.parseType(obj);
     console.log(`*** ERROR: ${str}`);
   };
