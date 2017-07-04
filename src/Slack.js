@@ -1,4 +1,17 @@
 /* @flow */
+
+/**
+ * HUBOT_IRC_INFO: path to the yaml file of configuration.
+ *
+ * yaml format
+ *
+ * ----
+ * webhook_url:
+ *   #foo: 'https://hooks.slack.com/services/XXXXX/YYYYY'
+ *   #bar: 'https://hooks.slack.com/services/YYYYY/ZZZZZ'
+ *
+ */
+
 import fs      from 'fs';
 import yaml    from 'js-yaml';
 import path    from 'path';
@@ -170,7 +183,7 @@ export default class Slack extends Context {
 
     this.debug(`${name}> json: ${JSON.stringify(q)}`);
     request
-      .post(this.info.webhook_url)
+      .post(this.info.webhook_url[target])
       .send(q)
       .end((err, res) => {
         if (err || !res.ok) {
