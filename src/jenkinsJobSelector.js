@@ -156,14 +156,13 @@ module.exports = (robot: any) => {
       if (icon) {
         info.icon_url = icon;
       }
-
-      sendFlag && sm.send(gitInfo['target'], `[Jenkins]: The job has started on ${sm.bold(branch)} branch at ${gitUrl}.`, info, (err, res) => {
+      sendFlag && gitInfo['target'].map((t, i) => sm.send(t, `[Jenkins]: The job has started on ${sm.bold(branch)} branch at ${gitUrl}.`, info, (err, res) => {
         if (err) {
           log.error(`${name}> send error: ${err}.`);
         } else {
           log.debug(`${name}> send: ${res}`);
         }
-      });
+      }));
     };
 
     if (sm.robot.checkType('Array', jobUrl)) {
