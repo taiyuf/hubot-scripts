@@ -151,6 +151,11 @@ export default class Slack extends Context {
       throw new Error(`Irc send: arguments error: target: ${target}, msg: ${msg}`);
     }
 
+    if (!this.info.webhook_url[target]) {
+      this.error(`${name}> No webhook url for target: ${target}.`);
+      return;
+    }
+
     const name: string          = "Slack send";
     const q: any                = {};
     const params: Array<string> = [
@@ -169,8 +174,12 @@ export default class Slack extends Context {
     q.attachments = this.buildAttatchment(msg, info);
 
     this.debug(`${name}> json: ${JSON.stringify(q)}`);
+    this.debug(`urls: ${JSON.stringify(this.info.webhook_url)}`);
+    this.debug(`target: ${target}`);
+    this.debug(`webhook: ${this.info.webhook_url[target]}`);
+
     request
-      .post(this.info.webhook_url)
+      .post(this.info.webhook_url[target])
       .send(q)
       .end((err, res) => {
         if (err || !res.ok) {
@@ -181,5 +190,6 @@ export default class Slack extends Context {
         this.debugFlag && this.debug(`${name}> body from slack; ${res.text}`);
         cb && cb(null, res.text);
       });
+//    this.robot.send(target, q);
   }
 }
