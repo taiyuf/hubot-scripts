@@ -65,20 +65,17 @@ module.exports = (robot: any) => {
     const query: string = querystring.parse(url.parse(req.url).query);
     res.end('OK');
 
-    let body;
     let payload;
 
-    try {
-      body = JSON.parse(req.body);
-    } catch(e) {
-      throw new Error(`${name}> body parse error: ${e}`);
-    }
+    if (req.body.payload) {
+      try {
+        payload = JSON.parse(req.body.payload);
+      } catch(e) {
+        throw new Error(`${name}> JSON parse error: ${e}`);
+      }
 
-
-    if (body.payload) {
-      payload = body.payload;
     } else {
-      payload = body;
+      payload = req.body;
     }
 
     if (!payload.repository) {
