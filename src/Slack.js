@@ -23,8 +23,8 @@ export default class Slack extends Context {
   robot:            any;
   color:            string;
   info:             any;
-  buildAttatchment: () => any;
-  send:             () => any;
+  buildAttatchment: (msg: string, info: any) => any;
+  send:             (target: string, msg: string, info: any, cb: () => any) => any;
 
   /**
    * Constructor
@@ -159,7 +159,9 @@ export default class Slack extends Context {
    *
    * @throws {Error}  arguments error.
    */
-  send(target: string, msg: string, info: mixed={}, cb: () => any) {
+  send(target: string, msg: string, info: any={}, cb: (str: ?string, obj: ?any) => any) {
+    const name: string = "Slack send";
+
     if (!(target && msg)) {
       throw new Error(`Irc send: arguments error: target: ${target}, msg: ${msg}`);
     }
@@ -169,7 +171,6 @@ export default class Slack extends Context {
       return;
     }
 
-    const name: string          = "Slack send";
     const q: any                = {};
     const params: Array<string> = [
       'color',
