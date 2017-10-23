@@ -6,12 +6,12 @@ export default class Context {
 
   env:       string;
   debugFlag: string;
-  checkType: () => any;
-  parseType: () => any;
-  debug:     () => any;
-  info:      () => any;
-  warn:      () => any;
-  error:     () => any;
+  checkType: (type: string, obj: any) => any;
+  parseType: (obj: any) => any;
+  debug:     (obj: any) => any;
+  info:      (obj: any) => any;
+  warn:      (obj: any) => any;
+  error:     (obj: any) => any;
 
   constructor() {
     this.env        = process.env.NODE_ENV || 'development';

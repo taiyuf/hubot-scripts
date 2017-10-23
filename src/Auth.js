@@ -7,10 +7,10 @@ export default class Auth {
   deny:         Array<string>;
   apikey:       string;
   remoteIp:     string;
-  match:        () => any;
+  match:        (pattern: string) => any;
   checkIp:      () => any;
   checkApiKey:  () => any;
-  checkRequest: () => any;
+  checkRequest: (res: any) => any;
 
   /**
    * Constructor
@@ -28,7 +28,7 @@ export default class Auth {
     }
 
     const splitString: (str: string) => any = (str: string): Array<string> => str.replace(/\s+/g, '').split(',');
-    const getRemoteIp: () => any = (req: any): string => {
+    const getRemoteIp: (req: any) => any = (req: any): string => {
       if (req.connection && req.connection.remoteAddress) {
         return req.connection.remoteAddress;
       } else if (req.socket && req.socket.remoteAddress) {

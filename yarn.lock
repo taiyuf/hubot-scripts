@@ -1128,7 +1128,7 @@ caseless@~0.12.0:
   version "0.12.0"
   resolved "https://registry.yarnpkg.com/caseless/-/caseless-0.12.0.tgz#1b681c21ff84033c826543090689420d187151dc"
 
-"cell@github:jkroso/cell":
+cell@jkroso/cell:
   version "1.0.2"
   resolved "https://codeload.github.com/jkroso/cell/tar.gz/6db4991ebff09e344d7c1211c4abdcc62aff479e"
 
@@ -3405,7 +3405,7 @@ merge-descriptors@1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/merge-descriptors/-/merge-descriptors-1.0.0.tgz#2169cf7538e1b0cc87fb88e1502d8474bbf79864"
 
-"merge@github:yields/merge":
+merge@yields/merge:
   version "1.0.1"
   resolved "https://codeload.github.com/yields/merge/tar.gz/2f357cb501cd06f1a86394b7817e5df73c53f644"
 
