@@ -127,7 +127,7 @@ module.exports = (robot: any) => {
     help(msg, 'Usage: cmd TARGET ACTION (ARGUMENT).', "Here is my task list.\n\n");
   });
 
-  robot.hear(/cmd (\w+) (\w+) ?(\w+)?/i, (msg: any) => {
+  robot.hear(/cmd (\w+) (\w+) ?([A-Za-z0-9_\.]+)?/i, (msg: any) => {
     const target  = msg.match[1];
     const action  = msg.match[2];
     const arg     = msg.match[3];
@@ -151,6 +151,7 @@ module.exports = (robot: any) => {
             msg.send(`Not allowed user: ${msg.message.user.name}.\n\nPlease contact the administrator.`);
             return;
           }
+console.log(`arg: ${arg}`);
           const cmd: string = arg ? `${act[COMMAND]} ${arg}` : `${act[COMMAND]}`;
           msg.send(`${title}\n  ${act[MESSAGE]}\n\n[command]\n  \`${cmd}\`\n\n`);
           execCommand(msg, act[COMMAND], arg);
