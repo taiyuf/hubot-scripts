@@ -109,22 +109,31 @@ module.exports = (robot: any) => {
     return flag === true ? true : false;
   };
 
-  const help = (msg: any, title: string, message: string = ''): void => {
+  const help = (msg: any): void => {
     const room     = msg.message.user.room;
     const target   = [ room ];
-    const messages = [message];
+    const messages = ['`[Usage: cmd TARGET ACTION (ARGUMENT)]`\nHere is my task list.'];
 
-    Object.keys(conf).map((target) => {
-      Object.keys(conf[target]).map((action) => {
-        messages.push(`\*${target} ${action}\*: \n  ${conf[target][action][MESSAGE]}\n\n  [command]\n    \`${conf[target][action][COMMAND]}\`\n\n  [user]\n    ${conf[target][action][USER].join(', ')}`);
+    Object.keys(conf).map(target => {
+      Object.keys(conf[target]).map(action => {
+        const cmds = `\*${target} ${action}\*:
+  ${conf[target][action][MESSAGE]}
+
+  [command]
+    \`${conf[target][action][COMMAND]}\`
+
+  [user]
+    ${conf[target][action][USER].join(', ')}`;
+
+        messages.push(cmds);
       });
     });
 
-    msg.send(`[${title}]\n\n${messages.join("\n\n")}`);
+    msg.send(messages.join("\n\n"));
   };
 
   robot.respond(/cmd help/i, (msg: any) => {
-    help(msg, 'Usage: cmd TARGET ACTION (ARGUMENT).', "Here is my task list.\n\n");
+    help(msg);
   });
 
   robot.respond(/cmd (\w+) (\w+) ?([A-Za-z0-9_\.]+)?/i, (msg: any) => {
