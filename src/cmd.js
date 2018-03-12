@@ -112,7 +112,7 @@ module.exports = (robot: any) => {
   const help = (msg: any): void => {
     const room     = msg.message.user.room;
     const target   = [ room ];
-    const messages = ['*[Usage: cmd TARGET ACTION (ARGUMENT)]*\nHere is my task list.'];
+    const messages = ['*USAGE: cmd TARGET ACTION (ARGUMENT)*', 'Here is my task list.'];
 
     Object.keys(conf).map(target => {
       Object.keys(conf[target]).map(action => {
