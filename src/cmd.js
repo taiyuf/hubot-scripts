@@ -80,10 +80,9 @@ module.exports = (robot: any) => {
   const execCommand = (msg, cmd, arg): void => {
     const room: string           = `#${msg.message.user.room}`;
     const target: Array<string>  = [ room ];
-    const exec: any              = child_process.exec;
     const command: string        = !!arg ? `${cmd} ${arg}` : cmd;
 
-    exec(command, (err: string, stdout: string, stderr: string) => {
+    child_process.exec(command, (err: string, stdout: string, stderr: string) => {
       let message = '';
 
       if (err) {
@@ -97,7 +96,8 @@ module.exports = (robot: any) => {
       }
 
       msg.reply(message);
-    };
+    });
+  };
 
   const checkPrivilege = (list: Array<string>, user: string): boolean => {
     let flag = false;
