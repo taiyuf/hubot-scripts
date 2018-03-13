@@ -81,19 +81,19 @@ module.exports = (robot: any) => {
     const room: string           = `#${msg.message.user.room}`;
     const target: Array<string>  = [ room ];
     const exec: any              = child_process.exec;
-    const command: string        = arg ? `${cmd} ${arg}` : cmd;
+    const command: string        = !!arg ? `${cmd} ${arg}` : cmd;
 
     exec(command, (err: string, stdout: string, stderr: string) => {
       if (err) {
-        msg.send(`[Unknown error]\n\n${err}\n${stderr}`);
+        msg.reply(`[Unknown error]\n\n${err}\n${stderr}`);
         return;
       }
 
       if (!stdout) {
-        msg.send(`[Result]\n  executed in success.`);
+        msg.reply(`[Result]\n  executed in success.`);
         return;
       }
-      msg.send(`[Result]\n  \`${stdout}\``);
+      msg.reply(`[Result]\n  \`${stdout}\``);
     });
   };
 
@@ -129,7 +129,7 @@ module.exports = (robot: any) => {
       });
     });
 
-    msg.send(messages.join("\n\n"));
+    msg.reply(messages.join("\n\n"));
   };
 
   robot.respond(/cmd help/i, (msg: any) => {
@@ -139,14 +139,14 @@ module.exports = (robot: any) => {
   robot.respond(/cmd (\w+) (\w+) ?([A-Za-z0-9_\.]+)?/i, (msg: any) => {
     const target  = msg.match[1];
     const action  = msg.match[2];
-    const arg     = msg.match[3];
+    const arg     = msg.match[3] || '';
     const title   = `*${target} ${action}*`;
     let flag      = false;
 
-    Object.keys(conf).map((t) => {
+    Object.keys(conf).map(t => {
       const actions: any = conf[target];
       if (target == t) {
-        Object.keys(actions).map((a) => {
+        Object.keys(actions).map(a => {
           const act: any = actions[a];
 
           if (action != a) {
@@ -157,12 +157,12 @@ module.exports = (robot: any) => {
 
           if (!checkPrivilege(act[USER], msg.message.user.name)) {
             console.log(`Not allowed user: ${msg.message.user.name}`);
-            msg.send(`Not allowed user: ${msg.message.user.name}.\n\nPlease contact the administrator.`);
+            msg.reply(`Not allowed user: ${msg.message.user.name}.\n\nPlease contact the administrator.`);
             return;
           }
-console.log(`arg: ${arg}`);
-          const cmd: string = arg ? `${act[COMMAND]} ${arg}` : `${act[COMMAND]}`;
-          msg.send(`${title}\n  ${act[MESSAGE]}\n\n[command]\n  \`${cmd}\`\n\n`);
+
+          const cmd: string = !!arg ? `${act[COMMAND]} ${arg}` : `${act[COMMAND]}`;
+          msg.reply(`${title}\n  ${act[MESSAGE]}\n\n[command]\n  \`${cmd}\`\n\n`);
           execCommand(msg, act[COMMAND], arg);
         });
       }
@@ -170,7 +170,7 @@ console.log(`arg: ${arg}`);
 
     if (flag === false) {
       console.log(`target not found: ${target}`);
-      msg.send(`Target not found: ${target}.\n\nTry @HUBOT_NAME cmd help.`);
+      msg.reply(`Target not found: ${target}.\n\nTry @HUBOT_NAME cmd help.`);
     }
   });
 };
