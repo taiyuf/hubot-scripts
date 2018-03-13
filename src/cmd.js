@@ -84,18 +84,20 @@ module.exports = (robot: any) => {
     const command: string        = !!arg ? `${cmd} ${arg}` : cmd;
 
     exec(command, (err: string, stdout: string, stderr: string) => {
+      let message = '';
+
       if (err) {
-        msg.reply(`[Unknown error]\n\n${err}\n${stderr}`);
-        return;
+        message = `[Unknown error]\n\n${err}\n${stderr}`;
       }
 
       if (!stdout) {
-        msg.reply(`[Result]\n  executed in success.`);
-        return;
+        message = `[Result]\n  executed in success.`;
+      } else {
+        message = `[Result]\n  \`${stdout}\``;
       }
-      msg.reply(`[Result]\n  \`${stdout}\``);
-    });
-  };
+
+      msg.reply(message);
+    };
 
   const checkPrivilege = (list: Array<string>, user: string): boolean => {
     let flag = false;
@@ -156,7 +158,7 @@ module.exports = (robot: any) => {
           flag = true;
 
           if (!checkPrivilege(act[USER], msg.message.user.name)) {
-            console.log(`Not allowed user: ${msg.message.user.name}`);
+            // console.log(`Not allowed user: ${msg.message.user.name}`);
             msg.reply(`Not allowed user: ${msg.message.user.name}.\n\nPlease contact the administrator.`);
             return;
           }
@@ -169,7 +171,7 @@ module.exports = (robot: any) => {
     });
 
     if (flag === false) {
-      console.log(`target not found: ${target}`);
+      // console.log(`target not found: ${target}`);
       msg.reply(`Target not found: ${target}.\n\nTry @HUBOT_NAME cmd help.`);
     }
   });
