@@ -92,7 +92,7 @@ module.exports = (robot: any) => {
       if (!stdout) {
         message = `[Result]\n  executed in success.`;
       } else {
-        message = `[Result]\n  \`${stdout}\``;
+        message = `[Result]\n  \`\`\`${stdout}\`\`\``;
       }
 
       msg.reply(message);
